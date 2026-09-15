@@ -18,4 +18,7 @@ A **OverClock Society** é um portal web exclusivo criado para conectar estudant
 
 ## 🛠️ Tecnologias
 - Web Frontend (HTML / CSS / JavaScript)
+- Web Backend (Python)
+- Framework: (FastAPI)
+- Banco de Dados: (PostgreSQL)
 - RAWG API (Games Database)
