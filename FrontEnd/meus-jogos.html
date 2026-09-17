@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Meus Jogos | Overclock Society</title>
+
+    <link
+        rel="stylesheet"
+        href="css/global.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/meus-jogos.css"
+    >
+
+</head>
+
+
+<body>
+
+    <!-- ==========================
+         HEADER
+    =========================== -->
+
+    <header class="dashboard-header">
+
+        <a
+            href="dashboard.html"
+            class="logo"
+        >
+
+            <span class="logo-icon">🎮</span>
+
+            <span>
+                Overclock<span class="logo-highlight">Society</span>
+            </span>
+
+        </a>
+
+
+        <div class="header-search">
+
+            <span class="search-icon">
+                🔍
+            </span>
+
+            <input
+                type="text"
+                placeholder="Pesquisar jogadores ou jogos..."
+                id="searchInput"
+            >
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <button
+                class="icon-button"
+                title="Notificações"
+            >
+                🔔
+            </button>
+
+
+            <button
+                class="profile-button"
+                id="profileButton"
+            >
+
+                <div class="avatar">
+                    J
+                </div>
+
+                <div class="profile-name">
+
+                    <strong>
+                        João
+                    </strong>
+
+                    <span>
+                        Online
+                    </span>
+
+                </div>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==========================
+         LAYOUT
+    =========================== -->
+
+    <div class="dashboard-layout">
+
+
+        <!-- ==========================
+             SIDEBAR
+        =========================== -->
+
+        <aside class="sidebar">
+
+            <nav>
+
+                <span class="sidebar-title">
+                    MENU
+                </span>
+
+
+                <a
+                    href="dashboard.html"
+                    class="sidebar-link"
+                >
+
+                    <span>🏠</span>
+
+                    Dashboard
+
+                </a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+
+                    <span>👤</span>
+
+                    Meu perfil
+
+                </a>
+
+
+                <a
+                    href="meus-jogos.html"
+                    class="sidebar-link active"
+                >
+
+                    <span>🎮</span>
+
+                    Meus jogos
+
+                </a>
+
+
+                <a
+    href="amigos.html"
+    class="sidebar-link"
+>
+    <span>👥</span>
+    Amigos
+</a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+
+                    <span>📰</span>
+
+                    Feed
+
+                </a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+
+                    <span>🏆</span>
+
+                    Eventos
+
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+
+                    <span>⚙️</span>
+
+                    Configurações
+
+                </a>
+
+
+                <a
+                    href="index.html"
+                    class="sidebar-link logout-link"
+                >
+
+                    <span>🚪</span>
+
+                    Sair
+
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <!-- ==========================
+             CONTEÚDO
+        =========================== -->
+
+        <main class="dashboard-content games-page">
+
+
+            <!-- ==========================
+                 CABEÇALHO
+            =========================== -->
+
+            <section class="games-header">
+
+                <div>
+
+                    <span class="welcome-label">
+                        MINHA COLEÇÃO
+                    </span>
+
+                    <h1>
+                        Meus jogos 🎮
+                    </h1>
+
+                    <p>
+                        Minha história gamer kk.
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="btn btn-primary"
+                    id="addGameButton"
+                >
+
+                    <span>
+                        +
+                    </span>
+
+                    Adicionar jogo
+
+                </button>
+
+            </section>
+
+
+            <!-- ==========================
+                 RESUMO
+            =========================== -->
+
+            <section class="games-summary">
+
+                <div class="summary-item">
+
+                    <span class="summary-icon">
+                        🏆
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            3
+                        </strong>
+
+                        <span>
+                            favoritos
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <span class="summary-icon">
+                        ❤️
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            8
+                        </strong>
+
+                        <span>
+                            jogos que gosto
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <span class="summary-icon">
+                        ✅
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            12
+                        </strong>
+
+                        <span>
+                            jogos zerados
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==========================
+                 FAVORITOS
+            =========================== -->
+
+            <section class="games-section favorites-section">
+
+                <div class="games-section-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            TOP 3
+                        </span>
+
+                        <h2>
+                            Jogos Favoritos
+                        </h2>
+
+                        <p>
+                            Os três jogos que mais me representam
+                            como jogador.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="podium">
+
+
+                    <!-- 2º LUGAR -->
+
+                    <article
+                        class="podium-card second-place"
+                        data-position="2"
+                    >
+
+                        <div class="podium-position silver">
+                            2º
+                        </div>
+
+                        <div class="podium-medal">
+                            🥈
+                        </div>
+
+
+                        <div class="podium-game-image hollow-knight">
+                            HK
+                        </div>
+
+
+                        <div class="podium-info">
+
+                            <span class="podium-place">
+                                SEGUNDO LUGAR
+                            </span>
+
+                            <h3>
+                                Hollow Knight
+                            </h3>
+
+                            <p>
+                                Metroidvania • Aventura
+                            </p>
+
+                            <div class="podium-rating">
+                                ⭐ 4.9
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- 1º LUGAR -->
+
+                    <article
+                        class="podium-card first-place"
+                        data-position="1"
+                    >
+
+                        <div class="podium-position gold">
+                            1º
+                        </div>
+
+                        <div class="podium-medal">
+                            🥇
+                        </div>
+
+
+                        <div class="podium-game-image elden-ring-large">
+                            ER
+                        </div>
+
+
+                        <div class="podium-info">
+
+                            <span class="podium-place">
+                                PRIMEIRO LUGAR
+                            </span>
+
+                            <h3>
+                                Elden Ring
+                            </h3>
+
+                            <p>
+                                RPG • Ação
+                            </p>
+
+                            <div class="podium-rating">
+                                ⭐ 5.0
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- 3º LUGAR -->
+
+                    <article
+                        class="podium-card third-place"
+                        data-position="3"
+                    >
+
+                        <div class="podium-position bronze">
+                            3º
+                        </div>
+
+                        <div class="podium-medal">
+                            🥉
+                        </div>
+
+
+                        <div class="podium-game-image minecraft-large">
+                            MC
+                        </div>
+
+
+                        <div class="podium-info">
+
+                            <span class="podium-place">
+                                TERCEIRO LUGAR
+                            </span>
+
+                            <h3>
+                                Minecraft
+                            </h3>
+
+                            <p>
+                                Sandbox • Aventura
+                            </p>
+
+                            <div class="podium-rating">
+                                ⭐ 4.8
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- ==========================
+                 JOGOS QUE GOSTO
+            =========================== -->
+
+            <section class="games-section">
+
+                <div class="games-section-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            COLEÇÃO
+                        </span>
+
+                        <h2>
+                            Jogos Que Gosto
+                        </h2>
+
+                        <p>
+                            Jogos que fazem parte da sua coleção.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        class="text-button"
+                        id="seeLikedGamesButton"
+                    >
+                        Ver todos →
+                    </button>
+
+                </div>
+
+
+                <div class="collection-grid">
+
+
+                    <article class="collection-card">
+
+                        <div class="collection-image valorant-game">
+                            V
+                        </div>
+
+                        <div class="collection-info">
+
+                            <div>
+
+                                <h3>
+                                    Valorant
+                                </h3>
+
+                                <span>
+                                    FPS • Competitivo
+                                </span>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 4.5
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="collection-card">
+
+                        <div class="collection-image terraria-game">
+                            T
+                        </div>
+
+                        <div class="collection-info">
+
+                            <div>
+
+                                <h3>
+                                    Terraria
+                                </h3>
+
+                                <span>
+                                    Sandbox • Aventura
+                                </span>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 4.7
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="collection-card">
+
+                        <div class="collection-image zelda-game">
+                            Z
+                        </div>
+
+                        <div class="collection-info">
+
+                            <div>
+
+                                <h3>
+                                    Zelda
+                                </h3>
+
+                                <span>
+                                    Aventura • RPG
+                                </span>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 4.8
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="collection-card">
+
+                        <div class="collection-image god-war-game">
+                            GW
+                        </div>
+
+                        <div class="collection-info">
+
+                            <div>
+
+                                <h3>
+                                    God of War
+                                </h3>
+
+                                <span>
+                                    Ação • Aventura
+                                </span>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 4.7
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="collection-card">
+
+                        <div class="collection-image stardew-game">
+                            SV
+                        </div>
+
+                        <div class="collection-info">
+
+                            <div>
+
+                                <h3>
+                                    Stardew Valley
+                                </h3>
+
+                                <span>
+                                    Simulação • RPG
+                                </span>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 4.6
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="collection-card">
+
+                        <div class="collection-image resident-game">
+                            RE
+                        </div>
+
+                        <div class="collection-info">
+
+                            <div>
+
+                                <h3>
+                                    Resident Evil 4
+                                </h3>
+
+                                <span>
+                                    Terror • Ação
+                                </span>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 4.8
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- ==========================
+                 JOGOS ZERADOS
+            =========================== -->
+
+            <section class="games-section">
+
+                <div class="games-section-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            HISTÓRIA
+                        </span>
+
+                        <h2>
+                            Jogos Zerados
+                        </h2>
+
+                        <p>
+                            Sua jornada através dos jogos que você terminou.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        class="text-button"
+                        id="seeCompletedGamesButton"
+                    >
+                        Ver todos →
+                    </button>
+
+                </div>
+
+
+                <div class="completed-list">
+
+
+                    <article class="completed-game">
+
+                        <div class="completed-image god-war-game">
+                            GW
+                        </div>
+
+                        <div class="completed-info">
+
+                            <h3>
+                                God of War Ragnarök
+                            </h3>
+
+                            <span>
+                                Ação • Aventura
+                            </span>
+
+                        </div>
+
+                        <div class="completed-date">
+
+                            <span>
+                                Zerado em
+                            </span>
+
+                            <strong>
+                                2026
+                            </strong>
+
+                        </div>
+
+                        <span class="completed-status">
+                            ✓ Zerado
+                        </span>
+
+                    </article>
+
+
+                    <article class="completed-game">
+
+                        <div class="completed-image resident-game">
+                            RE
+                        </div>
+
+                        <div class="completed-info">
+
+                            <h3>
+                                Resident Evil 4
+                            </h3>
+
+                            <span>
+                                Terror • Ação
+                            </span>
+
+                        </div>
+
+                        <div class="completed-date">
+
+                            <span>
+                                Zerado em
+                            </span>
+
+                            <strong>
+                                2025
+                            </strong>
+
+                        </div>
+
+                        <span class="completed-status">
+                            ✓ Zerado
+                        </span>
+
+                    </article>
+
+
+                    <article class="completed-game">
+
+                        <div class="completed-image celeste-game">
+                            C
+                        </div>
+
+                        <div class="completed-info">
+
+                            <h3>
+                                Celeste
+                            </h3>
+
+                            <span>
+                                Plataforma • Indie
+                            </span>
+
+                        </div>
+
+                        <div class="completed-date">
+
+                            <span>
+                                Zerado em
+                            </span>
+
+                            <strong>
+                                2025
+                            </strong>
+
+                        </div>
+
+                        <span class="completed-status">
+                            ✓ Zerado
+                        </span>
+
+                    </article>
+
+
+                    <article class="completed-game">
+
+                        <div class="completed-image spider-game">
+                            SM
+                        </div>
+
+                        <div class="completed-info">
+
+                            <h3>
+                                Spider-Man
+                            </h3>
+
+                            <span>
+                                Ação • Aventura
+                            </span>
+
+                        </div>
+
+                        <div class="completed-date">
+
+                            <span>
+                                Zerado em
+                            </span>
+
+                            <strong>
+                                2024
+                            </strong>
+
+                        </div>
+
+                        <span class="completed-status">
+                            ✓ Zerado
+                        </span>
+
+                    </article>
+
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+    </div>
+
+
+    <!-- ==========================
+         MODAL
+    =========================== -->
+
+    <div
+        class="game-modal-overlay"
+        id="gameModalOverlay"
+    >
+
+        <div class="game-modal">
+
+            <button
+                class="modal-close"
+                id="gameModalClose"
+            >
+                ×
+            </button>
+
+            <div class="modal-icon">
+                🎮
+            </div>
+
+            <h2>
+                Adicionar jogo
+            </h2>
+
+            <p>
+                O sistema de cadastro de jogos será integrado
+                ao banco de dados posteriormente.
+            </p>
+
+            <button
+                class="btn btn-primary"
+                id="gameModalButton"
+            >
+                Entendi
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script src="js/meus-jogos.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,823 @@
+/* =========================================
+   HEADER
+========================================= */
+
+.dashboard-header {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 1000;
+
+    height: 72px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding:
+        0 30px;
+
+    background:
+        rgba(3, 7, 18, 0.88);
+
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    backdrop-filter:
+        blur(18px);
+}
+
+
+.header-search {
+
+    width: 380px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding:
+        10px 14px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 9px;
+
+    background:
+        rgba(255, 255, 255, 0.04);
+}
+
+
+.search-icon {
+    opacity: 0.6;
+}
+
+
+.header-search input {
+
+    width: 100%;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    color: white;
+
+    font-size: 14px;
+}
+
+
+.header-search input::placeholder {
+    color: #64748b;
+}
+
+
+.header-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+
+.icon-button {
+
+    width: 40px;
+
+    height: 40px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 9px;
+
+    background:
+        rgba(255, 255, 255, 0.04);
+
+    color: white;
+
+    cursor: pointer;
+}
+
+
+.profile-button {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    border: none;
+
+    background: transparent;
+
+    color: white;
+
+    cursor: pointer;
+
+    text-align: left;
+}
+
+
+.avatar,
+.player-avatar {
+
+    width: 38px;
+
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #8b5cf6
+        );
+
+    color: white;
+
+    font-weight: 700;
+}
+
+
+.profile-name {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+
+.profile-name strong {
+    font-size: 13px;
+}
+
+
+.profile-name span {
+
+    color: #4ade80;
+
+    font-size: 11px;
+}
+
+
+/* =========================================
+   LAYOUT
+========================================= */
+
+.dashboard-layout {
+
+    min-height:
+        calc(100vh - 72px);
+
+    display: flex;
+}
+
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
+.sidebar {
+
+    position: sticky;
+
+    top: 72px;
+
+    width: 240px;
+
+    height:
+        calc(100vh - 72px);
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    padding:
+        28px 16px;
+
+    border-right:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    background:
+        #070c18;
+}
+
+
+.sidebar-title {
+
+    display: block;
+
+    padding:
+        0 13px 12px;
+
+    color: #475569;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
+}
+
+
+.sidebar-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding:
+        11px 13px;
+
+    margin-bottom: 5px;
+
+    border-radius: 9px;
+
+    color: #94a3b8;
+
+    text-decoration: none;
+
+    font-size: 14px;
+
+    transition:
+        0.2s ease;
+}
+
+
+.sidebar-link:hover {
+
+    background:
+        rgba(255, 255, 255, 0.05);
+
+    color: white;
+}
+
+
+.sidebar-link.active {
+
+    color: white;
+
+    background:
+        rgba(99, 102, 241, 0.15);
+
+    box-shadow:
+        inset 3px 0 #6366f1;
+}
+
+
+.logout-link:hover {
+
+    color: #f87171;
+}
+
+
+/* =========================================
+   CONTEÚDO
+========================================= */
+
+.dashboard-content {
+
+    flex: 1;
+
+    max-width: 1400px;
+
+    padding:
+        42px 45px;
+}
+
+
+/* =========================================
+   WELCOME
+========================================= */
+
+.welcome-section {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 30px;
+
+    margin-bottom: 35px;
+}
+
+
+.welcome-label {
+
+    color: #818cf8;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.7px;
+}
+
+
+.welcome-section h1 {
+
+    margin:
+        7px 0 5px;
+
+    font-size:
+        clamp(28px, 4vw, 38px);
+
+    letter-spacing: -1px;
+}
+
+
+.welcome-section p {
+
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+
+/* =========================================
+   STATS
+========================================= */
+
+.stats-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 16px;
+
+    margin-bottom: 50px;
+}
+
+
+.dashboard-stat-card {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 16px;
+
+    padding: 22px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
+
+    border-radius: 14px;
+
+    background:
+        rgba(15, 23, 42, 0.55);
+}
+
+
+.stat-card-icon {
+
+    width: 48px;
+
+    height: 48px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background:
+        rgba(99, 102, 241, 0.10);
+
+    font-size: 23px;
+}
+
+
+.dashboard-stat-card span {
+
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+
+.dashboard-stat-card strong {
+
+    font-size: 22px;
+}
+
+
+/* =========================================
+   SEÇÕES
+========================================= */
+
+.dashboard-section {
+
+    margin-bottom: 50px;
+}
+
+
+.section-header {
+
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    margin-bottom: 22px;
+}
+
+
+.section-header h2 {
+
+    margin-top: 2px;
+
+    font-size: 23px;
+
+    letter-spacing: -0.5px;
+}
+
+
+.text-button {
+
+    border: none;
+
+    background: transparent;
+
+    color: #818cf8;
+
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+
+.text-button:hover {
+    color: #a5b4fc;
+}
+
+
+/* =========================================
+   JOGOS
+========================================= */
+
+.game-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 16px;
+}
+
+
+.game-card {
+
+    position: relative;
+
+    overflow: hidden;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
+
+    border-radius: 14px;
+
+    background:
+        #0b1220;
+
+    transition:
+        transform 0.25s ease,
+        border-color 0.25s ease;
+}
+
+
+.game-card:hover {
+
+    transform:
+        translateY(-5px);
+
+    border-color:
+        rgba(129, 140, 248, 0.3);
+}
+
+
+.game-image {
+
+    height: 150px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 36px;
+
+    font-weight: 900;
+
+    color: white;
+}
+
+
+.elden-ring {
+
+    background:
+        linear-gradient(
+            135deg,
+            #47361a,
+            #9a7c42
+        );
+}
+
+
+.valorant {
+
+    background:
+        linear-gradient(
+            135deg,
+            #4c1020,
+            #e3264f
+        );
+}
+
+
+.minecraft {
+
+    background:
+        linear-gradient(
+            135deg,
+            #166534,
+            #65a30d
+        );
+}
+
+
+.terraria {
+
+    background:
+        linear-gradient(
+            135deg,
+            #075985,
+            #38bdf8
+        );
+}
+
+
+.game-info {
+
+    padding:
+        16px 15px 8px;
+}
+
+
+.game-info h3 {
+
+    margin-bottom: 5px;
+
+    font-size: 15px;
+}
+
+
+.game-info span {
+
+    color: #64748b;
+
+    font-size: 11px;
+}
+
+
+.game-rating {
+
+    padding:
+        5px 15px 16px;
+
+    color: #facc15;
+
+    font-size: 12px;
+}
+
+
+/* =========================================
+   JOGADORES
+========================================= */
+
+.players-list {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 15px;
+}
+
+
+.player-card {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 15px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
+
+    border-radius: 12px;
+
+    background:
+        rgba(15, 23, 42, 0.5);
+}
+
+
+.player-info {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+    flex: 1;
+}
+
+
+.player-info strong {
+    font-size: 13px;
+}
+
+
+.player-info span {
+
+    color: #64748b;
+
+    font-size: 11px;
+}
+
+
+.online-status {
+
+    color: #4ade80;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .stats-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .game-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .players-list {
+
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+@media (max-width: 800px) {
+
+    .dashboard-header {
+
+        padding:
+            0 18px;
+    }
+
+
+    .header-search {
+
+        display: none;
+    }
+
+
+    .sidebar {
+
+        width: 70px;
+
+        padding:
+            20px 8px;
+    }
+
+
+    .sidebar-title,
+    .sidebar-link {
+
+        justify-content: center;
+    }
+
+
+    .sidebar-link {
+
+        font-size: 0;
+
+        gap: 0;
+    }
+
+
+    .sidebar-link span {
+
+        font-size: 19px;
+    }
+
+
+    .dashboard-content {
+
+        padding:
+            30px 20px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .profile-name {
+
+        display: none;
+    }
+
+
+    .welcome-section {
+
+        flex-direction:
+            column;
+
+        align-items:
+            flex-start;
+    }
+
+
+    .stats-grid {
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .game-grid {
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .dashboard-content {
+
+        padding:
+            25px 15px;
+    }
+
+}

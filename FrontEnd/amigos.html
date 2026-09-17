@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Amigos | Overclock Society</title>
+
+    <link
+        rel="stylesheet"
+        href="css/global.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/amigos.css"
+    >
+
+</head>
+
+
+<body>
+
+    <!-- ==========================
+         HEADER
+    =========================== -->
+
+    <header class="dashboard-header">
+
+        <a
+            href="dashboard.html"
+            class="logo"
+        >
+
+            <span class="logo-icon">🎮</span>
+
+            <span>
+                Overclock<span class="logo-highlight">Society</span>
+            </span>
+
+        </a>
+
+
+        <div class="header-search">
+
+            <span class="search-icon">
+                🔍
+            </span>
+
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Pesquisar jogadores..."
+            >
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <button
+                class="icon-button"
+                title="Notificações"
+            >
+                🔔
+            </button>
+
+
+            <button
+                class="profile-button"
+                id="profileButton"
+            >
+
+                <div class="avatar">
+                    J
+                </div>
+
+                <div class="profile-name">
+
+                    <strong>
+                        João
+                    </strong>
+
+                    <span>
+                        Online
+                    </span>
+
+                </div>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==========================
+         LAYOUT
+    =========================== -->
+
+    <div class="dashboard-layout">
+
+
+        <!-- ==========================
+             SIDEBAR
+        =========================== -->
+
+        <aside class="sidebar">
+
+            <nav>
+
+                <span class="sidebar-title">
+                    MENU
+                </span>
+
+
+                <a
+                    href="dashboard.html"
+                    class="sidebar-link"
+                >
+
+                    <span>🏠</span>
+
+                    Dashboard
+
+                </a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+
+                    <span>👤</span>
+
+                    Meu perfil
+
+                </a>
+
+
+                <a
+                    href="meus-jogos.html"
+                    class="sidebar-link"
+                >
+
+                    <span>🎮</span>
+
+                    Meus jogos
+
+                </a>
+
+
+                <a
+                    href="amigos.html"
+                    class="sidebar-link active"
+                >
+
+                    <span>👥</span>
+
+                    Amigos
+
+                </a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+
+                    <span>📰</span>
+
+                    Feed
+
+                </a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+
+                    <span>🏆</span>
+
+                    Eventos
+
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+
+                    <span>⚙️</span>
+
+                    Configurações
+
+                </a>
+
+
+                <a
+                    href="index.html"
+                    class="sidebar-link logout-link"
+                >
+
+                    <span>🚪</span>
+
+                    Sair
+
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <!-- ==========================
+             CONTEÚDO
+        =========================== -->
+
+        <main class="dashboard-content friends-page">
+
+
+            <!-- ==========================
+                 CABEÇALHO
+            =========================== -->
+
+            <section class="friends-header">
+
+                <div>
+
+                    <span class="welcome-label">
+                        COMUNIDADE
+                    </span>
+
+                    <h1>
+                        Meus amigos 👥
+                    </h1>
+
+                    <p>
+                        Encontre seus amigos e descubra
+                        novos jogadores da faculdade.
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="btn btn-primary"
+                    id="findFriendsButton"
+                >
+
+                    <span>
+                        +
+                    </span>
+
+                    Encontrar jogadores
+
+                </button>
+
+            </section>
+
+
+            <!-- ==========================
+                 RESUMO
+            =========================== -->
+
+            <section class="friends-summary">
+
+                <div class="friend-summary-card">
+
+                    <div class="friend-summary-icon online">
+                        🟢
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            5
+                        </strong>
+
+                        <span>
+                            online agora
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="friend-summary-card">
+
+                    <div class="friend-summary-icon">
+                        👥
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            24
+                        </strong>
+
+                        <span>
+                            amigos
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="friend-summary-card">
+
+                    <div class="friend-summary-icon">
+                        📩
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            3
+                        </strong>
+
+                        <span>
+                            solicitações
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==========================
+                 SOLICITAÇÕES
+            =========================== -->
+
+            <section class="friends-section">
+
+                <div class="friends-section-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            NOVAS CONEXÕES
+                        </span>
+
+                        <h2>
+                            Solicitações de amizade
+                        </h2>
+
+                    </div>
+
+                    <span class="request-counter">
+                        3 pendentes
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="requests-list"
+                    id="requestsList"
+                >
+
+
+                    <article
+                        class="request-card"
+                        data-user="Mariana"
+                    >
+
+                        <div class="friend-avatar purple">
+                            M
+                        </div>
+
+
+                        <div class="request-info">
+
+                            <strong>
+                                Mariana
+                            </strong>
+
+                            <span>
+                                Engenharia de Software
+                            </span>
+
+                            <small>
+                                🎮 Valorant
+                            </small>
+
+                        </div>
+
+
+                        <div class="request-actions">
+
+                            <button
+                                class="request-btn accept"
+                            >
+                                ✓ Aceitar
+                            </button>
+
+                            <button
+                                class="request-btn decline"
+                            >
+                                ✕ Recusar
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <article
+                        class="request-card"
+                        data-user="Gabriel"
+                    >
+
+                        <div class="friend-avatar blue">
+                            G
+                        </div>
+
+
+                        <div class="request-info">
+
+                            <strong>
+                                Gabriel
+                            </strong>
+
+                            <span>
+                                Ciência da Computação
+                            </span>
+
+                            <small>
+                                🎮 Minecraft
+                            </small>
+
+                        </div>
+
+
+                        <div class="request-actions">
+
+                            <button
+                                class="request-btn accept"
+                            >
+                                ✓ Aceitar
+                            </button>
+
+                            <button
+                                class="request-btn decline"
+                            >
+                                ✕ Recusar
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <article
+                        class="request-card"
+                        data-user="Ana"
+                    >
+
+                        <div class="friend-avatar pink">
+                            A
+                        </div>
+
+
+                        <div class="request-info">
+
+                            <strong>
+                                Ana
+                            </strong>
+
+                            <span>
+                                Sistemas de Informação
+                            </span>
+
+                            <small>
+                                🎮 Elden Ring
+                            </small>
+
+                        </div>
+
+
+                        <div class="request-actions">
+
+                            <button
+                                class="request-btn accept"
+                            >
+                                ✓ Aceitar
+                            </button>
+
+                            <button
+                                class="request-btn decline"
+                            >
+                                ✕ Recusar
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- ==========================
+                 AMIGOS ONLINE
+            =========================== -->
+
+            <section class="friends-section">
+
+                <div class="friends-section-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            ONLINE AGORA
+                        </span>
+
+                        <h2>
+                            Amigos online
+                        </h2>
+
+                    </div>
+
+                    <button
+                        class="text-button"
+                        id="seeOnlineButton"
+                    >
+                        Ver todos →
+                    </button>
+
+                </div>
+
+
+                <div class="friends-grid">
+
+
+                    <article class="friend-card">
+
+                        <div class="friend-card-top">
+
+                            <div class="friend-avatar green">
+                                M
+                            </div>
+
+                            <span class="online-dot"></span>
+
+                        </div>
+
+
+                        <div class="friend-card-info">
+
+                            <h3>
+                                Maria
+                            </h3>
+
+                            <span>
+                                Engenharia de Software
+                            </span>
+
+                            <small>
+                                🎮 Jogando Valorant
+                            </small>
+
+                        </div>
+
+
+                        <div class="friend-card-actions">
+
+                            <button
+                                class="friend-action primary"
+                            >
+                                teste
+                            </button>
+
+                            <button
+                                class="friend-action"
+                            >
+                                💬
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="friend-card">
+
+                        <div class="friend-card-top">
+
+                            <div class="friend-avatar blue">
+                                P
+                            </div>
+
+                            <span class="online-dot"></span>
+
+                        </div>
+
+
+                        <div class="friend-card-info">
+
+                            <h3>
+                                Pedro
+                            </h3>
+
+                            <span>
+                                Engenharia de Software
+                            </span>
+
+                            <small>
+                                🎮 Jogando Minecraft
+                            </small>
+
+                        </div>
+
+
+                        <div class="friend-card-actions">
+
+                            <button
+                                class="friend-action primary"
+                            >
+                                teste
+                            </button>
+
+                            <button
+                                class="friend-action"
+                            >
+                                💬
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="friend-card">
+
+                        <div class="friend-card-top">
+
+                            <div class="friend-avatar orange">
+                                L
+                            </div>
+
+                            <span class="online-dot"></span>
+
+                        </div>
+
+
+                        <div class="friend-card-info">
+
+                            <h3>
+                                Lucas
+                            </h3>
+
+                            <span>
+                                Sistemas de Informação
+                            </span>
+
+                            <small>
+                                🎮 Jogando Elden Ring
+                            </small>
+
+                        </div>
+
+
+                        <div class="friend-card-actions">
+
+                            <button
+                                class="friend-action primary"
+                            >
+                                teste
+                            </button>
+
+                            <button
+                                class="friend-action"
+                            >
+                                💬
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- ==========================
+                 TODOS OS AMIGOS
+            =========================== -->
+
+            <section class="friends-section">
+
+                <div class="friends-section-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            MINHA REDE
+                        </span>
+
+                        <h2>
+                            Todos os amigos
+                        </h2>
+
+                    </div>
+
+
+                    <div class="friend-filters">
+
+                        <button
+                            class="filter-btn active"
+                            data-filter="all"
+                        >
+                            Todos
+                        </button>
+
+                        <button
+                            class="filter-btn"
+                            data-filter="online"
+                        >
+                            Online
+                        </button>
+
+                        <button
+                            class="filter-btn"
+                            data-filter="offline"
+                        >
+                            Offline
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="all-friends-list"
+                    id="allFriendsList"
+                >
+
+
+                    <article
+                        class="all-friend-card"
+                        data-status="online"
+                        data-name="Joana"
+                    >
+
+                        <div class="friend-avatar purple">
+                            J
+                        </div>
+
+                        <div class="all-friend-info">
+
+                            <strong>
+                                Joana
+                            </strong>
+
+                            <span>
+                                🟢 Online • 🎮 Valorant
+                            </span>
+
+                        </div>
+
+                        <button class="friend-more">
+                            ⋮
+                        </button>
+
+                    </article>
+
+
+                    <article
+                        class="all-friend-card"
+                        data-status="online"
+                        data-name="Rafael"
+                    >
+
+                        <div class="friend-avatar blue">
+                            R
+                        </div>
+
+                        <div class="all-friend-info">
+
+                            <strong>
+                                Rafael
+                            </strong>
+
+                            <span>
+                                🟢 Online • 🎮 CS2
+                            </span>
+
+                        </div>
+
+                        <button class="friend-more">
+                            ⋮
+                        </button>
+
+                    </article>
+
+
+                    <article
+                        class="all-friend-card"
+                        data-status="offline"
+                        data-name="Bruno"
+                    >
+
+                        <div class="friend-avatar orange">
+                            B
+                        </div>
+
+                        <div class="all-friend-info">
+
+                            <strong>
+                                Bruno
+                            </strong>
+
+                            <span>
+                                ⚪ Offline
+                            </span>
+
+                        </div>
+
+                        <button class="friend-more">
+                            ⋮
+                        </button>
+
+                    </article>
+
+
+                    <article
+                        class="all-friend-card"
+                        data-status="offline"
+                        data-name="Carolina"
+                    >
+
+                        <div class="friend-avatar pink">
+                            C
+                        </div>
+
+                        <div class="all-friend-info">
+
+                            <strong>
+                                Carolina
+                            </strong>
+
+                            <span>
+                                ⚪ Offline
+                            </span>
+
+                        </div>
+
+                        <button class="friend-more">
+                            ⋮
+                        </button>
+
+                    </article>
+
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- ==========================
+         MODAL
+    =========================== -->
+
+    <div
+        class="friends-modal-overlay"
+        id="friendsModalOverlay"
+    >
+
+        <div class="friends-modal">
+
+            <button
+                class="modal-close"
+                id="modalClose"
+            >
+                ×
+            </button>
+
+            <div class="modal-icon">
+                👥
+            </div>
+
+            <h2>
+                Encontrar jogadores
+            </h2>
+
+            <p>
+                A busca por novos jogadores será conectada
+                ao banco de dados posteriormente.
+            </p>
+
+            <button
+                class="btn btn-primary"
+                id="modalButton"
+            >
+                Entendi
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script src="js/amigos.js"></script>
+
+</body>
+
+</html>
