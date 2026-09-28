@@ -1170,3 +1170,455 @@
     }
 
 }
+
+/* =========================================
+   ADICIONAR JOGO
+========================================= */
+
+.add-game-modal {
+
+    max-width:
+        500px;
+
+    max-height:
+        90vh;
+
+    overflow-y:
+        auto;
+}
+
+
+.add-game-heading {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    margin-bottom:
+        25px;
+}
+
+
+.add-game-icon {
+
+    width:
+        44px;
+
+    height:
+        44px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        11px;
+
+    background:
+        rgba(99, 102, 241, 0.10);
+
+    font-size:
+        21px;
+}
+
+
+.add-game-heading h2 {
+
+    margin-top:
+        3px;
+
+    font-size:
+        22px;
+}
+
+
+/* =========================================
+   FORMULÁRIO
+========================================= */
+
+.add-game-modal .form-group {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        7px;
+
+    margin-bottom:
+        15px;
+}
+
+
+.add-game-modal .form-group label {
+
+    color:
+        #cbd5e1;
+
+    font-size:
+        12px;
+
+    font-weight:
+        600;
+}
+
+
+.add-game-modal input,
+.add-game-modal select {
+
+    width:
+        100%;
+
+    padding:
+        11px 12px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius:
+        9px;
+
+    outline:
+        none;
+
+    background:
+        #111827;
+
+    color:
+        white;
+
+    font-family:
+        inherit;
+
+    font-size:
+        13px;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.add-game-modal input::placeholder {
+
+    color:
+        #64748b;
+}
+
+
+.add-game-modal input:focus,
+.add-game-modal select:focus {
+
+    border-color:
+        rgba(129, 140, 248, 0.45);
+
+    background:
+        #172033;
+}
+
+
+/* =========================================
+   AVISO FAVORITOS
+========================================= */
+
+.favorite-limit-message {
+
+    display:
+        none;
+
+    margin-top:
+        4px;
+
+    margin-bottom:
+        15px;
+
+    padding:
+        10px 12px;
+
+    border:
+        1px solid rgba(250, 204, 21, 0.14);
+
+    border-radius:
+        9px;
+
+    background:
+        rgba(250, 204, 21, 0.06);
+
+    color:
+        #facc15;
+
+    font-size:
+        11px;
+
+    line-height:
+        1.5;
+}
+
+.new-game-image {
+
+    background:
+        linear-gradient(
+            135deg,
+            #312e81,
+            #6366f1
+        );
+
+    color:
+        white;
+
+    font-size:
+        32px;
+}
+
+/* =========================================
+   MENU DE OPÇÕES DOS JOGOS
+========================================= */
+
+.game-actions {
+
+    position: absolute;
+
+    top: 10px;
+
+    right: 10px;
+
+    z-index: 20;
+}
+
+
+.game-options-button {
+
+    width: 32px;
+
+    height: 32px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: 1px solid rgba(255, 255, 255, 0.10);
+
+    border-radius: 8px;
+
+    background: rgba(3, 7, 18, 0.60);
+
+    color: white;
+
+    font-size: 19px;
+
+    cursor: pointer;
+
+    backdrop-filter: blur(8px);
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.game-options-button:hover {
+
+    background: rgba(99, 102, 241, 0.30);
+
+    border-color:
+        rgba(129, 140, 248, 0.30);
+}
+
+
+.game-action-menu {
+
+    position: absolute;
+
+    top: 38px;
+
+    right: 0;
+
+    width: 145px;
+
+    display: none;
+
+    padding: 5px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 10px;
+
+    background: #0f172a;
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.35);
+}
+
+
+.game-action-menu.active {
+
+    display: block;
+}
+
+
+.game-action-menu button {
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 9px 10px;
+
+    border: none;
+
+    border-radius: 7px;
+
+    background: transparent;
+
+    color: #cbd5e1;
+
+    text-align: left;
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+
+.game-action-menu button:hover {
+
+    background:
+        rgba(255, 255, 255, 0.06);
+
+    color: white;
+}
+
+
+.game-action-menu button.danger {
+
+    color: #f87171;
+}
+
+
+.game-action-menu button.danger:hover {
+
+    background:
+        rgba(248, 113, 113, 0.08);
+}
+
+
+/* O botão do pódio fica um pouco
+   abaixo do número da posição */
+
+.podium-card .game-actions {
+
+    top: 48px;
+}
+
+
+/* A lista de zerados precisa
+   aceitar elementos absolutos */
+
+.completed-game {
+
+    position: relative;
+}
+
+/* =========================================
+   BOTÕES DO MODAL
+========================================= */
+
+.modal-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 25px;
+}
+
+
+.modal-cancel {
+
+    padding:
+        12px 18px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.10);
+
+    border-radius:
+        9px;
+
+    background:
+        rgba(255, 255, 255, 0.04);
+
+    color:
+        #cbd5e1;
+
+    font-family:
+        inherit;
+
+    font-size:
+        14px;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.modal-cancel:hover {
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    border-color:
+        rgba(255, 255, 255, 0.15);
+
+    color:
+        white;
+}
+
+
+/* Ajuda da nota */
+
+.rating-help {
+
+    color:
+        #64748b;
+
+    font-size:
+        10px;
+
+    text-align:
+        left;
+
+    line-height:
+        1.5;
+}
