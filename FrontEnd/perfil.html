@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Meu Perfil | Overclock Society</title>
+
+    <link
+        rel="stylesheet"
+        href="css/global.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/dashboard.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/perfil.css"
+    >
+
+</head>
+
+
+<body>
+
+    <!-- ==========================
+         HEADER
+    =========================== -->
+
+    <header class="dashboard-header">
+
+        <a
+            href="dashboard.html"
+            class="logo"
+        >
+
+            <span class="logo-icon">🎮</span>
+
+            <span>
+                Overclock<span class="logo-highlight"> Society</span>
+            </span>
+
+        </a>
+
+
+        <div class="header-search">
+
+            <span class="search-icon">
+                🔍
+            </span>
+
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Pesquisar jogadores ou jogos..."
+            >
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <button
+                class="icon-button"
+                title="Notificações"
+            >
+                🔔
+            </button>
+
+
+            <button
+                class="profile-button"
+                id="profileHeaderButton"
+            >
+
+                <div class="avatar">
+                    J
+                </div>
+
+                <div class="profile-name">
+
+                    <strong>
+                        João
+                    </strong>
+
+                    <span>
+                        Online
+                    </span>
+
+                </div>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==========================
+         LAYOUT
+    =========================== -->
+
+    <div class="dashboard-layout">
+
+
+        <!-- ==========================
+             SIDEBAR
+        =========================== -->
+
+        <aside class="sidebar">
+
+            <nav>
+
+                <span class="sidebar-title">
+                    MENU
+                </span>
+
+
+                <a
+                    href="dashboard.html"
+                    class="sidebar-link"
+                >
+                    <span>🏠</span>
+                    Dashboard
+                </a>
+
+
+                <a
+                    href="perfil.html"
+                    class="sidebar-link active"
+                >
+                    <span>👤</span>
+                    Meu perfil
+                </a>
+
+
+                <a
+                    href="meus-jogos.html"
+                    class="sidebar-link"
+                >
+                    <span>🎮</span>
+                    Meus jogos
+                </a>
+
+
+                <a
+                    href="amigos.html"
+                    class="sidebar-link"
+                >
+                    <span>👥</span>
+                    Amigos
+                </a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+                    <span>📰</span>
+                    Feed
+                </a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+                    <span>🏆</span>
+                    Eventos
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+                    <span>⚙️</span>
+                    Configurações
+                </a>
+
+
+                <a
+                    href="index.html"
+                    class="sidebar-link logout-link"
+                >
+                    <span>🚪</span>
+                    Sair
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <!-- ==========================
+             CONTEÚDO
+        =========================== -->
+
+        <main class="dashboard-content profile-page">
+
+
+            <!-- ==========================
+                 PERFIL PRINCIPAL
+            =========================== -->
+
+            <section class="profile-card">
+
+                <div class="profile-cover">
+
+                    <div class="cover-pattern"></div>
+
+                    <button
+                        class="cover-edit-button"
+                        id="coverEditButton"
+                        title="Editar capa"
+                    >
+                        ✏️
+                    </button>
+
+                </div>
+
+
+                <div class="profile-main">
+
+                    <div class="profile-avatar-wrapper">
+
+                        <div class="profile-avatar">
+                            J
+                        </div>
+
+                        <span class="profile-online"></span>
+
+                        <button
+                            class="avatar-edit-button"
+                            id="avatarEditButton"
+                            title="Alterar foto"
+                        >
+                            ✏
+                        </button>
+
+                    </div>
+
+
+                    <div class="profile-identity">
+
+                        <span class="profile-status">
+                            ● ONLINE
+                        </span>
+
+                        <h1>
+                            João Silva
+                        </h1>
+
+                        <span class="profile-username">
+                            @joao123
+                        </span>
+
+                        <p>
+                            Engenharia de Software • 6º período
+                        </p>
+
+                    </div>
+
+
+                    <div class="profile-actions">
+
+                        <button
+    type="button"
+    class="btn btn-primary"
+    id="editProfileButton"
+>
+    ✏️ Editar Perfil
+</button>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-bio">
+
+                    <p id="bioText">
+                        Apaixonado por RPGs, jogos de
+                        aventura e experiências single player.
+                        Sempre procurando conhecer novos jogos
+                        e novos jogadores da faculdade.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==========================
+                 ESTATÍSTICAS
+            =========================== -->
+
+            <section class="profile-stats">
+
+                <div class="profile-stat">
+
+                    <span class="profile-stat-icon">
+                        🎮
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            24
+                        </strong>
+
+                        <span>
+                            Jogos
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-stat">
+
+                    <span class="profile-stat-icon">
+                        ⭐
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            3
+                        </strong>
+
+                        <span>
+                            Favoritos
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-stat">
+
+                    <span class="profile-stat-icon">
+                        👥
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            24
+                        </strong>
+
+                        <span>
+                            Amigos
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="profile-stat">
+
+                    <span class="profile-stat-icon">
+                        🏆
+                    </span>
+
+                    <div>
+
+                        <strong>
+                            14
+                        </strong>
+
+                        <span>
+                            Conquistas
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ==========================
+                 GRID PRINCIPAL
+            =========================== -->
+
+            <section class="profile-content-grid">
+
+
+                <!-- SOBRE -->
+
+                <article class="profile-info-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <span class="section-label">
+                                PERFIL
+                            </span>
+
+                            <h2>
+                                Sobre mim
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="about-list">
+
+                        <div class="about-item">
+
+                            <span class="about-icon">
+                                🎓
+                            </span>
+
+                            <div>
+
+                                <span>
+                                    Curso
+                                </span>
+
+                                <strong>
+                                    Engenharia de Software
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="about-item">
+
+                            <span class="about-icon">
+                                📚
+                            </span>
+
+                            <div>
+
+                                <span>
+                                    Período
+                                </span>
+
+                                <strong>
+                                    6º período
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="about-item">
+
+                            <span class="about-icon">
+                                📅
+                            </span>
+
+                            <div>
+
+                                <span>
+                                    Entrou na comunidade
+                                </span>
+
+                                <strong>
+                                    Setembro de 2026
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+
+                <!-- PLATAFORMAS -->
+
+                <article class="profile-info-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <span class="section-label">
+                                GAMING
+                            </span>
+
+                            <h2>
+                                Plataformas
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="platform-list">
+
+                        <div class="platform-item">
+
+                            <div class="platform-icon pc">
+                                🖥️
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    PC
+                                </strong>
+
+                                <span>
+                                    Principal
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="platform-item">
+
+                            <div class="platform-icon playstation">
+                                🎮
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    PlayStation 5
+                                </strong>
+
+                                <span>
+                                    Também jogo
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                </article>
+
+
+                <!-- GÊNEROS -->
+
+                <article class="profile-info-card genres-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <span class="section-label">
+                                PREFERÊNCIAS
+                            </span>
+
+                            <h2>
+                                Gêneros favoritos
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="genre-tags">
+
+                        <span>
+                            RPG
+                        </span>
+
+                        <span>
+                            Ação
+                        </span>
+
+                        <span>
+                            Aventura
+                        </span>
+
+                        <span>
+                            Soulslike
+                        </span>
+
+                        <span>
+                            Sandbox
+                        </span>
+
+                    </div>
+
+                </article>
+
+
+                <!-- STATUS -->
+
+                <article class="profile-info-card gaming-status-card">
+
+                    <div class="card-heading">
+
+                        <div>
+
+                            <span class="section-label">
+                                STATUS
+                            </span>
+
+                            <h2>
+                                Atualmente
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="current-game">
+
+                        <div class="current-game-image">
+                            ER
+                        </div>
+
+                        <div>
+
+                            <span>
+                                Jogando agora
+                            </span>
+
+                            <strong>
+                                Elden Ring
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- ==========================
+                 FAVORITOS
+            =========================== -->
+
+            <section class="profile-section">
+
+                <div class="profile-section-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            COLEÇÃO
+                        </span>
+
+                        <h2>
+                            Jogos favoritos
+                        </h2>
+
+                    </div>
+
+
+                    <a
+                        href="meus-jogos.html"
+                        class="text-button"
+                    >
+                        Ver meus jogos →
+                    </a>
+
+                </div>
+
+
+                <div class="profile-games-grid">
+
+
+                    <article class="profile-game-card">
+
+                        <div class="profile-game-image elden-ring-profile">
+                            ER
+                        </div>
+
+                        <div class="profile-game-info">
+
+                            <div>
+
+                                <span>
+                                    1º FAVORITO
+                                </span>
+
+                                <h3>
+                                    Elden Ring
+                                </h3>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 5.0
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="profile-game-card">
+
+                        <div class="profile-game-image hollow-profile">
+                            HK
+                        </div>
+
+                        <div class="profile-game-info">
+
+                            <div>
+
+                                <span>
+                                    2º FAVORITO
+                                </span>
+
+                                <h3>
+                                    Hollow Knight
+                                </h3>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 4.9
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="profile-game-card">
+
+                        <div class="profile-game-image minecraft-profile">
+                            MC
+                        </div>
+
+                        <div class="profile-game-info">
+
+                            <div>
+
+                                <span>
+                                    3º FAVORITO
+                                </span>
+
+                                <h3>
+                                    Minecraft
+                                </h3>
+
+                            </div>
+
+                            <strong>
+                                ⭐ 4.8
+                            </strong>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+    </div>
+
+
+    <!-- ==========================
+         MODAL DE EDIÇÃO
+    =========================== -->
+
+    <div
+    class="profile-modal-overlay"
+    id="profileModalOverlay"
+>
+
+    <div class="profile-modal">
+
+        <button
+            class="modal-close"
+            id="modalClose"
+            type="button"
+        >
+            ×
+        </button>
+
+
+        <div class="modal-heading">
+
+            <div class="modal-heading-icon">
+                ✏️
+            </div>
+
+            <div>
+
+                <span class="section-label">
+                    PERSONALIZAÇÃO
+                </span>
+
+                <h2>
+                    Editar perfil
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <form id="profileForm">
+
+
+            <!-- ==========================
+                 IDENTIDADE
+            =========================== -->
+
+            <div class="edit-section">
+
+                <div class="edit-section-title">
+                    Identidade
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="profileName">
+                            Nome
+                        </label>
+
+                        <input
+                            type="text"
+                            id="profileName"
+                            value="João Silva"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="profileUsername">
+                            Nome de usuário
+                        </label>
+
+                        <input
+                            type="text"
+                            id="profileUsername"
+                            value="joao123"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="profileCourse">
+                            Curso
+                        </label>
+
+                        <input
+                            type="text"
+                            id="profileCourse"
+                            value="Engenharia de Software"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="profileSemester">
+                            Período
+                        </label>
+
+                        <select id="profileSemester">
+
+                            <option value="1">1º período</option>
+                            <option value="2">2º período</option>
+                            <option value="3">3º período</option>
+                            <option value="4">4º período</option>
+                            <option value="5">5º período</option>
+                            <option value="6" selected>6º período</option>
+                            <option value="7">7º período</option>
+                            <option value="8">8º período</option>
+                            <option value="9">9º período</option>
+                            <option value="10">10º período</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="profileJoinDate">
+                            Entrou na comunidade
+                        </label>
+
+                        <input
+                            type="month"
+                            id="profileJoinDate"
+                            value="2026-09"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="profileStatus">
+                            Status
+                        </label>
+
+                        <select id="profileStatus">
+
+                            <option value="online" selected>
+                                🟢 Online
+                            </option>
+
+                            <option value="away">
+                                🟡 Ausente
+                            </option>
+
+                            <option value="offline">
+                                ⚪ Offline
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================
+                 SOBRE
+            =========================== -->
+
+            <div class="edit-section">
+
+                <div class="edit-section-title">
+                    Sobre mim
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="profileBio">
+                        Biografia
+                    </label>
+
+                    <textarea
+                        id="profileBio"
+                        rows="4"
+                    >Apaixonado por RPGs, jogos de aventura e experiências single player. Sempre procurando conhecer novos jogos e novos jogadores da faculdade.</textarea>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================
+                 VISUAL
+            =========================== -->
+
+            <div class="edit-section">
+
+                <div class="edit-section-title">
+                    Aparência
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="profileAvatar">
+                            Avatar
+                        </label>
+
+                        <input
+                            type="file"
+                            id="profileAvatar"
+                            accept="image/*"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="profileCover">
+                            Capa
+                        </label>
+
+                        <input
+                            type="file"
+                            id="profileCover"
+                            accept="image/*"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================
+                 PLATAFORMAS
+            =========================== -->
+
+            <div class="edit-section">
+
+                <div class="edit-section-title">
+                    Plataformas
+                </div>
+
+
+                <div class="checkbox-grid">
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="platform"
+                            value="PC"
+                            checked
+                        >
+
+                        <span>
+                            🖥️ PC
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="platform"
+                            value="PlayStation 5"
+                            checked
+                        >
+
+                        <span>
+                            🎮 PlayStation 5
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="platform"
+                            value="Xbox Series"
+                        >
+
+                        <span>
+                            🎮 Xbox Series
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="platform"
+                            value="Nintendo Switch"
+                        >
+
+                        <span>
+                            🕹️ Nintendo Switch
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================
+                 GÊNEROS
+            =========================== -->
+
+            <div class="edit-section">
+
+                <div class="edit-section-title">
+                    Gêneros favoritos
+                </div>
+
+
+                <div class="checkbox-grid">
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="genre"
+                            value="RPG"
+                            checked
+                        >
+
+                        <span>
+                            RPG
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="genre"
+                            value="Ação"
+                            checked
+                        >
+
+                        <span>
+                            Ação
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="genre"
+                            value="Aventura"
+                            checked
+                        >
+
+                        <span>
+                            Aventura
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="genre"
+                            value="Soulslike"
+                            checked
+                        >
+
+                        <span>
+                            Soulslike
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="genre"
+                            value="Sandbox"
+                            checked
+                        >
+
+                        <span>
+                            Sandbox
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="genre"
+                            value="FPS"
+                        >
+
+                        <span>
+                            FPS
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="genre"
+                            value="Terror"
+                        >
+
+                        <span>
+                            Terror
+                        </span>
+
+                    </label>
+
+
+                    <label class="check-option">
+
+                        <input
+                            type="checkbox"
+                            name="genre"
+                            value="Estratégia"
+                        >
+
+                        <span>
+                            Estratégia
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================
+                 JOGOS FAVORITOS
+            =========================== -->
+
+            <div class="edit-section">
+
+                <div class="edit-section-title">
+                    Top 3 favoritos
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="favoriteGame1">
+                        🥇 1º lugar
+                    </label>
+
+                    <input
+                        type="text"
+                        id="favoriteGame1"
+                        value="Elden Ring"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="favoriteGame2">
+                        🥈 2º lugar
+                    </label>
+
+                    <input
+                        type="text"
+                        id="favoriteGame2"
+                        value="Hollow Knight"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="favoriteGame3">
+                        🥉 3º lugar
+                    </label>
+
+                    <input
+                        type="text"
+                        id="favoriteGame3"
+                        value="Minecraft"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================
+                 BOTÕES
+            =========================== -->
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel"
+                    id="modalCancel"
+                >
+                    Cancelar
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Salvar alterações
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+    <script src="js/perfil.js"></script>
+
+</body>
+
+</html>

@@ -138,7 +138,7 @@
 
 
                 <a
-                    href="#"
+                    href="perfil.html"
                     class="sidebar-link"
                 >
 
@@ -257,17 +257,12 @@
 
 
                 <button
-                    class="btn btn-primary"
-                    id="addGameButton"
-                >
-
-                    <span>
-                        +
-                    </span>
-
-                    Adicionar jogo
-
-                </button>
+    type="button"
+    class="btn btn-primary"
+    id="addGameButton"
+>
+    + Adicionar jogo
+</button>
 
             </section>
 
@@ -796,9 +791,6 @@
 
                         </div>
 
-                        <span class="completed-status">
-                            ✓ Zerado
-                        </span>
 
                     </article>
 
@@ -833,9 +825,6 @@
 
                         </div>
 
-                        <span class="completed-status">
-                            ✓ Zerado
-                        </span>
 
                     </article>
 
@@ -870,9 +859,6 @@
 
                         </div>
 
-                        <span class="completed-status">
-                            ✓ Zerado
-                        </span>
 
                     </article>
 
@@ -907,10 +893,6 @@
 
                         </div>
 
-                        <span class="completed-status">
-                            ✓ Zerado
-                        </span>
-
                     </article>
 
 
@@ -925,46 +907,249 @@
 
 
     <!-- ==========================
-         MODAL
-    =========================== -->
+     MODAL ADICIONAR JOGO
+=========================== -->
 
-    <div
-        class="game-modal-overlay"
-        id="gameModalOverlay"
-    >
+<div
+    class="game-modal-overlay"
+    id="gameModalOverlay"
+>
 
-        <div class="game-modal">
+    <div class="game-modal add-game-modal">
 
-            <button
-                class="modal-close"
-                id="gameModalClose"
-            >
-                ×
-            </button>
+        <button
+            class="modal-close"
+            id="gameModalClose"
+            type="button"
+        >
+            ×
+        </button>
 
-            <div class="modal-icon">
+
+        <div class="add-game-heading">
+
+            <div class="add-game-icon">
                 🎮
             </div>
 
-            <h2>
+            <div>
+
+                <span class="section-label">
+                    MINHA COLEÇÃO
+                </span>
+
+                <h2 id="gameModalTitle">
                 Adicionar jogo
-            </h2>
+                </h2>
 
-            <p>
-                O sistema de cadastro de jogos será integrado
-                ao banco de dados posteriormente.
-            </p>
-
-            <button
-                class="btn btn-primary"
-                id="gameModalButton"
-            >
-                Entendi
-            </button>
+            </div>
 
         </div>
 
+
+        <form id="addGameForm">
+
+
+            <!-- NOME -->
+
+            <div class="form-group">
+
+    <label for="gameName">
+        Jogo
+    </label>
+
+    <select
+        id="gameName"
+        required
+    >
+
+        <option
+            value=""
+            selected
+            disabled
+        >
+            Selecione um jogo...
+        </option>
+
+        <option value="Elden Ring">
+            Elden Ring
+        </option>
+
+        <option value="Hollow Knight">
+            Hollow Knight
+        </option>
+
+        <option value="Minecraft">
+            Minecraft
+        </option>
+
+        <option value="Valorant">
+            Valorant
+        </option>
+
+        <option value="Terraria">
+            Terraria
+        </option>
+
+        <option value="Hades">
+            Hades
+        </option>
+
+        <option value="Sekiro: Shadows Die Twice">
+            Sekiro: Shadows Die Twice
+        </option>
+
+        <option value="Cyberpunk 2077">
+            Cyberpunk 2077
+        </option>
+
+        <option value="Baldur's Gate 3">
+            Baldur's Gate 3
+        </option>
+
+        <option value="The Witcher 3">
+            The Witcher 3
+        </option>
+
+    </select>
+
+</div>
+
+
+            <!-- CATEGORIA -->
+
+            <div class="form-group">
+
+                <label for="gameCategory">
+                    Categoria
+                </label>
+
+                <select
+                    id="gameCategory"
+                    required
+                >
+
+                    <option
+                        value="liked"
+                        selected
+                    >
+                        ❤️ Jogos Que Gosto
+                    </option>
+
+                    <option
+                        value="favorite"
+                    >
+                        🏆 Jogos Favoritos
+                    </option>
+
+                    <option
+                        value="completed"
+                    >
+                        ✅ Jogos Zerados
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- POSIÇÃO DO FAVORITO -->
+
+            <div
+                class="form-group"
+                id="favoritePositionGroup"
+                style="display: none;"
+            >
+
+                <label for="favoritePosition">
+                    Posição no pódio
+                </label>
+
+                <select id="favoritePosition">
+
+                    <option value="1">
+                        🥇 1º lugar
+                    </option>
+
+                    <option value="2">
+                        🥈 2º lugar
+                    </option>
+
+                    <option value="3">
+                        🥉 3º lugar
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- NOTA -->
+
+            <div class="form-group">
+
+    <label for="gameRating">
+        Nota
+    </label>
+
+    <input
+        type="text"
+        id="gameRating"
+        inputmode="decimal"
+        maxlength="4"
+        placeholder="Ex: 7,8"
+        autocomplete="off"
+        required
+    >
+
+    <small class="rating-help">
+        Digite uma nota entre 0 e 10.
+        Exemplo: 7,8
+    </small>
+
+</div>
+
+
+            <!-- AVISO -->
+
+            <div
+                class="favorite-limit-message"
+                id="favoriteLimitMessage"
+            >
+                Você pode ter no máximo 3 jogos favoritos.
+            </div>
+
+
+            <!-- BOTÕES -->
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="modal-cancel"
+                    id="gameModalCancel"
+                >
+                    Cancelar
+                </button>
+
+
+                <button
+    type="submit"
+    class="btn btn-primary"
+    id="addGameSubmitButton"
+>
+    Adicionar jogo
+</button>
+
+            </div>
+
+
+        </form>
+
     </div>
+
+</div>
 
 
     <script src="js/meus-jogos.js"></script>
