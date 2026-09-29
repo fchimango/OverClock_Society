@@ -1,6 +1,6 @@
 # OverClock Society 🎮⚡
 
-> **A Fraternidade Gamer & Hub de Networking para Estudantes de Engenharia de Software**
+> **A Fraternidade Gamer & Hub de Networking para Estudantes de Engenharia de Software...**
 
 ## 📌 Sobre o Projeto
 A **OverClock Society** é um portal web exclusivo criado para conectar estudantes de Engenharia de Software, quebrando o isolamento entre calouros e veteranos através da paixão em comum por jogos digitais.
