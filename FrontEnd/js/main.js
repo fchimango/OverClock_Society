@@ -97,7 +97,7 @@ registerButton.addEventListener("click", () => {
 });
 
 
-ctaButton.addEventListener("click", () => {
+ctaButton?.addEventListener("click", () => {
 
     openModal(
         "Crie seu perfil",

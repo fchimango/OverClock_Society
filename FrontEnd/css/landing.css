@@ -1,0 +1,106 @@
+/* Countdown e formulário de leads */
+
+.countdown {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 32px 0;
+    flex-wrap: wrap;
+}
+
+.countdown-item {
+    min-width: 88px;
+    padding: 16px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    text-align: center;
+}
+
+.countdown-item strong {
+    display: block;
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--primary-light);
+    font-variant-numeric: tabular-nums;
+}
+
+.countdown-item span {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+}
+
+.lead-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 440px;
+    margin: 0 auto;
+}
+
+.lead-form input[type="text"],
+.lead-form input[type="email"] {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font: inherit;
+}
+
+.lead-form input:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
+/* Campo escondido anti-bot: humanos não veem, bots preenchem */
+.hp-field {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.lead-form button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.lead-feedback {
+    min-height: 1.4em;
+    margin: 4px 0 0;
+    font-size: 0.95rem;
+}
+
+.lead-feedback.success {
+    color: #4ade80;
+}
+
+.lead-feedback.error {
+    color: #f87171;
+}
+
+.lead-feedback.info {
+    color: var(--primary-light);
+}
+
+@media (max-width: 480px) {
+    .countdown {
+        gap: 8px;
+    }
+
+    .countdown-item {
+        min-width: 68px;
+        padding: 12px 8px;
+    }
+
+    .countdown-item strong {
+        font-size: 1.6rem;
+    }
+}
