@@ -5,14 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="description"
-        contOverclock Society - A comunidade gamer da faculdade."
-    >
+    <meta name="description" contOverclock Society - A comunidade gamer da faculdade.">
 
     <tOverclock Society | Comunidade Gamer</title>
 
-    <link rel="stylesheet" href="css/global.css">
+        <link rel="stylesheet" href="css/global.css">
+
+        <link rel="stylesheet" href="css/landing.css">
+
+        <link rel="icon"
+            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
 </head>
 
 <body>
@@ -51,12 +53,7 @@
         </div>
 
 
-        <button
-            class="menu-toggle"
-            id="menuToggle"
-            aria-label="Abrir menu"
-            aria-expanded="false"
-        >
+        <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu" aria-expanded="false">
             ☰
         </button>
 
@@ -97,15 +94,12 @@
 
                 <div class="hero-buttons">
 
-                    <a
-                        href="dashboard.html"
-                        class="btn btn-primary"
->
-                            Começar agora
+                    <a href="dashboard.html" class="btn btn-primary">
+                        Começar agora
 
-                    <span class="button-arrow">
-        →
-                     </span>
+                        <span class="button-arrow">
+                            →
+                        </span>
                     </a>
 
 
@@ -175,7 +169,7 @@
                 </h2>
 
                 <p>
-        Overclock Society foi pensado para aproximar os
+                    Overclock Society foi pensado para aproximar os
                     gamers da faculdade e facilitar novas conexões.
                 </p>
 
@@ -259,28 +253,44 @@
              CTA
         ========================== -->
 
-        <section class="cta">
+        <section class="cta" id="entrar">
 
             <div class="cta-content">
 
-                <span class="section-label">
-                    PRONTO PARA COMEÇAR?
-                </span>
+                <span class="section-label">LANÇAMENTO EM BREVE</span>
 
                 <h2>
                     Seu próximo squad
-                    <span>está aqui.</span>
+                    <span>está chegando.</span>
                 </h2>
 
                 <p>
-                    Crie seu perfil e comece a encontrar
-                    outros jogadores da faculdade.
+                    A OverClock Society abre as portas em breve.
+                    Entre na lista e seja um dos primeiros membros.
                 </p>
 
-                <button class="btn btn-primary" id="ctaButton">
-                    Criar minha conta
-                    <span class="button-arrow">→</span>
-                </button>
+                <div class="countdown" id="countdown" role="timer">
+                    <div class="countdown-item"><strong id="cdDays">--</strong><span>dias</span></div>
+                    <div class="countdown-item"><strong id="cdHours">--</strong><span>horas</span></div>
+                    <div class="countdown-item"><strong id="cdMinutes">--</strong><span>min</span></div>
+                    <div class="countdown-item"><strong id="cdSeconds">--</strong><span>seg</span></div>
+                </div>
+
+                <form class="lead-form" id="leadForm" novalidate>
+                    <input type="text" id="leadName" name="name" placeholder="Seu nome" autocomplete="name" required
+                        minlength="2" maxlength="120">
+                    <input type="email" id="leadEmail" name="email" placeholder="Seu melhor e-mail" autocomplete="email"
+                        required>
+                    <input type="text" id="leadContact" name="contact" placeholder="Discord ou Steam (opcional)"
+                        maxlength="60">
+                    <input type="text" name="website" class="hp-field" tabindex="-1" autocomplete="off"
+                        aria-hidden="true">
+                    <button type="submit" class="btn btn-primary" id="leadSubmit">
+                        Entrar na lista
+                        <span class="button-arrow">→</span>
+                    </button>
+                    <p class="lead-feedback" id="leadFeedback" role="status" aria-live="polite"></p>
+                </form>
 
             </div>
 
@@ -341,11 +351,7 @@
 
         <div class="modal" role="dialog" aria-modal="true">
 
-            <button
-                class="modal-close"
-                id="modalClose"
-                aria-label="Fechar"
-            >
+            <button class="modal-close" id="modalClose" aria-label="Fechar">
                 ×
             </button>
 
@@ -361,10 +367,7 @@
                 Em breve você poderá criar seu perfil gamer.
             </p>
 
-            <button
-                class="btn btn-primary modal-button"
-                id="modalButton"
-            >
+            <button class="btn btn-primary modal-button" id="modalButton">
                 Entendi
             </button>
 
@@ -374,6 +377,8 @@
 
 
     <script src="js/main.js"></script>
+
+    <script src="js/leads.js"></script>
 
 </body>
 
