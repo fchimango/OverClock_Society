@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Feed | Overclock Society</title>
+
+    <link
+    rel="stylesheet"
+    href="../css/global.css"
+>
+
+<link
+    rel="stylesheet"
+    href="../css/dashboard.css"
+>
+
+<link
+    rel="stylesheet"
+    href="../css/feed.css"
+>
+
+    <link rel="stylesheet" href="../css/notifications.css">
+
+</head>
+
+
+<body>
+
+    <!-- ==========================
+         HEADER
+    =========================== -->
+
+    <header class="dashboard-header">
+
+        <a
+            href="dashboard.html"
+            class="logo"
+        >
+
+            <span class="logo-icon">
+                🎮
+            </span>
+
+            <span>
+                Overclock<span class="logo-highlight">Society</span>
+            </span>
+
+        </a>
+
+
+        <div class="header-search">
+
+            <span class="search-icon">
+                🔍
+            </span>
+
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Pesquisar no feed..."
+            >
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <button
+                class="icon-button"
+                title="Notificações"
+            >
+                🔔
+            </button>
+
+
+            <button
+                class="profile-button"
+                id="profileButton"
+            >
+
+                <div class="avatar">
+                    J
+                </div>
+
+                <div class="profile-name">
+
+                    <strong>
+                        João
+                    </strong>
+
+                    <span>
+                        Online
+                    </span>
+
+                </div>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==========================
+         LAYOUT
+    =========================== -->
+
+    <div class="dashboard-layout">
+
+        <!-- ==========================
+             SIDEBAR
+        =========================== -->
+
+        <aside class="sidebar">
+
+            <nav>
+
+                <span class="sidebar-title">
+                    MENU
+                </span>
+
+
+                <a
+                    href="dashboard.html"
+                    class="sidebar-link"
+                >
+                    <span>🏠</span>
+                    Dashboard
+                </a>
+
+
+                <a
+                    href="perfil.html"
+                    class="sidebar-link"
+                >
+                    <span>👤</span>
+                    Meu perfil
+                </a>
+
+
+                <a
+                    href="meus-jogos.html"
+                    class="sidebar-link"
+                >
+                    <span>🎮</span>
+                    Meus jogos
+                </a>
+
+
+                <a
+                    href="amigos.html"
+                    class="sidebar-link"
+                >
+                    <span>👥</span>
+                    Amigos
+                </a>
+
+
+                <a
+                    href="feed.html"
+                    class="sidebar-link active"
+                >
+                    <span>📰</span>
+                    Feed
+                </a>
+
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+                    <span>🏆</span>
+                    Eventos
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <a
+                    href="#"
+                    class="sidebar-link"
+                >
+                    <span>⚙️</span>
+                    Configurações
+                </a>
+
+
+                <a
+                    href="index.html"
+                    class="sidebar-link logout-link"
+                >
+                    <span>🚪</span>
+                    Sair
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <!-- ==========================
+             CONTEÚDO
+        =========================== -->
+
+        <main class="dashboard-content feed-page">
+
+            <div class="feed-layout">
+
+                <!-- ==========================
+                     FEED PRINCIPAL
+                =========================== -->
+
+                <section class="feed-main">
+
+                    <div class="feed-header">
+
+                        <div>
+
+                            <span class="welcome-label">
+                                COMUNIDADE
+                            </span>
+
+                            <h1>
+                                Feed
+                            </h1>
+
+                            <p>
+                                Compartilhe momentos, opiniões e jogos
+                                com a comunidade.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ==========================
+                         CRIAR POST
+                    =========================== -->
+
+                    <section class="post-composer">
+
+                        <div class="composer-avatar">
+                            J
+                        </div>
+
+
+                        <div class="composer-content">
+
+                            <textarea
+                                id="postInput"
+                                maxlength="280"
+                                placeholder="O que está jogando hoje?"
+                            ></textarea>
+
+
+                            <div class="composer-footer">
+
+                                <div class="composer-info">
+
+                                    <span>
+                                        🎮 Use hashtags como
+                                        <strong>#eldenring</strong>
+                                    </span>
+
+                                    <span id="characterCounter">
+                                        0 / 280
+                                    </span>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    class="btn btn-primary"
+                                    id="publishPostButton"
+                                >
+                                    Publicar
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ==========================
+                         FILTRO
+                    =========================== -->
+
+                    <div
+                        class="feed-filter"
+                        id="feedFilter"
+                    >
+
+                        <span>
+                            Exibindo posts sobre
+                            <strong id="activeHashtag"></strong>
+                        </span>
+
+
+                        <button
+                            type="button"
+                            id="clearFilterButton"
+                        >
+                            Limpar filtro
+                        </button>
+
+                    </div>
+
+
+                    <!-- ==========================
+                         POSTS
+                    =========================== -->
+
+                    <section
+                        class="posts-list"
+                        id="postsList"
+                    >
+                    </section>
+
+                </section>
+
+
+                <!-- ==========================
+                     LATERAL
+                =========================== -->
+
+                <aside class="feed-right">
+
+                    <section class="feed-side-card">
+
+                        <span class="section-label">
+                            HASHTAGS
+                        </span>
+
+                        <h2>
+                            Jogos em destaque
+                        </h2>
+
+
+                        <div
+                            class="trending-games"
+                            id="trendingGames"
+                        >
+                        </div>
+
+                    </section>
+
+
+                    <section class="feed-side-card">
+
+                        <span class="section-label">
+                            SOBRE O FEED
+                        </span>
+
+                        <p class="feed-description">
+                            Hashtags reconhecidas pelo sistema representam
+                            jogos da plataforma. Clique em uma para visualizar
+                            publicações relacionadas.
+                        </p>
+
+                    </section>
+
+                </aside>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <script src="../js/notifications.js"></script>
+
+    <script src="../js/feed.js"></script>
+
+</body>
+
+</html>

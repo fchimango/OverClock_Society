@@ -64,8 +64,137 @@ profileButton.addEventListener(
     "click",
     () => {
 
-        alert(
-            "A página de perfil será implementada futuramente."
+        window.location.href =
+            "perfil.html";
+
+    }
+);
+
+
+/* =========================================
+   SINCRONIZAÇÃO COM NOTIFICAÇÕES
+========================================= */
+
+function updateRequestCounter() {
+
+    const counter =
+        document.querySelector(
+            ".request-counter"
+        );
+
+
+    if (!counter) {
+        return;
+    }
+
+
+    const count =
+        document.querySelectorAll(
+            ".request-card"
+        ).length;
+
+
+    counter.textContent =
+        `${count} ${
+            count === 1
+                ? "pendente"
+                : "pendentes"
+        }`;
+}
+
+
+function removeRequestCardByUser(
+    userName,
+    status = "declined"
+) {
+
+    const card =
+        Array.from(
+            document.querySelectorAll(
+                ".request-card"
+            )
+        ).find(
+            (item) =>
+                item.dataset.user ===
+                userName
+        );
+
+
+    if (!card) {
+        return;
+    }
+
+
+    card.style.opacity = "0";
+
+    card.style.transform =
+        status === "accepted"
+            ? "translateX(30px)"
+            : "translateX(-30px)";
+
+
+    setTimeout(
+        () => {
+
+            if (card.isConnected) {
+                card.remove();
+            }
+
+
+            updateRequestCounter();
+
+        },
+        250
+    );
+}
+
+
+function syncFriendRequestsWithNotifications() {
+
+    if (
+        !window.OverclockNotifications
+    ) {
+        return;
+    }
+
+
+    document
+        .querySelectorAll(
+            ".request-card"
+        )
+        .forEach(
+            (card) => {
+
+                const status =
+                    window
+                        .OverclockNotifications
+                        .getFriendRequestStatus(
+                            card.dataset.user
+                        );
+
+
+                if (
+                    status !== "pending"
+                ) {
+
+                    card.remove();
+                }
+
+            }
+        );
+
+
+    updateRequestCounter();
+}
+
+
+window.addEventListener(
+    "overclock:friend-request-resolved",
+    (event) => {
+
+        removeRequestCardByUser(
+            event.detail.friendName,
+            event.detail.status
         );
 
     }
@@ -94,6 +223,20 @@ document
                 const userName =
                     card.dataset.user;
 
+
+                if (
+                    window.OverclockNotifications
+                ) {
+
+                    window
+                        .OverclockNotifications
+                        .resolveFriendRequest(
+                            userName,
+                            "accepted"
+                        );
+                }
+
+
                 card.style.opacity = "0";
                 card.style.transform =
                     "translateX(30px)";
@@ -102,6 +245,8 @@ document
                 setTimeout(() => {
 
                     card.remove();
+
+                    updateRequestCounter();
 
                 }, 250);
 
@@ -121,6 +266,20 @@ document
                 const userName =
                     card.dataset.user;
 
+
+                if (
+                    window.OverclockNotifications
+                ) {
+
+                    window
+                        .OverclockNotifications
+                        .resolveFriendRequest(
+                            userName,
+                            "declined"
+                        );
+                }
+
+
                 card.style.opacity = "0";
                 card.style.transform =
                     "translateX(-30px)";
@@ -129,6 +288,8 @@ document
                 setTimeout(() => {
 
                     card.remove();
+
+                    updateRequestCounter();
 
                 }, 250);
 
@@ -390,6 +551,110 @@ document.addEventListener(
 );
 
 
+/* =========================================
+   PERFIL DE OUTRO USUÁRIO
+
+   Nesta fase apenas Maria possui um perfil
+   demonstrativo.
+========================================= */
+
+function setupDemoUserProfileLinks() {
+
+    const mariaCard =
+        Array.from(
+            document.querySelectorAll(
+                ".friend-card"
+            )
+        ).find(
+            (card) =>
+                card.querySelector(
+                    ".friend-card-info h3"
+                )?.textContent.trim() ===
+                    "Maria"
+        );
+
+
+    if (!mariaCard) {
+
+        return;
+    }
+
+
+    const triggers = [
+
+        mariaCard.querySelector(
+            ".friend-avatar"
+        ),
+
+        mariaCard.querySelector(
+            ".friend-card-info h3"
+        )
+
+    ].filter(Boolean);
+
+
+    const openMariaProfile = () => {
+
+        window.location.href =
+            "perfil-usuario.html?user=maria";
+    };
+
+
+    triggers.forEach(
+        (element) => {
+
+            element.classList.add(
+                "user-profile-link"
+            );
+
+            element.tabIndex = 0;
+
+            element.setAttribute(
+                "role",
+                "link"
+            );
+
+            element.setAttribute(
+                "aria-label",
+                "Abrir perfil de Maria"
+            );
+
+
+            element.addEventListener(
+                "click",
+                openMariaProfile
+            );
+
+
+            element.addEventListener(
+                "keydown",
+                (event) => {
+
+                    if (
+                        event.key === "Enter" ||
+                        event.key === " "
+                    ) {
+
+                        event.preventDefault();
+                        openMariaProfile();
+                    }
+                }
+            );
+
+        }
+    );
+}
+
+
+setupDemoUserProfileLinks();
+
+
 console.log(
     "👥 Página Amigos carregada."
 );
+
+/* =========================================
+   INICIALIZAÇÃO DAS SOLICITAÇÕES
+========================================= */
+
+syncFriendRequestsWithNotifications();

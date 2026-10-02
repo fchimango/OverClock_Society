@@ -1,0 +1,678 @@
+/* =========================================
+   PÁGINA
+========================================= */
+
+.feed-page {
+    padding-bottom: 100px;
+}
+
+
+.feed-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 25px;
+
+    max-width: 1050px;
+    margin: 0 auto;
+}
+
+
+.feed-main {
+    min-width: 0;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.feed-header {
+    margin-bottom: 25px;
+}
+
+
+.feed-header h1 {
+    margin: 6px 0;
+    font-size: 36px;
+}
+
+
+.feed-header p {
+    color: #64748b;
+    font-size: 13px;
+}
+
+
+/* =========================================
+   CRIAR POST
+========================================= */
+
+.post-composer {
+    display: flex;
+    gap: 14px;
+
+    padding: 20px;
+
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px;
+
+    background: rgba(15, 23, 42, 0.55);
+
+    margin-bottom: 18px;
+}
+
+
+.composer-avatar,
+.post-avatar,
+.comment-avatar {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #8b5cf6
+        );
+
+    color: white;
+
+    font-weight: 700;
+}
+
+
+.composer-avatar {
+    width: 45px;
+    height: 45px;
+}
+
+
+.composer-content {
+    flex: 1;
+}
+
+
+.composer-content textarea {
+    width: 100%;
+    min-height: 95px;
+
+    resize: none;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: #e2e8f0;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    line-height: 1.6;
+}
+
+
+.composer-content textarea::placeholder {
+    color: #64748b;
+}
+
+
+.composer-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding-top: 15px;
+
+    border-top:
+        1px solid rgba(255, 255, 255, 0.06);
+}
+
+
+.composer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    color: #64748b;
+    font-size: 10px;
+}
+
+
+.composer-info strong {
+    color: #818cf8;
+}
+
+
+/* =========================================
+   FILTRO
+========================================= */
+
+.feed-filter {
+    display: none;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 12px 16px;
+
+    margin-bottom: 15px;
+
+    border:
+        1px solid rgba(99, 102, 241, 0.18);
+
+    border-radius: 12px;
+
+    background:
+        rgba(99, 102, 241, 0.06);
+
+    color: #94a3b8;
+
+    font-size: 11px;
+}
+
+
+.feed-filter.active {
+    display: flex;
+}
+
+
+.feed-filter strong {
+    color: #818cf8;
+}
+
+
+.feed-filter button {
+    border: none;
+    background: transparent;
+
+    color: #818cf8;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   LISTA DE POSTS
+========================================= */
+
+.posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.post-card {
+    padding: 18px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
+
+    border-radius: 16px;
+
+    background:
+        rgba(15, 23, 42, 0.48);
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.post-card:hover {
+    border-color:
+        rgba(129, 140, 248, 0.18);
+
+    background:
+        rgba(15, 23, 42, 0.72);
+}
+
+
+.post-header {
+    display: flex;
+    gap: 11px;
+}
+
+
+.post-avatar {
+    width: 42px;
+    height: 42px;
+}
+
+
+.post-user {
+    flex: 1;
+}
+
+
+.post-user-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 6px;
+}
+
+
+.post-user-line strong {
+    font-size: 13px;
+}
+
+
+.post-username,
+.post-time {
+    color: #64748b;
+    font-size: 10px;
+}
+
+
+.post-text {
+    margin-top: 7px;
+
+    color: #cbd5e1;
+
+    font-size: 13px;
+    line-height: 1.7;
+
+    overflow-wrap: anywhere;
+}
+
+
+.game-hashtag {
+    color: #818cf8;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    text-decoration: none;
+}
+
+
+.game-hashtag:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   AÇÕES
+========================================= */
+
+.post-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+
+    margin-top: 17px;
+    padding-top: 12px;
+
+    border-top:
+        1px solid rgba(255, 255, 255, 0.05);
+}
+
+
+.post-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 7px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #64748b;
+
+    font-family: inherit;
+    font-size: 11px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.post-action:hover {
+    background:
+        rgba(255, 255, 255, 0.04);
+
+    color: #cbd5e1;
+}
+
+
+.post-action.liked {
+    color: #f472b6;
+}
+
+
+.post-action.reposted {
+    color: #4ade80;
+}
+
+
+/* =========================================
+   COMENTÁRIOS
+========================================= */
+
+.comments-section {
+    display: none;
+
+    margin-top: 14px;
+    padding-top: 14px;
+
+    border-top:
+        1px solid rgba(255, 255, 255, 0.05);
+}
+
+
+.comments-section.active {
+    display: block;
+}
+
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    margin-bottom: 12px;
+}
+
+
+.comment {
+    display: flex;
+    gap: 9px;
+}
+
+
+.comment-avatar {
+    width: 28px;
+    height: 28px;
+
+    font-size: 10px;
+}
+
+
+.comment-body {
+    flex: 1;
+
+    padding: 9px 11px;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255, 255, 255, 0.035);
+}
+
+
+.comment-user {
+    margin-bottom: 3px;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.comment-text {
+    color: #94a3b8;
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+.comment-form {
+    display: flex;
+    gap: 8px;
+}
+
+
+.comment-form input {
+    flex: 1;
+
+    padding: 10px 12px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #111827;
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 11px;
+}
+
+
+.comment-form input:focus {
+    border-color:
+        rgba(129, 140, 248, 0.35);
+}
+
+
+.comment-form button {
+    padding: 9px 14px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #6366f1;
+
+    color: white;
+
+    font-family: inherit;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   REPOST
+========================================= */
+
+.repost-label {
+    margin-bottom: 10px;
+
+    color: #4ade80;
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   COLUNA DIREITA
+========================================= */
+
+.feed-right {
+    display: flex;
+    flex-direction: column;
+
+    gap: 15px;
+}
+
+
+.feed-side-card {
+    padding: 18px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
+
+    border-radius: 15px;
+
+    background:
+        rgba(15, 23, 42, 0.48);
+}
+
+
+.feed-side-card h2 {
+    margin: 5px 0 15px;
+
+    font-size: 17px;
+}
+
+
+.trending-games {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.trending-game {
+    display: flex;
+    justify-content: space-between;
+
+    padding: 11px 0;
+
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.05);
+
+    cursor: pointer;
+}
+
+
+.trending-game:last-child {
+    border-bottom: none;
+}
+
+
+.trending-game:hover strong {
+    color: #818cf8;
+}
+
+
+.trending-game strong {
+    font-size: 11px;
+
+    transition: color 0.2s ease;
+}
+
+
+.trending-game span {
+    color: #64748b;
+    font-size: 9px;
+}
+
+
+.feed-description {
+    color: #64748b;
+
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+
+/* =========================================
+   VAZIO
+========================================= */
+
+.empty-feed {
+    padding: 45px 20px;
+
+    border:
+        1px dashed rgba(255, 255, 255, 0.08);
+
+    border-radius: 14px;
+
+    color: #64748b;
+
+    text-align: center;
+    font-size: 12px;
+}
+
+
+/* =========================================
+   RESPONSIVO
+========================================= */
+
+@media (max-width: 950px) {
+
+    .feed-layout {
+        grid-template-columns: 1fr;
+    }
+
+
+    .feed-right {
+        display: none;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .post-composer {
+        padding: 15px;
+    }
+
+
+    .composer-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .composer-footer .btn {
+        width: 100%;
+    }
+
+
+    .post-actions {
+        gap: 3px;
+    }
+
+
+    .post-action {
+        font-size: 10px;
+    }
+
+}
+/* =========================================
+   LINK PARA PERFIL DE OUTRO USUÁRIO
+========================================= */
+.post-avatar.user-profile-link,
+.post-user-line .user-profile-link {
+    cursor: pointer;
+}
+
+.post-avatar.user-profile-link:focus-visible,
+.post-user-line .user-profile-link:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .post-user-line .user-profile-link:hover {
+        color: #a5b4fc;
+    }
+
+    .post-avatar.user-profile-link:hover {
+        filter: brightness(1.12);
+    }
+}

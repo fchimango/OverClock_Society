@@ -1,0 +1,77 @@
+/* =========================================
+   PERFIL DE OUTRO USUÁRIO
+========================================= */
+
+.other-profile-page .profile-card,
+.other-profile-page .profile-info-card,
+.other-profile-page .profile-stat {
+    cursor: default;
+}
+
+.other-profile-page .profile-tab-panel[data-user-panel="games"] {
+    padding-top: 0;
+}
+
+.other-profile-games-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.other-profile-games-heading h1 {
+    margin: 5px 0 8px;
+    font-size: 30px;
+}
+
+.other-profile-games-heading p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.other-profile-page .games-summary {
+    margin-bottom: 36px;
+}
+
+.other-profile-page .games-section {
+    margin-bottom: 42px;
+}
+
+.other-profile-page .podium-card,
+.other-profile-page .collection-card,
+.other-profile-page .completed-game {
+    cursor: default;
+}
+
+/* Links para abrir o perfil demonstrativo */
+.user-profile-link {
+    cursor: pointer !important;
+}
+
+.user-profile-link:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .post-user-line .user-profile-link:hover,
+    .friend-card-info .user-profile-link:hover,
+    .all-friend-info .user-profile-link:hover,
+    .request-info .user-profile-link:hover {
+        color: #a5b4fc;
+    }
+
+    .post-avatar.user-profile-link:hover,
+    .friend-avatar.user-profile-link:hover {
+        filter: brightness(1.12);
+    }
+}
+
+@media (max-width: 720px) {
+    .other-profile-games-heading h1 {
+        font-size: 24px;
+    }
+}

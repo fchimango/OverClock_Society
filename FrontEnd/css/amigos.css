@@ -1005,3 +1005,33 @@
     }
 
 }
+/* =========================================
+   LINK PARA PERFIL DE OUTRO USUÁRIO
+========================================= */
+.friend-avatar.user-profile-link,
+.friend-card-info .user-profile-link,
+.all-friend-info .user-profile-link,
+.request-info .user-profile-link {
+    cursor: pointer;
+}
+
+.friend-avatar.user-profile-link:focus-visible,
+.friend-card-info .user-profile-link:focus-visible,
+.all-friend-info .user-profile-link:focus-visible,
+.request-info .user-profile-link:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .friend-card-info .user-profile-link:hover,
+    .all-friend-info .user-profile-link:hover,
+    .request-info .user-profile-link:hover {
+        color: #a5b4fc;
+    }
+
+    .friend-avatar.user-profile-link:hover {
+        filter: brightness(1.12);
+    }
+}
