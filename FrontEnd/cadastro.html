@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar conta | Overclock Society</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+
+<body class="auth-page">
+
+    <main class="auth-card">
+
+        <a href="index.html" class="auth-logo" aria-label="Voltar para o início">🎮</a>
+
+        <h1>Criar conta</h1>
+        <p class="auth-subtitle">Entre para a comunidade gamer da faculdade.</p>
+
+        <form class="auth-form" id="registerForm" novalidate>
+
+            <label>
+                Nome
+                <input type="text" name="name" placeholder="Seu nome" autocomplete="name" required minlength="2"
+                    maxlength="120">
+            </label>
+
+            <label>
+                E-mail
+                <input type="email" name="email" placeholder="voce@email.com" autocomplete="email" required>
+            </label>
+
+            <label>
+                Senha
+                <input type="password" name="password" placeholder="Mínimo de 8 caracteres" autocomplete="new-password"
+                    required minlength="8" maxlength="50">
+            </label>
+
+            <label>
+                Confirmar senha
+                <input type="password" name="confirm" placeholder="Repita a senha" autocomplete="new-password" required>
+            </label>
+
+            <button type="submit" class="btn btn-primary" id="registerSubmit">Criar conta</button>
+
+            <p class="auth-feedback" id="registerFeedback" role="status" aria-live="polite"></p>
+
+        </form>
+
+        <p class="auth-switch">
+            Já tem conta? <a href="login.html">Entrar</a>
+        </p>
+
+    </main>
+
+    <script src="js/auth.js"></script>
+
+</body>
+
+</html>

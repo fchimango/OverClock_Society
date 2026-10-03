@@ -1,3 +1,8 @@
+// Sem o "crachá" (token) de login, volta para a tela de login
+if (!localStorage.getItem("token")) {
+    window.location.href = "login.html";
+}
+
 const findPlayersButton =
     document.getElementById("findPlayersButton");
 
