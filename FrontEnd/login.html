@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar | Overclock Society</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+
+<body class="auth-page">
+
+    <main class="auth-card">
+
+        <a href="index.html" class="auth-logo" aria-label="Voltar para o início">🎮</a>
+
+        <h1>Entrar</h1>
+        <p class="auth-subtitle">Bem-vindo de volta à Overclock Society.</p>
+
+        <form class="auth-form" id="loginForm" novalidate>
+
+            <label>
+                E-mail
+                <input type="email" name="email" placeholder="voce@email.com" autocomplete="email" required>
+            </label>
+
+            <label>
+                Senha
+                <input type="password" name="password" placeholder="Sua senha" autocomplete="current-password" required>
+            </label>
+
+            <button type="submit" class="btn btn-primary" id="loginSubmit">Entrar</button>
+
+            <p class="auth-feedback" id="loginFeedback" role="status" aria-live="polite"></p>
+
+        </form>
+
+        <p class="auth-switch">
+            Ainda não tem conta? <a href="cadastro.html">Criar conta</a>
+        </p>
+
+    </main>
+
+    <script src="js/auth.js"></script>
+
+</body>
+
+</html>

@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
+import auth
 import models
 from database import Base, engine, get_db
 
@@ -34,11 +34,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
+
 @app.exception_handler(RequestValidationError)
 async def erro_de_validacao(request: Request, exc: RequestValidationError):
     mensagens = {
         "email": "Informe um e-mail válido.",
         "name": "Informe seu nome (mínimo de 2 letras).",
+        "password": "A senha precisa ter no mínimo 8 caracteres.",
     }
     erros = []
     for erro in exc.errors():

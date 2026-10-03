@@ -78,22 +78,11 @@ function closeModal() {
 ========================================= */
 
 loginButton.addEventListener("click", () => {
-
-    openModal(
-        "Login",
-        "A tela de login será implementada na próxima etapa do projeto."
-    );
-
+    window.location.href = "login.html";
 });
 
-
 registerButton.addEventListener("click", () => {
-
-    openModal(
-        "Criar conta",
-        "O cadastro dos jogadores será implementado na próxima etapa."
-    );
-
+    window.location.href = "cadastro.html";
 });
 
 
