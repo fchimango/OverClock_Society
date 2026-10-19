@@ -67,6 +67,19 @@ const summaryItems =
 
 
 /* =========================================
+   PERSISTÊNCIA POR USUÁRIO
+========================================= */
+
+const GAMES_USER_ID =
+    localStorage.getItem("userId");
+
+const GAMES_STORAGE_KEY =
+    GAMES_USER_ID
+        ? `overclockSocietyGames_${GAMES_USER_ID}`
+        : null;
+
+
+/* =========================================
    CATÁLOGO TEMPORÁRIO
 
    Futuramente será substituído
@@ -1295,12 +1308,240 @@ function getCardData(card) {
                 )?.textContent.trim()
                 || "",
 
-            rating: 5
+            rating: 5,
+
+            year:
+                Number(
+                    card.querySelector(
+                        ".completed-date strong"
+                    )?.textContent
+                ) ||
+                new Date().getFullYear()
         };
     }
 
 
     return null;
+}
+
+
+/* =========================================
+   PERSISTÊNCIA DOS JOGOS
+========================================= */
+
+function getCurrentGamesState() {
+
+    const favorites =
+        Array.from(
+            podium.querySelectorAll(
+                ".podium-card"
+            )
+        )
+        .map(getCardData)
+        .filter(Boolean);
+
+
+    const liked =
+        Array.from(
+            collectionGrid.querySelectorAll(
+                ".collection-card"
+            )
+        )
+        .map(getCardData)
+        .filter(Boolean);
+
+
+    const completed =
+        Array.from(
+            completedList.querySelectorAll(
+                ".completed-game"
+            )
+        )
+        .map(getCardData)
+        .filter(Boolean);
+
+
+    return {
+        favorites,
+        liked,
+        completed
+    };
+}
+
+
+function saveGamesToStorage() {
+
+    if (!GAMES_STORAGE_KEY) {
+
+        console.warn(
+            "Não foi possível salvar os jogos: userId ausente."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        localStorage.setItem(
+            GAMES_STORAGE_KEY,
+            JSON.stringify(
+                getCurrentGamesState()
+            )
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Não foi possível salvar os jogos no localStorage.",
+            error
+        );
+    }
+}
+
+
+function clearGameSections() {
+
+    podium.innerHTML = "";
+
+    collectionGrid.innerHTML = "";
+
+    completedList.innerHTML = "";
+}
+
+
+function loadGamesFromStorage() {
+
+    if (!GAMES_STORAGE_KEY) {
+
+        return false;
+    }
+
+
+    let stored = null;
+
+
+    try {
+
+        stored =
+            localStorage.getItem(
+                GAMES_STORAGE_KEY
+            );
+
+    } catch (error) {
+
+        console.warn(
+            "Não foi possível acessar os jogos salvos.",
+            error
+        );
+
+        return false;
+    }
+
+
+    if (!stored) {
+
+        return false;
+    }
+
+
+    try {
+
+        const data =
+            JSON.parse(stored);
+
+
+        if (
+            !data ||
+            !Array.isArray(data.favorites) ||
+            !Array.isArray(data.liked) ||
+            !Array.isArray(data.completed)
+        ) {
+
+            return false;
+        }
+
+
+        clearGameSections();
+
+
+        data.liked.forEach(
+            (game) => {
+
+                if (
+                    !game?.name ||
+                    !game?.genre
+                ) {
+
+                    return;
+                }
+
+
+                createLikedCard(
+                    game.name,
+                    game.genre,
+                    Number(game.rating ?? 5)
+                );
+            }
+        );
+
+
+        data.favorites.forEach(
+            (game) => {
+
+                if (
+                    !game?.name ||
+                    !game?.genre ||
+                    !Number(game.position)
+                ) {
+
+                    return;
+                }
+
+
+                createFavoriteCard(
+                    game.name,
+                    game.genre,
+                    Number(game.rating ?? 5),
+                    Number(game.position)
+                );
+            }
+        );
+
+
+        data.completed.forEach(
+            (game) => {
+
+                if (
+                    !game?.name ||
+                    !game?.genre
+                ) {
+
+                    return;
+                }
+
+
+                createCompletedCard(
+                    game.name,
+                    game.genre,
+                    Number(game.year) ||
+                        new Date().getFullYear()
+                );
+            }
+        );
+
+
+        return true;
+
+    } catch (error) {
+
+        console.warn(
+            "Não foi possível carregar os jogos salvos.",
+            error
+        );
+
+        return false;
+    }
 }
 
 
@@ -1559,11 +1800,9 @@ function createLikedCard(
 
 function createCompletedCard(
     name,
-    genre
+    genre,
+    year = new Date().getFullYear()
 ) {
-
-    const year =
-        new Date().getFullYear();
 
 
     const card =
@@ -1908,6 +2147,8 @@ function removeGame(card) {
     updateFavoritePositionOptions();
 
     refreshGameOptions();
+
+    saveGamesToStorage();
 }
 
 
@@ -2277,6 +2518,8 @@ addGameForm.addEventListener(
 
         updateFavoritePositionOptions();
 
+        saveGamesToStorage();
+
         closeGameModal();
 
     }
@@ -2532,6 +2775,8 @@ function saveEditedGame(
 
     updateFavoritePositionOptions();
 
+    saveGamesToStorage();
+
     closeGameModal();
 }
 
@@ -2703,16 +2948,28 @@ if (seeCompletedGamesButton) {
 
 buildGameOptions();
 
+
+/*
+ * Se o usuário já possui uma coleção salva,
+ * substituímos os cards de demonstração do HTML
+ * pelos dados exclusivos desta conta.
+ *
+ * Caso ainda não exista armazenamento para o
+ * usuário, os cards atuais do HTML funcionam
+ * como estado inicial e serão salvos abaixo.
+ */
+
+loadGamesFromStorage();
+
+
 initializeGameActions();
 
 normalizePodium();
 
 
 /*
- * IMPORTANTE:
- *
- * Garante que os favoritos que já existem
- * no HTML também estejam em Jogos Que Gosto.
+ * Garante que todo Favorito também exista
+ * em Jogos Que Gosto.
  */
 
 syncFavoriteGamesWithLiked();
@@ -2721,6 +2978,14 @@ syncFavoriteGamesWithLiked();
 updateSummary();
 
 updateFavoritePositionOptions();
+
+
+/*
+ * Também grava o estado inicial da página
+ * na primeira visita deste usuário.
+ */
+
+saveGamesToStorage();
 
 
 console.log(

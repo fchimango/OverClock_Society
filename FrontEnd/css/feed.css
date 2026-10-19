@@ -676,3 +676,36 @@
         filter: brightness(1.12);
     }
 }
+
+/* =========================================
+   EXCLUSÃO DE POSTS E COMENTÁRIOS
+========================================= */
+
+.post-delete-button {
+    margin-left: auto;
+}
+
+.post-delete-button:hover {
+    color: #ef4444;
+}
+
+
+.comment-delete-button {
+    margin-top: 6px;
+    padding: 0;
+
+    border: none;
+    background: transparent;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease;
+}
+
+.comment-delete-button:hover {
+    color: #ef4444;
+}

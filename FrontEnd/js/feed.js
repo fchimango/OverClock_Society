@@ -4,240 +4,123 @@
 
 ========================================= */
 
-
-
 const postInput =
-
     document.getElementById("postInput");
 
-
-
 const publishPostButton =
-
     document.getElementById(
-
         "publishPostButton"
-
     );
-
-
 
 const characterCounter =
-
     document.getElementById(
-
         "characterCounter"
-
     );
-
-
 
 const postsList =
-
     document.getElementById("postsList");
 
-
-
 const feedFilter =
-
     document.getElementById("feedFilter");
 
-
-
 const activeHashtag =
-
     document.getElementById(
-
         "activeHashtag"
-
     );
-
-
 
 const clearFilterButton =
-
     document.getElementById(
-
         "clearFilterButton"
-
     );
-
-
 
 const trendingGames =
-
     document.getElementById(
-
         "trendingGames"
-
     );
-
-
-
 
 
 /* =========================================
 
    JOGOS / HASHTAGS VÁLIDAS
 
-
-
    Futuramente isso poderá vir
-
    diretamente da API.
 
 ========================================= */
 
-
-
 const games = [
 
-
-
     {
-
         name: "Elden Ring",
-
         hashtag: "eldenring"
-
     },
 
-
-
     {
-
         name: "Hollow Knight",
-
         hashtag: "hollowknight"
-
     },
 
-
-
     {
-
         name: "Minecraft",
-
         hashtag: "minecraft"
-
     },
 
-
-
     {
-
         name: "Valorant",
-
         hashtag: "valorant"
-
     },
 
-
-
     {
-
         name: "Terraria",
-
         hashtag: "terraria"
-
     },
 
-
-
     {
-
         name: "Zelda",
-
         hashtag: "zelda"
-
     },
 
-
-
     {
-
         name: "God of War",
-
         hashtag: "godofwar"
-
     },
 
-
-
     {
-
         name: "Stardew Valley",
-
         hashtag: "stardewvalley"
-
     },
 
-
-
     {
-
         name: "Resident Evil 4",
-
         hashtag: "residentevil4"
-
     },
 
-
-
     {
-
         name: "Hades",
-
         hashtag: "hades"
-
     },
 
-
-
     {
-
         name: "Sekiro",
-
         hashtag: "sekiro"
-
     },
 
-
-
     {
-
         name: "Cyberpunk 2077",
-
         hashtag: "cyberpunk2077"
-
     },
 
-
-
     {
-
         name: "Celeste",
-
         hashtag: "celeste"
-
     },
 
-
-
     {
-
         name: "Spider-Man",
-
         hashtag: "spiderman"
-
     }
 
-
-
 ];
-
-
-
 
 
 /* =========================================
@@ -246,258 +129,129 @@ const games = [
 
 ========================================= */
 
-
-
 const initialPosts = [
 
-
-
     {
-
         id: 1,
-
-
 
         author: "Maria",
 
-
-
         username: "@maria",
-
-
 
         avatar: "M",
 
-
-
         content:
-
             "Finalmente comecei minha segunda run de #eldenring. Dessa vez vou tentar uma build completamente diferente.",
-
-
 
         createdAt: "há 12 min",
 
-
-
         likes: 14,
-
-
 
         reposts: 3,
 
-
-
         liked: false,
-
-
 
         reposted: false,
 
-
-
         comments: [
 
-
-
             {
-
                 author: "Pedro",
 
                 avatar: "P",
 
                 text: "Boa sorte kkk essa segunda run sempre vira mais 100 horas."
-
             }
 
-
-
         ]
-
-
-
     },
 
-
-
     {
-
         id: 2,
-
-
 
         author: "Pedro",
 
-
-
         username: "@pedro",
-
-
 
         avatar: "P",
 
-
-
         content:
-
             "Alguém ainda joga #terraria por aqui? Estou pensando em começar um mundo novo.",
-
-
 
         createdAt: "há 36 min",
 
-
-
         likes: 9,
-
-
 
         reposts: 1,
 
-
-
         liked: false,
-
-
 
         reposted: false,
 
-
-
         comments: []
-
-
-
     },
 
-
-
     {
-
         id: 3,
-
-
 
         author: "Lucas",
 
-
-
         username: "@lucas",
-
-
 
         avatar: "L",
 
-
-
         content:
-
             "Terminei #hollowknight ontem. Agora entendi por que tanta gente gosta desse jogo.",
-
-
 
         createdAt: "há 1 h",
 
-
-
         likes: 22,
-
-
 
         reposts: 5,
 
-
-
         liked: false,
-
-
 
         reposted: false,
 
-
-
         comments: [
 
-
-
             {
-
                 author: "Mariana",
 
                 avatar: "M",
 
                 text: "Agora é esperar Silksong 😅"
-
             }
 
-
-
         ]
-
-
-
     },
 
-
-
     {
-
         id: 4,
-
-
 
         author: "Ana",
 
-
-
         username: "@ana",
-
-
 
         avatar: "A",
 
-
-
         content:
-
             "Dia tranquilo jogando #minecraft e esquecendo completamente que tenho trabalho para entregar.",
-
-
 
         createdAt: "há 2 h",
 
-
-
         likes: 18,
-
-
 
         reposts: 2,
 
-
-
         liked: false,
-
-
 
         reposted: false,
 
-
-
         comments: []
-
-
-
     }
 
-
-
 ];
-
-
-
-
-
 
 
 /* =========================================
@@ -507,8 +261,15 @@ const initialPosts = [
    ainda não possui banco de dados.
 ========================================= */
 
+const CURRENT_USER_ID =
+    localStorage.getItem("userId");
+
+const CURRENT_USER_NAME =
+    localStorage.getItem("userName") ||
+    "Usuário";
+
 const POSTS_STORAGE_KEY =
-    "overclockSocietyFeedPosts";
+    `overclockSocietyFeedPosts_${CURRENT_USER_ID}`;
 
 
 function cloneInitialPosts() {
@@ -595,12 +356,7 @@ let posts =
 
 ========================================= */
 
-
-
 let currentHashtagFilter = null;
-
-
-
 
 
 /* =========================================
@@ -609,76 +365,39 @@ let currentHashtagFilter = null;
 
 ========================================= */
 
-
-
 function normalizeHashtag(value) {
 
-
-
     return value
-
         .toLowerCase()
-
         .replace("#", "")
-
         .trim();
-
 }
-
-
-
 
 
 function isValidGameHashtag(hashtag) {
 
-
-
     const normalized =
-
         normalizeHashtag(hashtag);
 
 
-
-
-
     return games.some(
-
         (game) =>
-
             game.hashtag === normalized
-
     );
-
 }
-
-
-
 
 
 function getGameByHashtag(hashtag) {
 
-
-
     const normalized =
-
         normalizeHashtag(hashtag);
 
 
-
-
-
     return games.find(
-
         (game) =>
-
             game.hashtag === normalized
-
     );
-
 }
-
-
-
 
 
 /* =========================================
@@ -687,204 +406,93 @@ function getGameByHashtag(hashtag) {
 
 ========================================= */
 
-
-
 function createPostTextElement(content) {
 
-
-
     const paragraph =
-
         document.createElement("p");
 
 
-
-
-
     paragraph.className =
-
         "post-text";
 
 
-
-
-
-    /*
-
-     * Localiza palavras começadas
-
-     * por #.
-
-     */
-
-
-
     const parts =
-
         content.split(
-
             /(#[a-zA-ZÀ-ÿ0-9_-]+)/g
-
         );
 
 
-
-
-
     parts.forEach(
-
         (part) => {
 
-
-
             if (
-
                 part.startsWith("#") &&
-
                 isValidGameHashtag(part)
-
             ) {
 
-
-
                 const hashtag =
-
                     document.createElement(
-
                         "button"
-
                     );
 
 
-
-
-
                 hashtag.type =
-
                     "button";
 
 
-
-
-
                 hashtag.className =
-
                     "game-hashtag";
 
 
-
-
-
                 hashtag.textContent =
-
                     part;
 
 
-
-
-
-                /*
-
-                 * Remove aparência
-
-                 * padrão do botão.
-
-                 */
-
-
-
                 hashtag.style.border =
-
                     "none";
 
-
-
                 hashtag.style.background =
-
                     "transparent";
 
-
-
                 hashtag.style.padding =
-
                     "0";
 
-
-
                 hashtag.style.font =
-
                     "inherit";
 
 
-
-
-
                 hashtag.addEventListener(
-
                     "click",
-
                     () => {
 
-
-
                         filterByHashtag(
-
                             part
-
                         );
 
-
-
                     }
-
                 );
-
-
-
 
 
                 paragraph.appendChild(
-
                     hashtag
-
                 );
-
-
 
             } else {
 
-
-
                 paragraph.appendChild(
-
                     document.createTextNode(
-
                         part
-
                     )
-
                 );
-
-
 
             }
 
-
-
         }
-
     );
 
 
-
-
-
     return paragraph;
-
 }
-
-
-
 
 
 /* =========================================
@@ -893,154 +501,77 @@ function createPostTextElement(content) {
 
 ========================================= */
 
-
-
 function renderPosts() {
-
-
 
     postsList.innerHTML = "";
 
 
-
-
-
     let visiblePosts =
-
         posts;
-
-
-
 
 
     if (currentHashtagFilter) {
 
-
-
         visiblePosts =
-
             posts.filter(
-
                 (post) => {
 
-
-
                     const regex =
-
                         new RegExp(
-
                             `#${currentHashtagFilter}\\b`,
-
                             "i"
-
                         );
 
 
-
-
-
                     return regex.test(
-
                         post.content
-
                     );
 
-
-
                 }
-
             );
 
-
-
     }
-
-
-
 
 
     if (
-
         visiblePosts.length === 0
-
     ) {
 
-
-
         const empty =
-
             document.createElement(
-
                 "div"
-
             );
-
-
-
 
 
         empty.className =
-
             "empty-feed";
 
 
-
-
-
         empty.textContent =
-
             "Nenhuma publicação encontrada.";
 
 
-
-
-
         postsList.appendChild(
-
             empty
-
         );
 
 
-
-
-
         return;
-
     }
 
 
-
-
-
     visiblePosts.forEach(
-
         (post) => {
 
-
-
             postsList.appendChild(
-
                 createPostCard(
-
                     post
-
                 )
-
             );
 
-
-
         }
-
     );
-
-
-
 }
-
-
-
 
 
 /* =========================================
@@ -1108,6 +639,7 @@ function enableDemoUserProfileLink(
             ) {
 
                 event.preventDefault();
+
                 openProfile();
             }
         }
@@ -1121,172 +653,88 @@ function enableDemoUserProfileLink(
 
 ========================================= */
 
-
-
 function createPostCard(post) {
 
-
-
     const article =
-
         document.createElement(
-
             "article"
-
         );
 
 
-
-
-
     article.className =
-
         "post-card";
-
-
-
 
 
     /* HEADER */
 
-
-
     const header =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     header.className =
-
         "post-header";
 
 
-
-
-
     const avatar =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     avatar.className =
-
         "post-avatar";
 
 
-
-
-
     avatar.textContent =
-
         post.avatar;
 
 
-
-
-
     const user =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     user.className =
-
         "post-user";
 
 
-
-
-
     const userLine =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     userLine.className =
-
         "post-user-line";
 
 
-
-
-
     const author =
-
         document.createElement(
-
             "strong"
-
         );
-
-
-
 
 
     author.textContent =
-
         post.author;
 
 
-
-
-
     const username =
-
         document.createElement(
-
             "span"
-
         );
-
-
-
 
 
     username.className =
-
         "post-username";
 
 
-
-
-
     username.textContent =
-
         post.username;
 
 
-
-
-
     enableDemoUserProfileLink(
         avatar,
         post.username
@@ -1301,343 +749,227 @@ function createPostCard(post) {
         username,
         post.username
     );
-
-
-
 
 
     const time =
-
         document.createElement(
-
             "span"
-
         );
 
 
-
-
-
     time.className =
-
         "post-time";
 
 
-
-
-
     time.textContent =
-
         `• ${post.createdAt}`;
 
 
-
-
-
     userLine.append(
-
         author,
-
         username,
-
         time
-
     );
 
 
-
-
-
     user.appendChild(
-
         userLine
-
     );
-
-
-
 
 
     user.appendChild(
-
         createPostTextElement(
-
             post.content
-
         )
-
     );
-
-
-
 
 
     header.append(
-
         avatar,
-
         user
-
     );
-
-
-
 
 
     article.appendChild(
-
         header
-
     );
-
-
-
 
 
     /* AÇÕES */
 
-
-
     const actions =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     actions.className =
-
         "post-actions";
 
 
-
-
-
     const commentButton =
-
         createActionButton(
-
             "💬",
-
             post.comments.length,
-
             "Comentar"
-
         );
-
-
-
 
 
     const repostButton =
-
         createActionButton(
-
             "🔁",
-
             post.reposts,
-
             "Repostar"
-
         );
-
-
-
 
 
     const likeButton =
-
         createActionButton(
-
             post.liked
-
                 ? "❤️"
-
                 : "♡",
-
-
 
             post.likes,
 
-
-
             "Curtir"
-
         );
 
 
+    const canDeletePost =
+        post.userId != null &&
+        String(post.userId) ===
+        String(CURRENT_USER_ID);
 
+
+    let deletePostButton =
+        null;
+
+
+    if (canDeletePost) {
+
+        deletePostButton =
+            document.createElement(
+                "button"
+            );
+
+
+        deletePostButton.type =
+            "button";
+
+
+        deletePostButton.className =
+            "post-action post-delete-button";
+
+
+        deletePostButton.innerHTML =
+            `
+                <span>🗑</span>
+                <span>Excluir</span>
+            `;
+    }
 
 
     if (post.liked) {
 
-
-
         likeButton.classList.add(
-
             "liked"
-
         );
-
     }
-
-
-
 
 
     if (post.reposted) {
 
-
-
         repostButton.classList.add(
-
             "reposted"
-
         );
-
     }
 
 
-
-
-
     actions.append(
-
         commentButton,
-
         repostButton,
-
         likeButton
-
     );
 
 
+    if (deletePostButton) {
 
+        actions.appendChild(
+            deletePostButton
+        );
+
+
+        deletePostButton.addEventListener(
+            "click",
+            () => {
+
+                deletePost(
+                    post.id
+                );
+
+            }
+        );
+    }
 
 
     article.appendChild(
-
         actions
-
     );
-
-
-
 
 
     /* COMENTÁRIOS */
 
-
-
     const commentsSection =
-
         createCommentsSection(
-
             post
-
         );
 
 
-
-
-
     article.appendChild(
-
         commentsSection
-
     );
-
-
-
 
 
     /* EVENTOS */
 
-
-
     commentButton.addEventListener(
-
         "click",
-
         () => {
 
-
-
             commentsSection.classList.toggle(
-
                 "active"
-
             );
 
-
-
         }
-
     );
-
-
-
 
 
     likeButton.addEventListener(
-
         "click",
-
         () => {
 
-
-
             toggleLike(
-
                 post.id
-
             );
 
-
-
         }
-
     );
-
-
-
 
 
     repostButton.addEventListener(
-
         "click",
-
         () => {
 
-
-
             toggleRepost(
-
                 post.id
-
             );
 
-
-
         }
-
     );
 
 
-
-
-
     return article;
-
 }
-
-
-
 
 
 /* =========================================
@@ -1646,66 +978,36 @@ function createPostCard(post) {
 
 ========================================= */
 
-
-
 function createActionButton(
-
     icon,
-
     count,
-
     label
-
 ) {
 
-
-
     const button =
-
         document.createElement(
-
             "button"
-
         );
 
 
-
-
-
     button.type =
-
         "button";
 
 
-
-
-
     button.className =
-
         "post-action";
 
 
-
-
-
     button.innerHTML =
-
-        `<span>${icon}</span>
-
-         <span>${count}</span>
-
-         <span>${label}</span>`;
-
-
-
+        `
+            <span>${icon}</span>
+            <span>${count}</span>
+            <span>${label}</span>
+        `;
 
 
     return button;
-
 }
-
-
-
 
 
 /* =========================================
@@ -1714,240 +1016,130 @@ function createActionButton(
 
 ========================================= */
 
-
-
 function createCommentsSection(post) {
 
-
-
     const section =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     section.className =
-
         "comments-section";
 
 
-
-
-
     const list =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     list.className =
-
         "comments-list";
 
 
-
-
-
     post.comments.forEach(
-
         (comment) => {
 
-
-
             const commentElement =
-
                 createComment(
-
-                    comment
-
+                    comment,
+                    post.id
                 );
 
 
-
-
-
             list.appendChild(
-
                 commentElement
-
             );
 
-
-
         }
-
     );
-
-
-
 
 
     const form =
-
         document.createElement(
-
             "form"
-
         );
-
-
-
 
 
     form.className =
-
         "comment-form";
 
 
-
-
-
     const input =
-
         document.createElement(
-
             "input"
-
         );
-
-
-
 
 
     input.type =
-
         "text";
 
 
-
-
-
     input.placeholder =
-
         "Escreva um comentário...";
 
 
-
-
-
     input.maxLength =
-
         180;
 
 
-
-
-
     const button =
-
         document.createElement(
-
             "button"
-
         );
 
 
-
-
-
     button.type =
-
         "submit";
 
 
-
-
-
     button.textContent =
-
         "Enviar";
 
 
-
-
-
     form.append(
-
         input,
-
         button
-
     );
 
 
-
-
-
     form.addEventListener(
-
         "submit",
-
         (event) => {
-
-
 
             event.preventDefault();
 
 
-
-
-
             const text =
-
                 input.value.trim();
-
-
-
 
 
             if (!text) {
 
-
-
                 return;
-
             }
-
-
-
 
 
             post.comments.push({
 
+                id:
+                    Date.now(),
 
+                userId:
+                    CURRENT_USER_ID,
 
                 author:
-
-                    "João",
-
-
+                    CURRENT_USER_NAME,
 
                 avatar:
-
-                    "J",
-
-
+                    CURRENT_USER_NAME
+                        .charAt(0)
+                        .toUpperCase(),
 
                 text
 
-
-
             });
-
-
-
 
 
             savePosts();
@@ -1955,34 +1147,18 @@ function createCommentsSection(post) {
 
             renderPosts();
 
-
-
         }
-
     );
-
-
-
 
 
     section.append(
-
         list,
-
         form
-
     );
 
 
-
-
-
     return section;
-
 }
-
-
-
 
 
 /* =========================================
@@ -1991,166 +1167,276 @@ function createCommentsSection(post) {
 
 ========================================= */
 
-
-
-function createComment(comment) {
-
-
+function createComment(
+    comment,
+    postId
+) {
 
     const element =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     element.className =
-
         "comment";
 
 
-
-
-
     const avatar =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     avatar.className =
-
         "comment-avatar";
 
 
-
-
-
     avatar.textContent =
-
         comment.avatar;
 
 
-
-
-
     const body =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     body.className =
-
         "comment-body";
 
 
-
-
-
     const user =
-
         document.createElement(
-
             "div"
-
         );
-
-
-
 
 
     user.className =
-
         "comment-user";
 
 
-
-
-
     user.textContent =
-
         comment.author;
 
 
-
-
-
     const text =
-
         document.createElement(
-
             "div"
-
         );
 
 
-
-
-
     text.className =
-
         "comment-text";
 
 
-
-
-
     text.textContent =
-
         comment.text;
 
 
-
-
-
     body.append(
-
         user,
-
         text
-
     );
 
 
+    const canDeleteComment =
+        comment.id != null &&
+        String(comment.userId) ===
+        String(CURRENT_USER_ID);
 
+
+    if (canDeleteComment) {
+
+        const deleteButton =
+            document.createElement(
+                "button"
+            );
+
+
+        deleteButton.type =
+            "button";
+
+
+        deleteButton.className =
+            "comment-delete-button";
+
+
+        deleteButton.textContent =
+            "🗑 Excluir";
+
+
+        deleteButton.addEventListener(
+            "click",
+            () => {
+
+                deleteComment(
+                    postId,
+                    comment.id
+                );
+
+            }
+        );
+
+
+        body.appendChild(
+            deleteButton
+        );
+    }
 
 
     element.append(
-
         avatar,
-
         body
-
     );
 
 
-
-
-
     return element;
-
 }
 
 
+/* =========================================
 
+   EXCLUIR POST
+
+========================================= */
+
+function deletePost(postId) {
+
+    const post =
+        posts.find(
+            (item) =>
+                String(item.id) ===
+                String(postId)
+        );
+
+
+    if (!post) {
+
+        return;
+    }
+
+
+    if (
+        String(post.userId) !==
+        String(CURRENT_USER_ID)
+    ) {
+
+        console.warn(
+            "Você não pode excluir este post."
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            "Deseja realmente excluir este post?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+    }
+
+
+    posts =
+        posts.filter(
+            (item) =>
+                String(item.id) !==
+                String(postId)
+        );
+
+
+    savePosts();
+
+
+    renderPosts();
+
+
+    renderTrendingGames();
+}
+
+
+/* =========================================
+
+   EXCLUIR COMENTÁRIO
+
+========================================= */
+
+function deleteComment(
+    postId,
+    commentId
+) {
+
+    const post =
+        posts.find(
+            (item) =>
+                String(item.id) ===
+                String(postId)
+        );
+
+
+    if (!post) {
+
+        return;
+    }
+
+
+    const comment =
+        (post.comments || []).find(
+            (item) =>
+                String(item.id) ===
+                String(commentId)
+        );
+
+
+    if (!comment) {
+
+        return;
+    }
+
+
+    if (
+        String(comment.userId) !==
+        String(CURRENT_USER_ID)
+    ) {
+
+        console.warn(
+            "Você não pode excluir este comentário."
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            "Deseja realmente excluir este comentário?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+    }
+
+
+    post.comments =
+        (post.comments || []).filter(
+            (item) =>
+                String(item.id) !==
+                String(commentId)
+        );
+
+
+    savePosts();
+
+
+    renderPosts();
+}
 
 
 /* =========================================
@@ -2159,67 +1445,36 @@ function createComment(comment) {
 
 ========================================= */
 
-
-
 function toggleLike(postId) {
 
-
-
     const post =
-
         posts.find(
-
             (post) =>
-
                 post.id === postId
-
         );
-
-
-
 
 
     if (!post) {
 
-
-
         return;
-
     }
 
 
-
-
-
     post.liked =
-
         !post.liked;
 
 
-
-
-
     post.likes +=
-
         post.liked
-
             ? 1
-
             : -1;
-
-
-
 
 
     savePosts();
 
 
     renderPosts();
-
 }
-
-
-
 
 
 /* =========================================
@@ -2228,67 +1483,36 @@ function toggleLike(postId) {
 
 ========================================= */
 
-
-
 function toggleRepost(postId) {
 
-
-
     const post =
-
         posts.find(
-
             (post) =>
-
                 post.id === postId
-
         );
-
-
-
 
 
     if (!post) {
 
-
-
         return;
-
     }
 
 
-
-
-
     post.reposted =
-
         !post.reposted;
 
 
-
-
-
     post.reposts +=
-
         post.reposted
-
             ? 1
-
             : -1;
-
-
-
 
 
     savePosts();
 
 
     renderPosts();
-
 }
-
-
-
 
 
 /* =========================================
@@ -2297,164 +1521,84 @@ function toggleRepost(postId) {
 
 ========================================= */
 
-
-
 function publishPost() {
 
-
-
     const content =
-
         postInput.value.trim();
-
-
-
 
 
     if (!content) {
 
-
-
         return;
-
     }
-
-
-
 
 
     const newPost = {
 
-
-
         id:
-
             Date.now(),
 
         userId:
-            "current-user",
-
-
+            CURRENT_USER_ID,
 
         author:
-
-            "João",
-
-
+            CURRENT_USER_NAME,
 
         username:
-
-            "@joao123",
-
-
+            `@${CURRENT_USER_NAME
+                .toLowerCase()
+                .replace(/\s+/g, "")}`,
 
         avatar:
-
-            "J",
-
-
+            CURRENT_USER_NAME
+                .charAt(0)
+                .toUpperCase(),
 
         content,
 
-
-
         createdAt:
-
             "agora",
 
-
-
         likes:
-
             0,
-
-
 
         reposts:
-
             0,
 
-
-
         liked:
-
             false,
-
-
 
         reposted:
-
             false,
 
-
-
         comments:
-
             []
-
-
-
     };
 
 
-
-
-
     posts.unshift(
-
         newPost
-
     );
-
-
-
 
 
     savePosts();
 
 
     postInput.value =
-
         "";
-
-
-
 
 
     updateCharacterCounter();
 
 
-
-
-
-    /*
-
-     * Remove filtro para o usuário
-
-     * enxergar imediatamente o post
-
-     * publicado.
-
-     */
-
-
-
     clearHashtagFilter();
-
-
-
 
 
     renderPosts();
 
 
-
     renderTrendingGames();
-
 }
-
-
-
 
 
 /* =========================================
@@ -2463,96 +1607,49 @@ function publishPost() {
 
 ========================================= */
 
-
-
 function filterByHashtag(hashtag) {
 
-
-
     const normalized =
-
         normalizeHashtag(hashtag);
 
 
-
-
-
     if (
-
         !isValidGameHashtag(
-
             normalized
-
         )
-
     ) {
 
-
-
         return;
-
     }
 
 
-
-
-
     currentHashtagFilter =
-
         normalized;
 
 
-
-
-
     const game =
-
         getGameByHashtag(
-
             normalized
-
         );
 
 
-
-
-
     activeHashtag.textContent =
-
         `#${game.hashtag}`;
 
 
-
-
-
     feedFilter.classList.add(
-
         "active"
-
     );
-
-
-
 
 
     renderPosts();
 
 
-
-
-
     window.scrollTo({
-
         top: 0,
-
         behavior: "smooth"
-
     });
-
 }
-
-
-
 
 
 /* =========================================
@@ -2561,30 +1658,16 @@ function filterByHashtag(hashtag) {
 
 ========================================= */
 
-
-
 function clearHashtagFilter() {
 
-
-
     currentHashtagFilter =
-
         null;
 
 
-
-
-
     feedFilter.classList.remove(
-
         "active"
-
     );
-
 }
-
-
-
 
 
 /* =========================================
@@ -2593,270 +1676,138 @@ function clearHashtagFilter() {
 
 ========================================= */
 
-
-
 function renderTrendingGames() {
 
-
-
     trendingGames.innerHTML =
-
         "";
 
 
-
-
-
     const ranking =
-
         games
-
             .map(
-
                 (game) => {
 
-
-
                     const regex =
-
                         new RegExp(
-
                             `#${game.hashtag}\\b`,
-
                             "gi"
-
                         );
 
 
-
-
-
                     const postsCount =
-
                         posts.filter(
-
                             (post) =>
-
                                 regex.test(
-
                                     post.content
-
                                 )
-
                         ).length;
 
 
-
-
-
                     return {
-
                         ...game,
-
                         postsCount
-
                     };
 
-
-
                 }
-
             )
 
             .filter(
-
                 (game) =>
-
                     game.postsCount > 0
-
             )
 
             .sort(
-
                 (a, b) =>
-
                     b.postsCount -
-
                     a.postsCount
-
             )
 
             .slice(
-
                 0,
-
                 5
-
             );
-
-
-
 
 
     ranking.forEach(
-
         (game) => {
 
-
-
             const item =
-
                 document.createElement(
-
                     "div"
-
                 );
-
-
-
 
 
             item.className =
-
                 "trending-game";
 
 
-
-
-
             const left =
-
                 document.createElement(
-
                     "div"
-
                 );
-
-
-
 
 
             const name =
-
                 document.createElement(
-
                     "strong"
-
                 );
-
-
-
 
 
             name.textContent =
-
                 `#${game.hashtag}`;
 
 
-
-
-
             const gameName =
-
                 document.createElement(
-
                     "span"
-
                 );
-
-
-
 
 
             gameName.textContent =
-
                 game.name;
 
 
-
-
-
             left.append(
-
                 name,
-
                 gameName
-
             );
-
-
-
 
 
             const count =
-
                 document.createElement(
-
                     "span"
-
                 );
 
 
-
-
-
             count.textContent =
-
                 `${game.postsCount} posts`;
 
 
-
-
-
             item.append(
-
                 left,
-
                 count
-
             );
-
-
-
 
 
             item.addEventListener(
-
                 "click",
-
                 () => {
 
-
-
                     filterByHashtag(
-
                         game.hashtag
-
                     );
 
-
-
                 }
-
             );
-
-
-
 
 
             trendingGames.appendChild(
-
                 item
-
             );
 
-
-
         }
-
     );
-
-
-
 }
-
-
-
 
 
 /* =========================================
@@ -2865,20 +1816,11 @@ function renderTrendingGames() {
 
 ========================================= */
 
-
-
 function updateCharacterCounter() {
 
-
-
     characterCounter.textContent =
-
         `${postInput.value.length} / 280`;
-
 }
-
-
-
 
 
 /* =========================================
@@ -2887,86 +1829,45 @@ function updateCharacterCounter() {
 
 ========================================= */
 
-
-
 const searchInput =
-
     document.getElementById(
-
         "searchInput"
-
     );
 
 
-
-
-
 searchInput.addEventListener(
-
     "input",
-
     () => {
 
-
-
         const term =
-
             searchInput.value
-
                 .trim()
-
                 .toLowerCase();
 
 
-
-
-
         document
-
             .querySelectorAll(
-
                 ".post-card"
-
             )
 
             .forEach(
-
                 (card) => {
 
-
-
                     const text =
-
                         card.textContent
-
                             .toLowerCase();
 
 
-
-
-
                     card.style.display =
-
                         text.includes(term)
-
                             ? ""
-
                             : "none";
 
-
-
                 }
-
             );
 
-
-
     }
-
 );
-
-
-
 
 
 /* =========================================
@@ -2975,46 +1876,24 @@ searchInput.addEventListener(
 
 ========================================= */
 
-
-
 const profileButton =
-
     document.getElementById(
-
         "profileButton"
-
     );
-
-
-
 
 
 if (profileButton) {
 
-
-
     profileButton.addEventListener(
-
         "click",
-
         () => {
 
-
-
             window.location.href =
-
                 "perfil.html";
 
-
-
         }
-
     );
-
 }
-
-
-
 
 
 /* =========================================
@@ -3023,86 +1902,44 @@ if (profileButton) {
 
 ========================================= */
 
-
-
 postInput.addEventListener(
-
     "input",
-
     updateCharacterCounter
-
 );
-
-
-
 
 
 publishPostButton.addEventListener(
-
     "click",
-
     publishPost
-
 );
-
-
-
 
 
 postInput.addEventListener(
-
     "keydown",
-
     (event) => {
 
-
-
         if (
-
             event.ctrlKey &&
-
             event.key === "Enter"
-
         ) {
 
-
-
             publishPost();
-
         }
 
-
-
     }
-
 );
-
-
-
 
 
 clearFilterButton.addEventListener(
-
     "click",
-
     () => {
-
-
 
         clearHashtagFilter();
 
-
-
         renderPosts();
 
-
-
     }
-
 );
-
-
-
 
 
 /* =========================================
@@ -3110,8 +1947,6 @@ clearFilterButton.addEventListener(
    INICIALIZAÇÃO
 
 ========================================= */
-
-
 
 const requestedHashtag =
     new URLSearchParams(
@@ -3138,19 +1973,12 @@ if (
 }
 
 
-
 renderTrendingGames();
-
 
 
 updateCharacterCounter();
 
 
-
-
-
 console.log(
-
     "📰 Feed carregado com sucesso."
-
 );

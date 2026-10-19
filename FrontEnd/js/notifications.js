@@ -4,8 +4,11 @@
 
 (() => {
 
-    const STORAGE_KEY =
-        "overclockSocietyNotifications";
+    const CURRENT_USER_ID =
+    localStorage.getItem("userId");
+
+const STORAGE_KEY =
+    `overclockSocietyNotifications_${CURRENT_USER_ID}`;
 
 
     /* =========================================

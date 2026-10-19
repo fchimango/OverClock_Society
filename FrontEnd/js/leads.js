@@ -36,7 +36,7 @@ if (cdDays) {
 const API_URL =
     ["127.0.0.1", "localhost"].includes(window.location.hostname)
         ? "http://127.0.0.1:8000"
-        : "https://SEU-BACKEND.onrender.com";
+        : "https://overclock-api.onrender.com";
 
 const leadForm = document.getElementById("leadForm");
 const leadFeedback = document.getElementById("leadFeedback");

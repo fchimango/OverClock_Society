@@ -606,10 +606,6 @@ function updateCurrentGame() {
 
 /* =========================================
    ESTATÍSTICAS
-
-   Agora temos somente:
-   - Jogos
-   - Amigos
 ========================================= */
 
 function updateStats() {
@@ -672,8 +668,6 @@ if (profileForm) {
             }
 
 
-            /* IDENTIDADE */
-
             if (profileIdentityName) {
 
                 profileIdentityName.textContent =
@@ -695,8 +689,6 @@ if (profileForm) {
             }
 
 
-            /* BIO */
-
             if (bioText) {
 
                 bioText.textContent =
@@ -704,8 +696,6 @@ if (profileForm) {
                     "Nenhuma biografia adicionada.";
             }
 
-
-            /* DATA */
 
             if (profileDateText) {
 
@@ -716,29 +706,19 @@ if (profileForm) {
             }
 
 
-            /* STATUS */
-
             updateProfileStatus(
                 profileStatus.value
             );
 
 
-            /* ESTATÍSTICAS */
-
             updateStats();
 
-
-            /* PLATAFORMAS */
 
             updatePlatforms();
 
 
-            /* GÊNEROS */
-
             updateGenres();
 
-
-            /* JOGO ATUAL */
 
             updateCurrentGame();
 
@@ -969,11 +949,53 @@ profileTabButtons.forEach(
    POSTS DO PERFIL
 ========================================= */
 
-const PROFILE_POSTS_STORAGE_KEY =
-    "overclockSocietyFeedPosts";
+function getProfileCurrentUser() {
 
-const PROFILE_CURRENT_USER_ID =
-    "current-user";
+    const id =
+        localStorage.getItem("userId");
+
+
+    const name =
+        localStorage.getItem("userName") ||
+        "Usuário";
+
+
+    const email =
+        localStorage.getItem("userEmail") ||
+        "";
+
+
+    const avatar =
+        name
+            .charAt(0)
+            .toUpperCase() ||
+        "?";
+
+
+    const username =
+        `@${name
+            .toLocaleLowerCase("pt-BR")
+            .replace(/\s+/g, "")}`;
+
+
+    return {
+        id,
+        name,
+        email,
+        avatar,
+        username
+    };
+}
+
+
+function getProfilePostsStorageKey() {
+
+    const user =
+        getProfileCurrentUser();
+
+
+    return `overclockSocietyFeedPosts_${user.id}`;
+}
 
 
 const PROFILE_GAME_HASHTAGS =
@@ -1011,7 +1033,7 @@ function loadProfilePostsData() {
 
         stored =
             localStorage.getItem(
-                PROFILE_POSTS_STORAGE_KEY
+                getProfilePostsStorageKey()
             );
 
     } catch (error) {
@@ -1020,6 +1042,7 @@ function loadProfilePostsData() {
             "Não foi possível acessar o localStorage.",
             error
         );
+
 
         return [];
     }
@@ -1069,7 +1092,7 @@ function saveProfilePostsData(
     try {
 
         localStorage.setItem(
-            PROFILE_POSTS_STORAGE_KEY,
+            getProfilePostsStorageKey(),
             JSON.stringify(
                 posts
             )
@@ -1081,7 +1104,6 @@ function saveProfilePostsData(
             "Não foi possível salvar os posts.",
             error
         );
-
     }
 }
 
@@ -1090,18 +1112,16 @@ function saveProfilePostsData(
    POSTS DO USUÁRIO ATUAL
 ========================================= */
 
-function getCurrentUserPosts(
-    posts
-) {
+function getCurrentUserPosts(posts) {
+
+    const user =
+        getProfileCurrentUser();
+
 
     return posts.filter(
         (post) =>
-
-            post.userId ===
-                PROFILE_CURRENT_USER_ID ||
-
-            post.username ===
-                "@joao123"
+            String(post.userId) ===
+            String(user.id)
     );
 }
 
@@ -1269,7 +1289,8 @@ function createProfilePostAction(
 ========================================= */
 
 function createProfileComment(
-    comment
+    comment,
+    postId
 ) {
 
     const element =
@@ -1291,9 +1312,10 @@ function createProfileComment(
     avatar.className =
         "comment-avatar";
 
+
     avatar.textContent =
         comment.avatar ||
-        "J";
+        "?";
 
 
     const body =
@@ -1315,6 +1337,7 @@ function createProfileComment(
     user.className =
         "comment-user";
 
+
     user.textContent =
         comment.author ||
         "Usuário";
@@ -1329,6 +1352,7 @@ function createProfileComment(
     text.className =
         "comment-text";
 
+
     text.textContent =
         comment.text ||
         "";
@@ -1338,6 +1362,53 @@ function createProfileComment(
         user,
         text
     );
+
+
+    const currentUser =
+        getProfileCurrentUser();
+
+
+    const canDeleteComment =
+        comment.id != null &&
+        String(comment.userId) ===
+        String(currentUser.id);
+
+
+    if (canDeleteComment) {
+
+        const deleteButton =
+            document.createElement(
+                "button"
+            );
+
+
+        deleteButton.type =
+            "button";
+
+        deleteButton.className =
+            "comment-delete-button";
+
+        deleteButton.textContent =
+            "🗑 Excluir";
+
+
+        deleteButton.addEventListener(
+            "click",
+            () => {
+
+                deleteProfileComment(
+                    postId,
+                    comment.id
+                );
+
+            }
+        );
+
+
+        body.appendChild(
+            deleteButton
+        );
+    }
 
 
     element.append(
@@ -1384,7 +1455,8 @@ function createProfileCommentsSection(
 
             list.appendChild(
                 createProfileComment(
-                    comment
+                    comment,
+                    post.id
                 )
             );
 
@@ -1465,13 +1537,23 @@ function createProfileCommentsSection(
             }
 
 
+            const currentUser =
+                getProfileCurrentUser();
+
+
             post.comments.push({
 
+                id:
+                    Date.now(),
+
+                userId:
+                    currentUser.id,
+
                 author:
-                    "João",
+                    currentUser.name,
 
                 avatar:
-                    "J",
+                    currentUser.avatar,
 
                 text
 
@@ -1496,6 +1578,165 @@ function createProfileCommentsSection(
 
 
     return section;
+}
+
+
+/* =========================================
+   EXCLUIR POST DO PERFIL
+========================================= */
+
+function deleteProfilePost(
+    postId
+) {
+
+    const currentUser =
+        getProfileCurrentUser();
+
+
+    const posts =
+        loadProfilePostsData();
+
+
+    const post =
+        posts.find(
+            (item) =>
+                String(item.id) ===
+                String(postId)
+        );
+
+
+    if (!post) {
+
+        return;
+    }
+
+
+    if (
+        String(post.userId) !==
+        String(currentUser.id)
+    ) {
+
+        console.warn(
+            "Você não pode excluir este post."
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            "Deseja realmente excluir este post?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+    }
+
+
+    const updatedPosts =
+        posts.filter(
+            (item) =>
+                String(item.id) !==
+                String(postId)
+        );
+
+
+    saveProfilePostsData(
+        updatedPosts
+    );
+
+
+    renderProfilePosts();
+}
+
+
+/* =========================================
+   EXCLUIR COMENTÁRIO DO PERFIL
+========================================= */
+
+function deleteProfileComment(
+    postId,
+    commentId
+) {
+
+    const currentUser =
+        getProfileCurrentUser();
+
+
+    const posts =
+        loadProfilePostsData();
+
+
+    const post =
+        posts.find(
+            (item) =>
+                String(item.id) ===
+                String(postId)
+        );
+
+
+    if (!post) {
+
+        return;
+    }
+
+
+    const comment =
+        (post.comments || []).find(
+            (item) =>
+                String(item.id) ===
+                String(commentId)
+        );
+
+
+    if (!comment) {
+
+        return;
+    }
+
+
+    if (
+        String(comment.userId) !==
+        String(currentUser.id)
+    ) {
+
+        console.warn(
+            "Você não pode excluir este comentário."
+        );
+
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            "Deseja realmente excluir este comentário?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+    }
+
+
+    post.comments =
+        (post.comments || []).filter(
+            (item) =>
+                String(item.id) !==
+                String(commentId)
+        );
+
+
+    saveProfilePostsData(
+        posts
+    );
+
+
+    renderProfilePosts();
 }
 
 
@@ -1626,6 +1867,10 @@ function createProfilePostCard(
     allPosts
 ) {
 
+    const currentUser =
+        getProfileCurrentUser();
+
+
     const article =
         document.createElement(
             "article"
@@ -1635,10 +1880,6 @@ function createProfilePostCard(
     article.className =
         "post-card";
 
-
-    /* =========================
-       HEADER
-    ========================= */
 
     const header =
         document.createElement(
@@ -1659,9 +1900,10 @@ function createProfilePostCard(
     avatar.className =
         "post-avatar";
 
+
     avatar.textContent =
         post.avatar ||
-        "J";
+        currentUser.avatar;
 
 
     const user =
@@ -1692,7 +1934,7 @@ function createProfilePostCard(
 
     author.textContent =
         post.author ||
-        "João";
+        currentUser.name;
 
 
     const username =
@@ -1704,9 +1946,10 @@ function createProfilePostCard(
     username.className =
         "post-username";
 
+
     username.textContent =
         post.username ||
-        "@joao123";
+        currentUser.username;
 
 
     const time =
@@ -1717,6 +1960,7 @@ function createProfilePostCard(
 
     time.className =
         "post-time";
+
 
     time.textContent =
         `• ${post.createdAt || "agora"}`;
@@ -1751,10 +1995,6 @@ function createProfilePostCard(
         header
     );
 
-
-    /* =========================
-       AÇÕES
-    ========================= */
 
     const actions =
         document.createElement(
@@ -1798,6 +2038,39 @@ function createProfilePostCard(
         );
 
 
+    const canDeletePost =
+        post.userId != null &&
+        String(post.userId) ===
+        String(currentUser.id);
+
+
+    let deletePostButton =
+        null;
+
+
+    if (canDeletePost) {
+
+        deletePostButton =
+            document.createElement(
+                "button"
+            );
+
+
+        deletePostButton.type =
+            "button";
+
+        deletePostButton.className =
+            "post-action post-delete-button";
+
+
+        deletePostButton.innerHTML =
+            `
+                <span>🗑</span>
+                <span>Excluir</span>
+            `;
+    }
+
+
     if (
         post.liked
     ) {
@@ -1825,14 +2098,30 @@ function createProfilePostCard(
     );
 
 
+    if (deletePostButton) {
+
+        actions.appendChild(
+            deletePostButton
+        );
+
+
+        deletePostButton.addEventListener(
+            "click",
+            () => {
+
+                deleteProfilePost(
+                    post.id
+                );
+
+            }
+        );
+    }
+
+
     article.appendChild(
         actions
     );
 
-
-    /* =========================
-       COMENTÁRIOS
-    ========================= */
 
     const commentsSection =
         createProfileCommentsSection(
@@ -1845,10 +2134,6 @@ function createProfilePostCard(
         commentsSection
     );
 
-
-    /* =========================
-       EVENTOS
-    ========================= */
 
     commentButton.addEventListener(
         "click",
@@ -1981,12 +2266,30 @@ window.addEventListener(
 
         if (
             event.key ===
-            PROFILE_POSTS_STORAGE_KEY
+            getProfilePostsStorageKey()
         ) {
 
             renderProfilePosts();
         }
 
+    }
+);
+
+
+/* =========================================
+   SINCRONIZAÇÃO COM A SESSÃO
+========================================= */
+
+window.addEventListener(
+    "overclock:session-ready",
+    () => {
+
+        renderProfilePosts();
+
+
+        console.log(
+            "👤 Perfil sincronizado com a sessão."
+        );
     }
 );
 

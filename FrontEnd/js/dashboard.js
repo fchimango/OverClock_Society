@@ -30,9 +30,8 @@ seeGamesButton.addEventListener(
     "click",
     () => {
 
-        alert(
-            "A página de jogos será implementada em breve."
-        );
+        window.location.href =
+            "meus-jogos.html";
 
     }
 );
@@ -42,9 +41,8 @@ seePlayersButton.addEventListener(
     "click",
     () => {
 
-        alert(
-            "A lista completa de jogadores será implementada em breve."
-        );
+        window.location.href =
+            "amigos.html";
 
     }
 );
@@ -54,9 +52,8 @@ profileButton.addEventListener(
     "click",
     () => {
 
-        alert(
-            "O perfil do usuário será implementado em breve."
-        );
+        window.location.href =
+            "perfil.html";
 
     }
 );

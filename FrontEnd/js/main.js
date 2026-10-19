@@ -1,75 +1,148 @@
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
+const menuToggle =
+    document.getElementById("menuToggle");
 
-const loginButton = document.getElementById("loginButton");
-const registerButton = document.getElementById("registerButton");
-const ctaButton = document.getElementById("ctaButton");
+const navLinks =
+    document.getElementById("navLinks");
 
-const modalOverlay = document.getElementById("modalOverlay");
-const modalClose = document.getElementById("modalClose");
-const modalButton = document.getElementById("modalButton");
+const loginButton =
+    document.getElementById("loginButton");
 
-const modalTitle = document.getElementById("modalTitle");
-const modalMessage = document.getElementById("modalMessage");
+const registerButton =
+    document.getElementById("registerButton");
+
+const ctaButton =
+    document.getElementById("ctaButton");
+
+const modalOverlay =
+    document.getElementById("modalOverlay");
+
+const modalClose =
+    document.getElementById("modalClose");
+
+const modalButton =
+    document.getElementById("modalButton");
+
+const modalTitle =
+    document.getElementById("modalTitle");
+
+const modalMessage =
+    document.getElementById("modalMessage");
 
 
 /* =========================================
    MENU MOBILE
 ========================================= */
 
-menuToggle.addEventListener("click", () => {
+if (
+    menuToggle &&
+    navLinks
+) {
 
-    const isOpen = navLinks.classList.toggle("active");
+    menuToggle.addEventListener(
+        "click",
+        () => {
 
-    menuToggle.setAttribute(
-        "aria-expanded",
-        isOpen
+            const isOpen =
+                navLinks.classList.toggle(
+                    "active"
+                );
+
+
+            menuToggle.setAttribute(
+                "aria-expanded",
+                String(isOpen)
+            );
+
+        }
     );
 
-});
+
+    /* Fecha o menu quando clicamos em algum link */
+
+    document
+        .querySelectorAll(
+            ".nav-links a"
+        )
+        .forEach(
+            (link) => {
+
+                link.addEventListener(
+                    "click",
+                    () => {
+
+                        navLinks.classList.remove(
+                            "active"
+                        );
 
 
-/* Fecha o menu quando clicamos em algum link */
+                        menuToggle.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
 
-document.querySelectorAll(".nav-links a").forEach((link) => {
+                    }
+                );
 
-    link.addEventListener("click", () => {
-
-        navLinks.classList.remove("active");
-
-        menuToggle.setAttribute(
-            "aria-expanded",
-            "false"
+            }
         );
 
-    });
-
-});
+}
 
 
 /* =========================================
    MODAL
 ========================================= */
 
-function openModal(title, message) {
+function openModal(
+    title,
+    message
+) {
 
-    modalTitle.textContent = title;
+    if (
+        !modalOverlay ||
+        !modalTitle ||
+        !modalMessage
+    ) {
 
-    modalMessage.textContent = message;
+        return;
+    }
 
-    modalOverlay.classList.add("active");
 
-    document.body.style.overflow = "hidden";
+    modalTitle.textContent =
+        title;
 
+
+    modalMessage.textContent =
+        message;
+
+
+    modalOverlay.classList.add(
+        "active"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
 }
 
 
 function closeModal() {
 
-    modalOverlay.classList.remove("active");
+    if (
+        !modalOverlay
+    ) {
 
-    document.body.style.overflow = "";
+        return;
+    }
 
+
+    modalOverlay.classList.remove(
+        "active"
+    );
+
+
+    document.body.style.overflow =
+        "";
 }
 
 
@@ -77,76 +150,118 @@ function closeModal() {
    BOTÕES
 ========================================= */
 
-loginButton.addEventListener("click", () => {
 
-    openModal(
-        "Login",
-        "A tela de login será implementada na próxima etapa do projeto."
+/*
+ * Login e cadastro agora possuem
+ * páginas próprias.
+ */
+
+if (
+    loginButton
+) {
+
+    loginButton.addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "login.html";
+
+        }
     );
 
-});
+}
 
 
-registerButton.addEventListener("click", () => {
+if (
+    registerButton
+) {
 
-    openModal(
-        "Criar conta",
-        "O cadastro dos jogadores será implementado na próxima etapa."
+    registerButton.addEventListener(
+        "click",
+        () => {
+
+            window.location.href =
+                "cadastro.html";
+
+        }
     );
 
-});
+}
 
 
-ctaButton?.addEventListener("click", () => {
+/*
+ * Mantém o CTA antigo usando o modal,
+ * caso o botão exista na página.
+ */
 
-    openModal(
-        "Crie seu perfil",
-        "O sistema de cadastro estará disponível na próxima etapa."
-    );
+ctaButton?.addEventListener(
+    "click",
+    () => {
 
-});
+        openModal(
+            "Crie seu perfil",
+            "O sistema de cadastro estará disponível na próxima etapa."
+        );
+
+    }
+);
 
 
 /* =========================================
    FECHAR MODAL
 ========================================= */
 
-modalClose.addEventListener(
+modalClose?.addEventListener(
     "click",
     closeModal
 );
 
 
-modalButton.addEventListener(
+modalButton?.addEventListener(
     "click",
     closeModal
 );
 
 
-/* Clicar fora do modal */
+/* =========================================
+   CLICAR FORA DO MODAL
+========================================= */
 
-modalOverlay.addEventListener("click", (event) => {
+modalOverlay?.addEventListener(
+    "click",
+    (event) => {
 
-    if (event.target === modalOverlay) {
+        if (
+            event.target ===
+            modalOverlay
+        ) {
 
-        closeModal();
-
-    }
-
-});
-
-
-/* Tecla ESC */
-
-document.addEventListener("keydown", (event) => {
-
-    if (event.key === "Escape") {
-
-        closeModal();
+            closeModal();
+        }
 
     }
+);
 
-});
+
+/* =========================================
+   TECLA ESC
+========================================= */
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+
+        if (
+            event.key ===
+            "Escape"
+        ) {
+
+            closeModal();
+        }
+
+    }
+);
 
 
 /* =========================================
