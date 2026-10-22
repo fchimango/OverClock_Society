@@ -14,9 +14,7 @@
         content="Crie sua conta na Overclock Society."
     >
 
-    <title>
-        Criar conta | Overclock Society
-    </title>
+    <title>Criar conta | Overclock Society</title>
 
     <link
         rel="icon"
@@ -34,7 +32,6 @@
     >
 </head>
 
-
 <body class="auth-page">
 
     <main class="auth-card">
@@ -47,15 +44,11 @@
             🎮
         </a>
 
-
-        <h1>
-            Criar conta
-        </h1>
+        <h1>Criar conta</h1>
 
         <p class="auth-subtitle">
             Entre para a comunidade gamer da faculdade.
         </p>
-
 
         <form
             class="auth-form"
@@ -64,7 +57,6 @@
         >
 
             <label>
-
                 Nome
 
                 <input
@@ -76,12 +68,25 @@
                     minlength="2"
                     maxlength="120"
                 >
-
             </label>
 
+            <label>
+                Nome de usuário
+
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="Ex.: player_test"
+                    autocomplete="username"
+                    required
+                    minlength="3"
+                    maxlength="32"
+                    pattern="[A-Za-z0-9._]{3,32}"
+                    title="Use de 3 a 32 caracteres: letras, números, ponto ou sublinhado."
+                >
+            </label>
 
             <label>
-
                 E-mail
 
                 <input
@@ -91,12 +96,9 @@
                     autocomplete="email"
                     required
                 >
-
             </label>
 
-
             <label>
-
                 Senha
 
                 <input
@@ -108,12 +110,9 @@
                     minlength="8"
                     maxlength="50"
                 >
-
             </label>
 
-
             <label>
-
                 Confirmar senha
 
                 <input
@@ -125,9 +124,7 @@
                     minlength="8"
                     maxlength="50"
                 >
-
             </label>
-
 
             <button
                 type="submit"
@@ -136,7 +133,6 @@
             >
                 Criar conta
             </button>
-
 
             <p
                 class="auth-feedback"
@@ -147,22 +143,17 @@
 
         </form>
 
-
         <p class="auth-switch">
-
             Já tem conta?
 
             <a href="login.html">
                 Entrar
             </a>
-
         </p>
 
     </main>
 
-
     <script src="../js/auth.js"></script>
 
 </body>
-
 </html>

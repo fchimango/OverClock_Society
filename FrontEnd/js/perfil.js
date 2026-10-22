@@ -1,853 +1,693 @@
 /* =========================================
-   ELEMENTOS
+   ELEMENTOS DO PERFIL
 ========================================= */
 
-const editProfileButton =
-    document.getElementById("editProfileButton");
+const editProfileButton = document.getElementById("editProfileButton");
+const modalOverlay = document.getElementById("profileModalOverlay");
+const modalClose = document.getElementById("modalClose");
+const modalCancel = document.getElementById("modalCancel");
+const profileForm = document.getElementById("profileForm");
 
-const modalOverlay =
-    document.getElementById("profileModalOverlay");
+const profileName = document.getElementById("profileName");
+const profileUsername = document.getElementById("profileUsername");
+const profileCourse = document.getElementById("profileCourse");
+const profileSemester = document.getElementById("profileSemester");
+const profileJoinDate = document.getElementById("profileJoinDate");
+const profileStatus = document.getElementById("profileStatus");
+const profileBio = document.getElementById("profileBio");
+const profileAvatar = document.getElementById("profileAvatar");
+const profileCover = document.getElementById("profileCover");
+const profileGamesCount = document.getElementById("profileGamesCount");
+const profileFriendsCount = document.getElementById("profileFriendsCount");
+const currentGame = document.getElementById("currentGame");
+const currentGameStatus = document.getElementById("currentGameStatus");
 
-const modalClose =
-    document.getElementById("modalClose");
+const profileIdentityName = document.querySelector(".profile-identity h1");
+const profileIdentityUsername = document.querySelector(".profile-username");
+const profileIdentityCourse = document.querySelector(".profile-identity p");
+const bioText = document.getElementById("bioText");
+const profileStatusText = document.querySelector(".profile-status");
+const profileOnline = document.querySelector(".profile-online");
+const profileDateText = document.querySelector(".about-item:nth-child(3) strong");
+const statValues = document.querySelectorAll(".profile-stat strong");
+const platformList = document.querySelector(".platform-list");
+const genreTags = document.querySelector(".genre-tags");
+const currentGameName = document.querySelector(".current-game strong");
+const currentGameAvailability = document.querySelector(".current-game small");
 
-const modalCancel =
-    document.getElementById("modalCancel");
-
-const profileForm =
-    document.getElementById("profileForm");
+const profileTabButtons = document.querySelectorAll("[data-profile-tab]");
+const profileTabPanels = document.querySelectorAll("[data-profile-panel]");
+const profilePostsList = document.getElementById("profilePostsList");
+const profilePostsCount = document.getElementById("profilePostsCount");
 
 
 /* =========================================
-   ELEMENTOS DO FORMULÁRIO
+   CONFIGURAÇÃO DA API
 ========================================= */
 
-const profileName =
-    document.getElementById("profileName");
+const PROFILE_API_BASE_URL =
+    ["127.0.0.1", "localhost"].includes(window.location.hostname)
+        ? "http://127.0.0.1:8000"
+        : "https://overclock-api.onrender.com";
 
-const profileUsername =
-    document.getElementById("profileUsername");
+let PROFILE_API_DATA = null;
 
-const profileCourse =
-    document.getElementById("profileCourse");
+function normalizeProfileUsername(value) {
+    return String(value || "")
+        .trim()
+        .replace(/^@+/, "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9._]/g, "");
+}
 
-const profileSemester =
-    document.getElementById("profileSemester");
+async function getProfileApiErrorMessage(response) {
+    let body = {};
 
-const profileJoinDate =
-    document.getElementById("profileJoinDate");
+    try {
+        body = await response.json();
+    } catch (error) {
+        // A resposta pode não conter JSON.
+    }
 
-const profileStatus =
-    document.getElementById("profileStatus");
+    if (Array.isArray(body.detail)) {
+        return body.detail
+            .map((item) => item.msg || String(item))
+            .join(" ");
+    }
 
-const profileBio =
-    document.getElementById("profileBio");
+    if (typeof body.detail === "string") {
+        return body.detail;
+    }
 
-const profileAvatar =
-    document.getElementById("profileAvatar");
-
-const profileCover =
-    document.getElementById("profileCover");
-
-const profileGamesCount =
-    document.getElementById("profileGamesCount");
-
-const profileFriendsCount =
-    document.getElementById("profileFriendsCount");
-
-const currentGame =
-    document.getElementById("currentGame");
-
-const currentGameStatus =
-    document.getElementById("currentGameStatus");
+    return "Não foi possível concluir a operação.";
+}
 
 
 /* =========================================
-   ELEMENTOS DA PÁGINA
-========================================= */
-
-const profileIdentityName =
-    document.querySelector(
-        ".profile-identity h1"
-    );
-
-const profileIdentityUsername =
-    document.querySelector(
-        ".profile-username"
-    );
-
-const profileIdentityCourse =
-    document.querySelector(
-        ".profile-identity p"
-    );
-
-const bioText =
-    document.getElementById("bioText");
-
-const profileStatusText =
-    document.querySelector(
-        ".profile-status"
-    );
-
-const profileOnline =
-    document.querySelector(
-        ".profile-online"
-    );
-
-const profileDateText =
-    document.querySelector(
-        ".about-item:nth-child(3) strong"
-    );
-
-
-/* =========================================
-   ESTATÍSTICAS
-========================================= */
-
-const statValues =
-    document.querySelectorAll(
-        ".profile-stat strong"
-    );
-
-
-/* =========================================
-   PLATAFORMAS
-========================================= */
-
-const platformList =
-    document.querySelector(
-        ".platform-list"
-    );
-
-
-/* =========================================
-   GÊNEROS
-========================================= */
-
-const genreTags =
-    document.querySelector(
-        ".genre-tags"
-    );
-
-
-/* =========================================
-   JOGO ATUAL
-========================================= */
-
-const currentGameName =
-    document.querySelector(
-        ".current-game strong"
-    );
-
-const currentGameAvailability =
-    document.querySelector(
-        ".current-game small"
-    );
-
-
-/* =========================================
-   MODAL
+   MODAL DO PERFIL
 ========================================= */
 
 function openModal() {
+    if (!modalOverlay) return;
 
-    modalOverlay.classList.add(
-        "active"
-    );
-
-    document.body.style.overflow =
-        "hidden";
+    modalOverlay.classList.add("active");
+    document.body.style.overflow = "hidden";
 }
-
 
 function closeModal() {
+    if (!modalOverlay) return;
 
-    modalOverlay.classList.remove(
-        "active"
-    );
-
-    document.body.style.overflow =
-        "";
+    modalOverlay.classList.remove("active");
+    document.body.style.overflow = "";
 }
-
 
 if (editProfileButton) {
-
-    editProfileButton.addEventListener(
-        "click",
-        openModal
-    );
+    editProfileButton.addEventListener("click", openModal);
 }
-
 
 if (modalClose) {
-
-    modalClose.addEventListener(
-        "click",
-        closeModal
-    );
+    modalClose.addEventListener("click", closeModal);
 }
-
 
 if (modalCancel) {
-
-    modalCancel.addEventListener(
-        "click",
-        closeModal
-    );
+    modalCancel.addEventListener("click", closeModal);
 }
-
 
 if (modalOverlay) {
-
-    modalOverlay.addEventListener(
-        "click",
-        (event) => {
-
-            if (
-                event.target ===
-                modalOverlay
-            ) {
-
-                closeModal();
-            }
-
-        }
-    );
-}
-
-
-document.addEventListener(
-    "keydown",
-    (event) => {
-
-        if (
-            event.key === "Escape"
-        ) {
-
+    modalOverlay.addEventListener("click", (event) => {
+        if (event.target === modalOverlay) {
             closeModal();
         }
+    });
+}
 
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeModal();
     }
-);
+});
 
 
 /* =========================================
-   FORMATAR DATA
+   UTILIDADES DE APRESENTAÇÃO
 ========================================= */
 
 function formatJoinDate(value) {
+    if (!value) return "";
 
-    if (!value) {
+    const [year, month] = value.split("-");
 
+    const months = [
+        "Janeiro", "Fevereiro", "Março", "Abril",
+        "Maio", "Junho", "Julho", "Agosto",
+        "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+
+    const monthIndex = Number(month) - 1;
+
+    if (monthIndex < 0 || monthIndex > 11) {
         return "";
     }
 
-
-    const [year, month] =
-        value.split("-");
-
-
-    const months = [
-
-        "Janeiro",
-        "Fevereiro",
-        "Março",
-        "Abril",
-        "Maio",
-        "Junho",
-        "Julho",
-        "Agosto",
-        "Setembro",
-        "Outubro",
-        "Novembro",
-        "Dezembro"
-
-    ];
-
-
-    return `${months[
-        Number(month) - 1
-    ]} de ${year}`;
+    return `${months[monthIndex]} de ${year}`;
 }
-
-
-/* =========================================
-   STATUS ONLINE
-========================================= */
 
 function updateProfileStatus(status) {
+    if (!profileStatusText || !profileOnline) return;
 
-    if (
-        !profileStatusText ||
-        !profileOnline
-    ) {
-
-        return;
-    }
-
-
-    if (
-        status === "online"
-    ) {
-
-        profileStatusText.textContent =
-            "● ONLINE";
-
-        profileStatusText.style.color =
-            "#4ade80";
-
-        profileOnline.style.background =
-            "#4ade80";
-
+    if (status === "online") {
+        profileStatusText.textContent = "● ONLINE";
+        profileStatusText.style.color = "#4ade80";
+        profileOnline.style.background = "#4ade80";
         profileOnline.style.boxShadow =
             "0 0 12px rgba(74,222,128,0.60)";
-
-        profileOnline.style.display =
-            "block";
-
+        profileOnline.style.display = "block";
         return;
     }
 
-
-    if (
-        status === "away"
-    ) {
-
-        profileStatusText.textContent =
-            "● AUSENTE";
-
-        profileStatusText.style.color =
-            "#facc15";
-
-        profileOnline.style.background =
-            "#facc15";
-
+    if (status === "away") {
+        profileStatusText.textContent = "● AUSENTE";
+        profileStatusText.style.color = "#facc15";
+        profileOnline.style.background = "#facc15";
         profileOnline.style.boxShadow =
             "0 0 12px rgba(250,204,21,0.60)";
-
-        profileOnline.style.display =
-            "block";
-
+        profileOnline.style.display = "block";
         return;
     }
 
-
-    profileStatusText.textContent =
-        "● OFFLINE";
-
-    profileStatusText.style.color =
-        "#94a3b8";
-
-    profileOnline.style.display =
-        "none";
+    profileStatusText.textContent = "● OFFLINE";
+    profileStatusText.style.color = "#94a3b8";
+    profileOnline.style.display = "none";
 }
 
-
-/* =========================================
-   PLATAFORMAS
-========================================= */
-
 function updatePlatforms() {
+    if (!platformList) return;
 
-    if (!platformList) {
+    const selectedPlatforms = document.querySelectorAll(
+        'input[name="platform"]:checked'
+    );
 
-        return;
-    }
+    platformList.innerHTML = "";
 
-
-    const selectedPlatforms =
-        document.querySelectorAll(
-            'input[name="platform"]:checked'
-        );
-
-
-    platformList.innerHTML =
-        "";
-
-
-    if (
-        selectedPlatforms.length === 0
-    ) {
-
+    if (selectedPlatforms.length === 0) {
         platformList.innerHTML = `
             <span class="empty-profile-message">
                 Nenhuma plataforma adicionada.
             </span>
         `;
-
         return;
     }
 
+    selectedPlatforms.forEach((checkbox) => {
+        const name = checkbox.value;
 
-    selectedPlatforms.forEach(
-        (checkbox) => {
-
-            const name =
-                checkbox.value;
-
-
-            let icon =
-                "🎮";
-
-            let type =
-                "";
-
-
-            if (
-                name === "PC"
-            ) {
-
-                icon =
-                    "🖥️";
-
-                type =
-                    "pc";
+        const platformDetails = {
+            "PC": {
+                icon: "🖥️",
+                type: "pc"
+            },
+            "PlayStation 5": {
+                icon: "🎮",
+                type: "playstation"
+            },
+            "Xbox Series": {
+                icon: "🎮",
+                type: "xbox"
+            },
+            "Nintendo Switch": {
+                icon: "🕹️",
+                type: "switch"
             }
+        };
 
+        const details = platformDetails[name] || {
+            icon: "🎮",
+            type: ""
+        };
 
-            else if (
-                name ===
-                "PlayStation 5"
-            ) {
+        const item = document.createElement("div");
+        item.className = "platform-item";
 
-                icon =
-                    "🎮";
+        const icon = document.createElement("div");
+        icon.className = `platform-icon ${details.type}`;
+        icon.textContent = details.icon;
 
-                type =
-                    "playstation";
-            }
+        const info = document.createElement("div");
 
+        const title = document.createElement("strong");
+        title.textContent = name;
 
-            else if (
-                name ===
-                "Xbox Series"
-            ) {
-
-                icon =
-                    "🎮";
-
-                type =
-                    "xbox";
-            }
-
-
-            else if (
-                name ===
-                "Nintendo Switch"
-            ) {
-
-                icon =
-                    "🕹️";
-
-                type =
-                    "switch";
-            }
-
-
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-
-            item.className =
-                "platform-item";
-
-
-            item.innerHTML = `
-
-                <div class="platform-icon ${type}">
-                    ${icon}
-                </div>
-
-                <div>
-
-                    <strong>
-                        ${name}
-                    </strong>
-
-                </div>
-
-            `;
-
-
-            platformList.appendChild(
-                item
-            );
-
-        }
-    );
+        info.appendChild(title);
+        item.append(icon, info);
+        platformList.appendChild(item);
+    });
 }
-
-
-/* =========================================
-   GÊNEROS
-========================================= */
 
 function updateGenres() {
+    if (!genreTags) return;
 
-    if (!genreTags) {
-
-        return;
-    }
-
-
-    const selectedGenres =
-        document.querySelectorAll(
-            'input[name="genre"]:checked'
-        );
-
-
-    genreTags.innerHTML =
-        "";
-
-
-    if (
-        selectedGenres.length === 0
-    ) {
-
-        genreTags.innerHTML = `
-            <span>
-                Nenhum gênero selecionado
-            </span>
-        `;
-
-        return;
-    }
-
-
-    selectedGenres.forEach(
-        (checkbox) => {
-
-            const tag =
-                document.createElement(
-                    "span"
-                );
-
-
-            tag.textContent =
-                checkbox.value;
-
-
-            genreTags.appendChild(
-                tag
-            );
-
-        }
+    const selectedGenres = document.querySelectorAll(
+        'input[name="genre"]:checked'
     );
+
+    genreTags.innerHTML = "";
+
+    if (selectedGenres.length === 0) {
+        const empty = document.createElement("span");
+        empty.textContent = "Nenhum gênero selecionado";
+        genreTags.appendChild(empty);
+        return;
+    }
+
+    selectedGenres.forEach((checkbox) => {
+        const tag = document.createElement("span");
+        tag.textContent = checkbox.value;
+        genreTags.appendChild(tag);
+    });
 }
-
-
-/* =========================================
-   JOGO ATUAL
-========================================= */
 
 function updateCurrentGame() {
+    if (!currentGameName) return;
 
-    if (
-        !currentGame ||
-        !currentGameName ||
-        !currentGameStatus ||
-        !currentGameAvailability
-    ) {
+    const game = currentGame
+        ? currentGame.value.trim()
+        : (PROFILE_API_DATA?.current_game || "");
 
-        return;
-    }
+    const status = currentGameStatus
+        ? currentGameStatus.value
+        : (PROFILE_API_DATA?.current_game_status || "available");
 
+    currentGameName.textContent = game || "Nenhum jogo";
 
-    const game =
-        currentGame.value.trim();
+    if (!currentGameAvailability) return;
 
-
-    currentGameName.textContent =
-        game ||
-        "Nenhum jogo";
-
-
-    const status =
-        currentGameStatus.value;
-
-
-    if (
-        status === "available"
-    ) {
-
-        currentGameAvailability.textContent =
-            "🟢 Disponível";
-
-        currentGameAvailability.style.color =
-            "#4ade80";
-    }
-
-
-    else if (
-        status === "busy"
-    ) {
-
-        currentGameAvailability.textContent =
-            "🔴 Ocupado";
-
-        currentGameAvailability.style.color =
-            "#f87171";
-    }
-
-
-    else {
-
-        currentGameAvailability.textContent =
-            "🟡 Ausente";
-
-        currentGameAvailability.style.color =
-            "#facc15";
+    if (status === "available") {
+        currentGameAvailability.textContent = "🟢 Disponível";
+        currentGameAvailability.style.color = "#4ade80";
+    } else if (status === "busy") {
+        currentGameAvailability.textContent = "🔴 Ocupado";
+        currentGameAvailability.style.color = "#f87171";
+    } else {
+        currentGameAvailability.textContent = "🟡 Ausente";
+        currentGameAvailability.style.color = "#facc15";
     }
 }
-
-
-/* =========================================
-   ESTATÍSTICAS
-========================================= */
 
 function updateStats() {
-
-    if (
-        statValues[0] &&
-        profileGamesCount
-    ) {
-
-        statValues[0].textContent =
-            profileGamesCount.value || 0;
+    if (statValues[0] && profileGamesCount) {
+        statValues[0].textContent = profileGamesCount.value || 0;
     }
 
-
-    if (
-        statValues[1] &&
-        profileFriendsCount
-    ) {
-
-        statValues[1].textContent =
-            profileFriendsCount.value || 0;
+    if (statValues[1] && profileFriendsCount) {
+        statValues[1].textContent = profileFriendsCount.value || 0;
     }
 }
 
 
 /* =========================================
-   SALVAR PERFIL
+   CARREGAR DADOS DO PERFIL PELA API
+========================================= */
+
+function applyProfileData(profile) {
+    const userId = String(
+        profile.id || localStorage.getItem("userId") || ""
+    );
+
+    const usernameKey =
+        `overclockSocietyUsername_${userId}`;
+
+    const savedUsername = userId
+        ? localStorage.getItem(usernameKey)
+        : null;
+
+    const username = normalizeProfileUsername(
+        profile.username || savedUsername || profile.name
+    );
+
+    const data = {
+        ...profile,
+        id: userId,
+        name: profile.name ||
+            localStorage.getItem("userName") ||
+            "Usuário",
+        email: profile.email ||
+            localStorage.getItem("userEmail") ||
+            "",
+        username,
+        course: profile.course || "",
+        semester: Number(profile.semester || 1),
+        join_date: profile.join_date || "",
+        status: profile.status || "online",
+        bio: profile.bio || "",
+        platforms: Array.isArray(profile.platforms)
+            ? profile.platforms
+            : [],
+        genres: Array.isArray(profile.genres)
+            ? profile.genres
+            : [],
+        current_game: profile.current_game || "",
+        current_game_status:
+            profile.current_game_status || "available"
+    };
+
+    PROFILE_API_DATA = data;
+
+    if (userId) {
+        localStorage.setItem("userId", userId);
+        localStorage.setItem(usernameKey, username);
+    }
+
+    localStorage.setItem("userName", data.name);
+
+    if (data.email) {
+        localStorage.setItem("userEmail", data.email);
+    }
+
+    if (profileName) profileName.value = data.name;
+    if (profileUsername) profileUsername.value = data.username;
+    if (profileCourse) profileCourse.value = data.course;
+    if (profileSemester) {
+        profileSemester.value = String(data.semester);
+    }
+    if (profileJoinDate) {
+        profileJoinDate.value = data.join_date;
+    }
+    if (profileStatus) profileStatus.value = data.status;
+    if (profileBio) profileBio.value = data.bio;
+    if (currentGame) currentGame.value = data.current_game;
+    if (currentGameStatus) {
+        currentGameStatus.value = data.current_game_status;
+    }
+
+    document.querySelectorAll('input[name="platform"]').forEach(
+        (checkbox) => {
+            checkbox.checked =
+                data.platforms.includes(checkbox.value);
+        }
+    );
+
+    document.querySelectorAll('input[name="genre"]').forEach(
+        (checkbox) => {
+            checkbox.checked =
+                data.genres.includes(checkbox.value);
+        }
+    );
+
+    if (profileIdentityName) {
+        profileIdentityName.textContent = data.name;
+    }
+
+    if (profileIdentityUsername) {
+        profileIdentityUsername.textContent = `@${data.username}`;
+    }
+
+    if (profileIdentityCourse) {
+        profileIdentityCourse.textContent =
+            `${data.course} • ${data.semester}º período`;
+    }
+
+    if (bioText) {
+        bioText.textContent =
+            data.bio || "Nenhuma biografia adicionada.";
+    }
+
+    if (profileDateText) {
+        profileDateText.textContent =
+            formatJoinDate(data.join_date) || "Não informado";
+    }
+
+    document.querySelectorAll(".profile-name strong").forEach(
+        (element) => {
+            element.textContent = data.name;
+        }
+    );
+
+    document.querySelectorAll(".profile-button .avatar").forEach(
+        (element) => {
+            element.textContent =
+                data.name.charAt(0).toUpperCase() || "?";
+        }
+    );
+
+    const ownAvatar = document.querySelector(".profile-avatar");
+
+    if (ownAvatar && !ownAvatar.style.backgroundImage) {
+        ownAvatar.textContent =
+            data.name.charAt(0).toUpperCase() || "?";
+    }
+
+    updateProfileStatus(data.status);
+    updatePlatforms();
+    updateGenres();
+    updateCurrentGame();
+    updateStats();
+    renderProfilePosts();
+}
+
+async function loadProfileFromApi() {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    try {
+        const response = await fetch(
+            `${PROFILE_API_BASE_URL}/auth/profile`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                await getProfileApiErrorMessage(response)
+            );
+        }
+
+        const profile = await response.json();
+
+        applyProfileData(profile);
+
+        console.log("Perfil carregado da API.");
+
+    } catch (error) {
+        console.error(
+            "Erro ao carregar o Perfil:",
+            error
+        );
+
+        alert(
+            "Não foi possível carregar os dados do Perfil. " +
+            error.message
+        );
+    }
+}
+
+
+/* =========================================
+   SALVAR PERFIL NO POSTGRESQL
 ========================================= */
 
 if (profileForm) {
+    profileForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-    profileForm.addEventListener(
-        "submit",
-        (event) => {
+        const name = profileName.value.trim();
 
-            event.preventDefault();
+        const username =
+            normalizeProfileUsername(profileUsername.value);
 
+        const course = profileCourse.value.trim();
 
-            const name =
-                profileName.value.trim();
+        if (
+            !name ||
+            !course ||
+            !/^[a-z0-9._]{3,32}$/.test(username)
+        ) {
+            alert(
+                "Informe um nome, um curso e um nome de usuário válido. " +
+                "O nome de usuário deve ter de 3 a 32 caracteres " +
+                "e pode conter letras, números, ponto e sublinhado."
+            );
+            return;
+        }
 
-            const username =
-                profileUsername.value.trim();
+        const currentUserId =
+            localStorage.getItem("userId");
 
-            const course =
-                profileCourse.value.trim();
+        const token =
+            localStorage.getItem("token");
 
+        if (!currentUserId || !token) {
+            alert(
+                "Sua sessão não foi encontrada. Faça login novamente."
+            );
+            return;
+        }
 
-            if (
-                !name ||
-                !username ||
-                !course
-            ) {
+        const payload = {
+            name,
+            username,
+            course,
+            semester: Number(profileSemester?.value || 1),
+            join_date: profileJoinDate?.value || null,
+            status: profileStatus?.value || "online",
+            bio: profileBio?.value.trim() || "",
 
-                alert(
-                    "Preencha Nome, Usuário e Curso."
-                );
+            platforms: Array.from(
+                document.querySelectorAll(
+                    'input[name="platform"]:checked'
+                )
+            ).map((checkbox) => checkbox.value),
 
-                return;
-            }
+            genres: Array.from(
+                document.querySelectorAll(
+                    'input[name="genre"]:checked'
+                )
+            ).map((checkbox) => checkbox.value),
 
+            current_game: currentGame
+                ? currentGame.value.trim()
+                : (PROFILE_API_DATA?.current_game || ""),
 
-            if (profileIdentityName) {
+            current_game_status: currentGameStatus
+                ? currentGameStatus.value
+                : (
+                    PROFILE_API_DATA?.current_game_status ||
+                    "available"
+                )
+        };
 
-                profileIdentityName.textContent =
-                    name;
-            }
+        const submitButton = profileForm.querySelector(
+            'button[type="submit"]'
+        );
 
+        const originalButtonText = submitButton
+            ? submitButton.textContent
+            : "";
 
-            if (profileIdentityUsername) {
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = "Salvando...";
+        }
 
-                profileIdentityUsername.textContent =
-                    `@${username}`;
-            }
+        try {
+            const response = await fetch(
+                `${PROFILE_API_BASE_URL}/auth/profile`,
+                {
+                    method: "PUT",
 
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
 
-            if (profileIdentityCourse) {
-
-                profileIdentityCourse.textContent =
-                    `${course} • ${profileSemester.value}º período`;
-            }
-
-
-            if (bioText) {
-
-                bioText.textContent =
-                    profileBio.value.trim() ||
-                    "Nenhuma biografia adicionada.";
-            }
-
-
-            if (profileDateText) {
-
-                profileDateText.textContent =
-                    formatJoinDate(
-                        profileJoinDate.value
-                    );
-            }
-
-
-            updateProfileStatus(
-                profileStatus.value
+                    body: JSON.stringify(payload)
+                }
             );
 
+            if (!response.ok) {
+                throw new Error(
+                    await getProfileApiErrorMessage(response)
+                );
+            }
 
-            updateStats();
+            const savedProfile = await response.json();
 
-
-            updatePlatforms();
-
-
-            updateGenres();
-
-
-            updateCurrentGame();
-
-
+            applyProfileData(savedProfile);
             closeModal();
 
+            window.dispatchEvent(
+                new CustomEvent("overclock:profile-updated", {
+                    detail: savedProfile
+                })
+            );
+
+            alert("Perfil salvo com sucesso!");
+
+            console.log("Perfil atualizado na API.");
+
+        } catch (error) {
+            console.error(
+                "Erro ao salvar o Perfil:",
+                error
+            );
+
+            alert(
+                "Não foi possível salvar o Perfil: " +
+                error.message
+            );
+
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+            }
         }
-    );
+    });
 }
 
 
 /* =========================================
-   AVATAR
+   PRÉVIA DO AVATAR E DA CAPA
+
+   As imagens são apenas pré-visualizadas.
+   Ainda não são enviadas ao servidor.
 ========================================= */
 
 if (profileAvatar) {
+    profileAvatar.addEventListener("change", () => {
+        const file = profileAvatar.files[0];
 
-    profileAvatar.addEventListener(
-        "change",
-        () => {
+        if (!file) return;
 
-            const file =
-                profileAvatar.files[0];
+        const reader = new FileReader();
 
+        reader.onload = (event) => {
+            const avatar =
+                document.querySelector(".profile-avatar");
 
-            if (!file) {
+            if (!avatar) return;
 
-                return;
-            }
+            avatar.style.backgroundImage =
+                `url(${event.target.result})`;
 
+            avatar.style.backgroundSize = "cover";
+            avatar.style.backgroundPosition = "center";
+            avatar.style.fontSize = "0";
+        };
 
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                (event) => {
-
-                    const avatar =
-                        document.querySelector(
-                            ".profile-avatar"
-                        );
-
-
-                    if (!avatar) {
-
-                        return;
-                    }
-
-
-                    avatar.style.backgroundImage =
-                        `url(${event.target.result})`;
-
-                    avatar.style.backgroundSize =
-                        "cover";
-
-                    avatar.style.backgroundPosition =
-                        "center";
-
-                    avatar.style.fontSize =
-                        "0";
-                };
-
-
-            reader.readAsDataURL(
-                file
-            );
-
-        }
-    );
+        reader.readAsDataURL(file);
+    });
 }
 
-
-/* =========================================
-   CAPA
-========================================= */
-
 if (profileCover) {
+    profileCover.addEventListener("change", () => {
+        const file = profileCover.files[0];
 
-    profileCover.addEventListener(
-        "change",
-        () => {
+        if (!file) return;
 
-            const file =
-                profileCover.files[0];
+        const reader = new FileReader();
 
+        reader.onload = (event) => {
+            const cover =
+                document.querySelector(".profile-cover");
 
-            if (!file) {
+            if (!cover) return;
 
-                return;
-            }
+            cover.style.backgroundImage =
+                `url(${event.target.result})`;
 
+            cover.style.backgroundSize = "cover";
+            cover.style.backgroundPosition = "center";
+        };
 
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                (event) => {
-
-                    const cover =
-                        document.querySelector(
-                            ".profile-cover"
-                        );
-
-
-                    if (!cover) {
-
-                        return;
-                    }
-
-
-                    cover.style.backgroundImage =
-                        `url(${event.target.result})`;
-
-                    cover.style.backgroundSize =
-                        "cover";
-
-                    cover.style.backgroundPosition =
-                        "center";
-                };
-
-
-            reader.readAsDataURL(
-                file
-            );
-
-        }
-    );
+        reader.readAsDataURL(file);
+    });
 }
 
 
@@ -855,1116 +695,726 @@ if (profileCover) {
    ABAS DO PERFIL
 ========================================= */
 
-const profileTabButtons =
-    document.querySelectorAll(
-        "[data-profile-tab]"
-    );
-
-const profileTabPanels =
-    document.querySelectorAll(
-        "[data-profile-panel]"
-    );
-
-const profilePostsList =
-    document.getElementById(
-        "profilePostsList"
-    );
-
-const profilePostsCount =
-    document.getElementById(
-        "profilePostsCount"
-    );
-
-
 function openProfileTab(tabName) {
-
-    profileTabButtons.forEach(
-        (button) => {
-
-            const isActive =
-                button.dataset.profileTab ===
-                tabName;
-
-
-            button.classList.toggle(
-                "active",
-                isActive
-            );
-
-
-            button.setAttribute(
-                "aria-selected",
-                String(isActive)
-            );
-
-        }
+    const targetTab = Array.from(profileTabButtons).find(
+        (button) => button.dataset.profileTab === tabName
     );
 
-
-    profileTabPanels.forEach(
-        (panel) => {
-
-            const isActive =
-                panel.dataset.profilePanel ===
-                tabName;
-
-
-            panel.classList.toggle(
-                "active",
-                isActive
-            );
-
-        }
+    const targetPanel = Array.from(profileTabPanels).find(
+        (panel) => panel.dataset.profilePanel === tabName
     );
 
+    if (!targetTab || !targetPanel) {
+        console.error(
+            "Não foi possível encontrar a aba ou o painel do perfil:",
+            tabName
+        );
 
-    if (
-        tabName === "posts"
-    ) {
+        return;
+    }
 
+    profileTabButtons.forEach((button) => {
+        const isActive =
+            button.dataset.profileTab === tabName;
+
+        button.classList.toggle("active", isActive);
+
+        button.setAttribute(
+            "aria-selected",
+            String(isActive)
+        );
+    });
+
+    profileTabPanels.forEach((panel) => {
+        const isActive =
+            panel.dataset.profilePanel === tabName;
+
+        panel.classList.toggle("active", isActive);
+        panel.hidden = !isActive;
+    });
+
+    if (tabName === "posts") {
         renderProfilePosts();
+
+        if (
+            !profilePostsLoaded &&
+            !profilePostsLoading &&
+            localStorage.getItem("token")
+        ) {
+            loadProfilePostsFromApi();
+        }
     }
 }
 
+profileTabButtons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+        event.preventDefault();
 
-profileTabButtons.forEach(
-    (button) => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                openProfileTab(
-                    button.dataset.profileTab
-                );
-
-            }
-        );
-
-    }
-);
+        openProfileTab(button.dataset.profileTab);
+    });
+});
 
 
 /* =========================================
-   POSTS DO PERFIL
+   PUBLICAÇÕES DO PERFIL — API DO FEED
+========================================= */
+
+let profileFeedPosts = [];
+let profilePostsLoaded = false;
+let profilePostsLoading = false;
+let profilePostsError = "";
+let profilePostsLoadPromise = null;
+
+const activeProfileCommentPostIds = new Set();
+
+const PROFILE_GAME_HASHTAGS = new Set([
+    "eldenring",
+    "hollowknight",
+    "minecraft",
+    "valorant",
+    "terraria",
+    "zelda",
+    "godofwar",
+    "stardewvalley",
+    "residentevil4",
+    "hades",
+    "sekiro",
+    "cyberpunk2077",
+    "celeste",
+    "spiderman"
+]);
+
+
+/* =========================================
+   USUÁRIO ATUAL
 ========================================= */
 
 function getProfileCurrentUser() {
-
-    const id =
-        localStorage.getItem("userId");
-
-
+    const id = localStorage.getItem("userId");
     const name =
-        localStorage.getItem("userName") ||
-        "Usuário";
-
+        localStorage.getItem("userName") || "Usuário";
 
     const email =
-        localStorage.getItem("userEmail") ||
-        "";
-
+        localStorage.getItem("userEmail") || "";
 
     const avatar =
+        name.trim().charAt(0).toUpperCase() || "?";
+
+    const savedUsername = id
+        ? localStorage.getItem(
+            `overclockSocietyUsername_${id}`
+        )
+        : null;
+
+    const username = normalizeProfileUsername(
+        PROFILE_API_DATA?.username ||
+        savedUsername ||
         name
-            .charAt(0)
-            .toUpperCase() ||
-        "?";
-
-
-    const username =
-        `@${name
-            .toLocaleLowerCase("pt-BR")
-            .replace(/\s+/g, "")}`;
-
+    ) || "usuario";
 
     return {
         id,
         name,
         email,
         avatar,
-        username
+        username: `@${username}`
     };
 }
 
 
-function getProfilePostsStorageKey() {
+/* =========================================
+   REQUISIÇÕES À API DO FEED
+========================================= */
 
-    const user =
-        getProfileCurrentUser();
+async function profileFeedApiRequest(path, options = {}) {
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+        throw new Error(
+            "Sua sessão não foi encontrada. Entre novamente."
+        );
+    }
 
-    return `overclockSocietyFeedPosts_${user.id}`;
+    const headers = {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`
+    };
+
+    if (
+        options.body &&
+        !headers["Content-Type"]
+    ) {
+        headers["Content-Type"] = "application/json";
+    }
+
+    const response = await fetch(
+        `${PROFILE_API_BASE_URL}${path}`,
+        {
+            ...options,
+            headers
+        }
+    );
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            await getProfileApiErrorMessage(response)
+        );
+    }
+
+    return response.json();
 }
 
 
-const PROFILE_GAME_HASHTAGS =
-    new Set([
-
-        "eldenring",
-        "hollowknight",
-        "minecraft",
-        "valorant",
-        "terraria",
-        "zelda",
-        "godofwar",
-        "stardewvalley",
-        "residentevil4",
-        "hades",
-        "sekiro",
-        "cyberpunk2077",
-        "celeste",
-        "spiderman"
-
-    ]);
-
-
 /* =========================================
-   CARREGAR POSTS
+   CARREGAR PUBLICAÇÕES DO POSTGRESQL
 ========================================= */
 
-function loadProfilePostsData() {
+async function loadProfilePostsFromApi() {
+    if (profilePostsLoadPromise) {
+        return profilePostsLoadPromise;
+    }
 
-    let stored =
-        null;
+    if (!localStorage.getItem("token")) {
+        profilePostsLoaded = false;
+        profilePostsLoading = false;
 
+        profilePostsError =
+            "Entre novamente para ver suas publicações.";
 
-    try {
+        renderProfilePosts();
+        return;
+    }
 
-        stored =
-            localStorage.getItem(
-                getProfilePostsStorageKey()
+    profilePostsLoading = true;
+    profilePostsError = "";
+
+    renderProfilePosts();
+
+    const request = (async () => {
+        try {
+            const result = await profileFeedApiRequest(
+                "/feed/posts"
             );
 
-    } catch (error) {
+            profileFeedPosts = Array.isArray(result)
+                ? result
+                : [];
 
-        console.warn(
-            "Não foi possível acessar o localStorage.",
-            error
-        );
+            profilePostsLoaded = true;
+            profilePostsError = "";
 
+            renderProfilePosts();
 
-        return [];
-    }
-
-
-    if (!stored) {
-
-        return [];
-    }
-
-
-    try {
-
-        const parsed =
-            JSON.parse(
-                stored
+        } catch (error) {
+            console.error(
+                "Erro ao carregar publicações do perfil:",
+                error
             );
 
+            profilePostsLoaded = false;
 
-        return Array.isArray(
-            parsed
-        )
-            ? parsed
-            : [];
+            profilePostsError =
+                error.message || "Erro desconhecido.";
 
-    } catch (error) {
+            renderProfilePosts();
 
-        console.warn(
-            "Não foi possível carregar os posts do perfil.",
-            error
-        );
+        } finally {
+            profilePostsLoading = false;
+            profilePostsLoadPromise = null;
+        }
+    })();
 
+    profilePostsLoadPromise = request;
 
-        return [];
-    }
+    return request;
 }
 
-
-/* =========================================
-   SALVAR POSTS
-========================================= */
-
-function saveProfilePostsData(
-    posts
-) {
-
-    try {
-
-        localStorage.setItem(
-            getProfilePostsStorageKey(),
-            JSON.stringify(
-                posts
-            )
-        );
-
-    } catch (error) {
-
-        console.warn(
-            "Não foi possível salvar os posts.",
-            error
-        );
-    }
-}
-
-
-/* =========================================
-   POSTS DO USUÁRIO ATUAL
-========================================= */
 
 function getCurrentUserPosts(posts) {
-
-    const user =
-        getProfileCurrentUser();
-
+    const user = getProfileCurrentUser();
 
     return posts.filter(
         (post) =>
-            String(post.userId) ===
-            String(user.id)
+            String(post.userId) === String(user.id)
     );
 }
 
 
 /* =========================================
-   HASHTAGS
+   HASHTAGS NAS PUBLICAÇÕES
 ========================================= */
 
-function normalizeProfileHashtag(
-    value
-) {
-
-    return String(value)
+function normalizeProfileHashtag(value) {
+    return String(value || "")
         .toLowerCase()
-        .replace("#", "")
+        .replace(/^#/, "")
         .trim();
 }
 
 
-function createProfilePostText(
-    content
-) {
+function createProfilePostText(content) {
+    const paragraph = document.createElement("p");
+    paragraph.className = "post-text";
 
-    const paragraph =
-        document.createElement(
-            "p"
-        );
+    const parts = String(content || "")
+        .split(/(#[a-zA-ZÀ-ÿ0-9_-]+)/g);
 
+    parts.forEach((part) => {
+        const normalized =
+            normalizeProfileHashtag(part);
 
-    paragraph.className =
-        "post-text";
+        if (
+            part.startsWith("#") &&
+            PROFILE_GAME_HASHTAGS.has(normalized)
+        ) {
+            const hashtag =
+                document.createElement("button");
 
+            hashtag.type = "button";
+            hashtag.className = "game-hashtag";
+            hashtag.textContent = part;
 
-    const parts =
-        String(content).split(
-            /(#[a-zA-ZÀ-ÿ0-9_-]+)/g
-        );
+            hashtag.style.border = "none";
+            hashtag.style.background = "transparent";
+            hashtag.style.padding = "0";
+            hashtag.style.font = "inherit";
 
+            hashtag.addEventListener("click", () => {
+                window.location.href =
+                    `feed.html?hashtag=${encodeURIComponent(normalized)}`;
+            });
 
-    parts.forEach(
-        (part) => {
+            paragraph.appendChild(hashtag);
 
-            const normalized =
-                normalizeProfileHashtag(
-                    part
-                );
-
-
-            if (
-                part.startsWith("#") &&
-                PROFILE_GAME_HASHTAGS.has(
-                    normalized
-                )
-            ) {
-
-                const hashtag =
-                    document.createElement(
-                        "button"
-                    );
-
-
-                hashtag.type =
-                    "button";
-
-                hashtag.className =
-                    "game-hashtag";
-
-                hashtag.textContent =
-                    part;
-
-
-                hashtag.style.border =
-                    "none";
-
-                hashtag.style.background =
-                    "transparent";
-
-                hashtag.style.padding =
-                    "0";
-
-                hashtag.style.font =
-                    "inherit";
-
-
-                hashtag.addEventListener(
-                    "click",
-                    () => {
-
-                        window.location.href =
-                            `feed.html?hashtag=${encodeURIComponent(
-                                normalized
-                            )}`;
-
-                    }
-                );
-
-
-                paragraph.appendChild(
-                    hashtag
-                );
-
-
-                return;
-            }
-
-
+        } else {
             paragraph.appendChild(
-                document.createTextNode(
-                    part
-                )
+                document.createTextNode(part)
             );
-
         }
-    );
-
+    });
 
     return paragraph;
 }
 
 
-/* =========================================
-   BOTÃO DE AÇÃO DO POST
-========================================= */
+function createProfilePostAction(icon, count, label) {
+    const button = document.createElement("button");
 
-function createProfilePostAction(
-    icon,
-    count,
-    label
-) {
+    button.type = "button";
+    button.className = "post-action";
 
-    const button =
-        document.createElement(
-            "button"
-        );
+    const iconSpan = document.createElement("span");
+    iconSpan.textContent = icon;
 
+    const countSpan = document.createElement("span");
+    countSpan.textContent = String(count ?? 0);
 
-    button.type =
-        "button";
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = label;
 
-    button.className =
-        "post-action";
+    button.append(
+        iconSpan,
+        countSpan,
+        labelSpan
+    );
 
-
-    button.innerHTML = `
-        <span>
-            ${icon}
-        </span>
-
-        <span>
-            ${count}
-        </span>
-
-        <span>
-            ${label}
-        </span>
-    `;
-
+    button.setAttribute(
+        "aria-label",
+        `${label}: ${count ?? 0}`
+    );
 
     return button;
 }
 
 
 /* =========================================
-   COMENTÁRIO
+   COMENTÁRIOS
 ========================================= */
 
-function createProfileComment(
-    comment,
-    postId
-) {
+function createProfileComment(comment, postId) {
+    const element = document.createElement("div");
+    element.className = "comment";
 
-    const element =
-        document.createElement(
-            "div"
-        );
+    const avatar = document.createElement("div");
+    avatar.className = "comment-avatar";
+    avatar.textContent = comment.avatar || "?";
 
+    const body = document.createElement("div");
+    body.className = "comment-body";
 
-    element.className =
-        "comment";
+    const user = document.createElement("div");
+    user.className = "comment-user";
+    user.textContent = comment.author || "Usuário";
 
+    const text = document.createElement("div");
+    text.className = "comment-text";
+    text.textContent = comment.text || "";
 
-    const avatar =
-        document.createElement(
-            "div"
-        );
+    body.append(user, text);
 
-
-    avatar.className =
-        "comment-avatar";
-
-
-    avatar.textContent =
-        comment.avatar ||
-        "?";
-
-
-    const body =
-        document.createElement(
-            "div"
-        );
-
-
-    body.className =
-        "comment-body";
-
-
-    const user =
-        document.createElement(
-            "div"
-        );
-
-
-    user.className =
-        "comment-user";
-
-
-    user.textContent =
-        comment.author ||
-        "Usuário";
-
-
-    const text =
-        document.createElement(
-            "div"
-        );
-
-
-    text.className =
-        "comment-text";
-
-
-    text.textContent =
-        comment.text ||
-        "";
-
-
-    body.append(
-        user,
-        text
-    );
-
-
-    const currentUser =
-        getProfileCurrentUser();
-
+    const currentUser = getProfileCurrentUser();
 
     const canDeleteComment =
         comment.id != null &&
-        String(comment.userId) ===
-        String(currentUser.id);
-
+        String(comment.userId) === String(currentUser.id);
 
     if (canDeleteComment) {
-
         const deleteButton =
-            document.createElement(
-                "button"
-            );
+            document.createElement("button");
 
+        deleteButton.type = "button";
+        deleteButton.className = "comment-delete-button";
+        deleteButton.textContent = "🗑 Excluir";
 
-        deleteButton.type =
-            "button";
+        deleteButton.addEventListener("click", () => {
+            deleteProfileComment(postId, comment.id);
+        });
 
-        deleteButton.className =
-            "comment-delete-button";
-
-        deleteButton.textContent =
-            "🗑 Excluir";
-
-
-        deleteButton.addEventListener(
-            "click",
-            () => {
-
-                deleteProfileComment(
-                    postId,
-                    comment.id
-                );
-
-            }
-        );
-
-
-        body.appendChild(
-            deleteButton
-        );
+        body.appendChild(deleteButton);
     }
 
-
-    element.append(
-        avatar,
-        body
-    );
-
+    element.append(avatar, body);
 
     return element;
 }
 
 
-/* =========================================
-   SEÇÃO DE COMENTÁRIOS
-========================================= */
+function createProfileCommentsSection(post) {
+    const section = document.createElement("div");
+    section.className = "comments-section";
 
-function createProfileCommentsSection(
-    post,
-    allPosts
-) {
+    if (
+        activeProfileCommentPostIds.has(String(post.id))
+    ) {
+        section.classList.add("active");
+    }
 
-    const section =
-        document.createElement(
-            "div"
+    const list = document.createElement("div");
+    list.className = "comments-list";
+
+    (post.comments || []).forEach((comment) => {
+        list.appendChild(
+            createProfileComment(comment, post.id)
+        );
+    });
+
+    const form = document.createElement("form");
+    form.className = "comment-form";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.maxLength = 180;
+    input.placeholder = "Escreva um comentário...";
+    input.required = true;
+
+    input.setAttribute(
+        "aria-label",
+        "Texto do comentário"
+    );
+
+    const button = document.createElement("button");
+    button.type = "submit";
+    button.textContent = "Enviar";
+
+    form.append(input, button);
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const content = input.value.trim();
+
+        if (!content) return;
+
+        button.disabled = true;
+        button.textContent = "Enviando...";
+
+        activeProfileCommentPostIds.add(
+            String(post.id)
         );
 
-
-    section.className =
-        "comments-section";
-
-
-    const list =
-        document.createElement(
-            "div"
-        );
-
-
-    list.className =
-        "comments-list";
-
-
-    (post.comments || []).forEach(
-        (comment) => {
-
-            list.appendChild(
-                createProfileComment(
-                    comment,
-                    post.id
-                )
+        try {
+            await profileFeedApiRequest(
+                `/feed/posts/${post.id}/comments`,
+                {
+                    method: "POST",
+                    body: JSON.stringify({ content })
+                }
             );
 
-        }
-    );
+            await loadProfilePostsFromApi();
 
-
-    const form =
-        document.createElement(
-            "form"
-        );
-
-
-    form.className =
-        "comment-form";
-
-
-    const input =
-        document.createElement(
-            "input"
-        );
-
-
-    input.type =
-        "text";
-
-    input.maxLength =
-        180;
-
-    input.placeholder =
-        "Escreva um comentário...";
-
-
-    const button =
-        document.createElement(
-            "button"
-        );
-
-
-    button.type =
-        "submit";
-
-    button.textContent =
-        "Enviar";
-
-
-    form.append(
-        input,
-        button
-    );
-
-
-    form.addEventListener(
-        "submit",
-        (event) => {
-
-            event.preventDefault();
-
-
-            const text =
-                input.value.trim();
-
-
-            if (!text) {
-
-                return;
-            }
-
-
-            if (
-                !Array.isArray(
-                    post.comments
-                )
-            ) {
-
-                post.comments =
-                    [];
-            }
-
-
-            const currentUser =
-                getProfileCurrentUser();
-
-
-            post.comments.push({
-
-                id:
-                    Date.now(),
-
-                userId:
-                    currentUser.id,
-
-                author:
-                    currentUser.name,
-
-                avatar:
-                    currentUser.avatar,
-
-                text
-
-            });
-
-
-            saveProfilePostsData(
-                allPosts
+        } catch (error) {
+            console.error(
+                "Erro ao enviar comentário:",
+                error
             );
 
+            alert(
+                `Não foi possível enviar o comentário: ${error.message}`
+            );
 
-            renderProfilePosts();
-
+        } finally {
+            button.disabled = false;
+            button.textContent = "Enviar";
         }
-    );
+    });
 
-
-    section.append(
-        list,
-        form
-    );
-
+    section.append(list, form);
 
     return section;
 }
 
 
 /* =========================================
-   EXCLUIR POST DO PERFIL
+   EXCLUIR PUBLICAÇÕES E COMENTÁRIOS
 ========================================= */
 
-function deleteProfilePost(
-    postId
-) {
+async function deleteProfilePost(postId) {
+    const currentUser = getProfileCurrentUser();
 
-    const currentUser =
-        getProfileCurrentUser();
-
-
-    const posts =
-        loadProfilePostsData();
-
-
-    const post =
-        posts.find(
-            (item) =>
-                String(item.id) ===
-                String(postId)
-        );
-
-
-    if (!post) {
-
-        return;
-    }
-
-
-    if (
-        String(post.userId) !==
-        String(currentUser.id)
-    ) {
-
-        console.warn(
-            "Você não pode excluir este post."
-        );
-
-        return;
-    }
-
-
-    const confirmed =
-        window.confirm(
-            "Deseja realmente excluir este post?"
-        );
-
-
-    if (!confirmed) {
-
-        return;
-    }
-
-
-    const updatedPosts =
-        posts.filter(
-            (item) =>
-                String(item.id) !==
-                String(postId)
-        );
-
-
-    saveProfilePostsData(
-        updatedPosts
+    const post = profileFeedPosts.find(
+        (item) =>
+            String(item.id) === String(postId)
     );
 
+    if (!post) return;
 
-    renderProfilePosts();
+    if (
+        String(post.userId) !== String(currentUser.id)
+    ) {
+        console.warn(
+            "Você só pode excluir suas próprias publicações."
+        );
+
+        return;
+    }
+
+    if (
+        !window.confirm(
+            "Deseja realmente excluir esta publicação?"
+        )
+    ) {
+        return;
+    }
+
+    try {
+        await profileFeedApiRequest(
+            `/feed/posts/${postId}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        activeProfileCommentPostIds.delete(
+            String(postId)
+        );
+
+        await loadProfilePostsFromApi();
+
+    } catch (error) {
+        console.error(
+            "Erro ao excluir publicação:",
+            error
+        );
+
+        alert(
+            `Não foi possível excluir a publicação: ${error.message}`
+        );
+    }
 }
 
 
-/* =========================================
-   EXCLUIR COMENTÁRIO DO PERFIL
-========================================= */
+async function deleteProfileComment(postId, commentId) {
+    const currentUser = getProfileCurrentUser();
 
-function deleteProfileComment(
-    postId,
-    commentId
-) {
+    const post = profileFeedPosts.find(
+        (item) =>
+            String(item.id) === String(postId)
+    );
 
-    const currentUser =
-        getProfileCurrentUser();
+    const comment = (post?.comments || []).find(
+        (item) =>
+            String(item.id) === String(commentId)
+    );
 
-
-    const posts =
-        loadProfilePostsData();
-
-
-    const post =
-        posts.find(
-            (item) =>
-                String(item.id) ===
-                String(postId)
-        );
-
-
-    if (!post) {
-
-        return;
-    }
-
-
-    const comment =
-        (post.comments || []).find(
-            (item) =>
-                String(item.id) ===
-                String(commentId)
-        );
-
-
-    if (!comment) {
-
-        return;
-    }
-
+    if (!comment) return;
 
     if (
-        String(comment.userId) !==
-        String(currentUser.id)
+        String(comment.userId) !== String(currentUser.id)
     ) {
-
         console.warn(
-            "Você não pode excluir este comentário."
+            "Você só pode excluir seus próprios comentários."
         );
 
         return;
     }
 
-
-    const confirmed =
-        window.confirm(
+    if (
+        !window.confirm(
             "Deseja realmente excluir este comentário?"
-        );
-
-
-    if (!confirmed) {
-
-        return;
-    }
-
-
-    post.comments =
-        (post.comments || []).filter(
-            (item) =>
-                String(item.id) !==
-                String(commentId)
-        );
-
-
-    saveProfilePostsData(
-        posts
-    );
-
-
-    renderProfilePosts();
-}
-
-
-/* =========================================
-   CURTIR POST
-========================================= */
-
-function toggleProfilePostLike(
-    postId
-) {
-
-    const posts =
-        loadProfilePostsData();
-
-
-    const post =
-        posts.find(
-            (item) =>
-                item.id ===
-                postId
-        );
-
-
-    if (!post) {
-
-        return;
-    }
-
-
-    post.liked =
-        !post.liked;
-
-
-    post.likes =
-        Number(
-            post.likes || 0
-        ) +
-        (
-            post.liked
-                ? 1
-                : -1
-        );
-
-
-    if (
-        post.likes < 0
+        )
     ) {
-
-        post.likes =
-            0;
-    }
-
-
-    saveProfilePostsData(
-        posts
-    );
-
-
-    renderProfilePosts();
-}
-
-
-/* =========================================
-   REPOSTAR
-========================================= */
-
-function toggleProfilePostRepost(
-    postId
-) {
-
-    const posts =
-        loadProfilePostsData();
-
-
-    const post =
-        posts.find(
-            (item) =>
-                item.id ===
-                postId
-        );
-
-
-    if (!post) {
-
         return;
     }
 
-
-    post.reposted =
-        !post.reposted;
-
-
-    post.reposts =
-        Number(
-            post.reposts || 0
-        ) +
-        (
-            post.reposted
-                ? 1
-                : -1
-        );
-
-
-    if (
-        post.reposts < 0
-    ) {
-
-        post.reposts =
-            0;
-    }
-
-
-    saveProfilePostsData(
-        posts
+    activeProfileCommentPostIds.add(
+        String(postId)
     );
 
+    try {
+        await profileFeedApiRequest(
+            `/feed/posts/${postId}/comments/${commentId}`,
+            {
+                method: "DELETE"
+            }
+        );
 
-    renderProfilePosts();
+        await loadProfilePostsFromApi();
+
+    } catch (error) {
+        console.error(
+            "Erro ao excluir comentário:",
+            error
+        );
+
+        alert(
+            `Não foi possível excluir o comentário: ${error.message}`
+        );
+    }
 }
 
 
 /* =========================================
-   CARD DO POST
+   CURTIDAS E REPOSTAGENS
 ========================================= */
 
-function createProfilePostCard(
-    post,
-    allPosts
-) {
+async function toggleProfilePostLike(postId, button) {
+    if (button) {
+        button.disabled = true;
+    }
 
-    const currentUser =
-        getProfileCurrentUser();
-
-
-    const article =
-        document.createElement(
-            "article"
+    try {
+        const result = await profileFeedApiRequest(
+            `/feed/posts/${postId}/like`,
+            {
+                method: "POST"
+            }
         );
 
-
-    article.className =
-        "post-card";
-
-
-    const header =
-        document.createElement(
-            "div"
+        const post = profileFeedPosts.find(
+            (item) =>
+                String(item.id) === String(postId)
         );
 
+        if (post) {
+            post.liked = result.liked;
+            post.likes = result.likes;
+        }
 
-    header.className =
-        "post-header";
+        renderProfilePosts();
 
-
-    const avatar =
-        document.createElement(
-            "div"
+    } catch (error) {
+        console.error(
+            "Erro ao atualizar curtida:",
+            error
         );
 
+        alert(
+            `Não foi possível atualizar a curtida: ${error.message}`
+        );
 
-    avatar.className =
-        "post-avatar";
+    } finally {
+        if (button) {
+            button.disabled = false;
+        }
+    }
+}
 
 
+async function toggleProfilePostRepost(postId, button) {
+    if (button) {
+        button.disabled = true;
+    }
+
+    try {
+        const result = await profileFeedApiRequest(
+            `/feed/posts/${postId}/repost`,
+            {
+                method: "POST"
+            }
+        );
+
+        const post = profileFeedPosts.find(
+            (item) =>
+                String(item.id) === String(postId)
+        );
+
+        if (post) {
+            post.reposted = result.reposted;
+            post.reposts = result.reposts;
+        }
+
+        renderProfilePosts();
+
+    } catch (error) {
+        console.error(
+            "Erro ao atualizar repostagem:",
+            error
+        );
+
+        alert(
+            `Não foi possível atualizar a repostagem: ${error.message}`
+        );
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+        }
+    }
+}
+
+
+/* =========================================
+   CARD DE PUBLICAÇÃO
+========================================= */
+
+function createProfilePostCard(post) {
+    const currentUser = getProfileCurrentUser();
+
+    const article = document.createElement("article");
+    article.className = "post-card";
+
+    const header = document.createElement("div");
+    header.className = "post-header";
+
+    const avatar = document.createElement("div");
+    avatar.className = "post-avatar";
     avatar.textContent =
-        post.avatar ||
-        currentUser.avatar;
+        post.avatar || currentUser.avatar;
 
+    const user = document.createElement("div");
+    user.className = "post-user";
 
-    const user =
-        document.createElement(
-            "div"
-        );
+    const userLine = document.createElement("div");
+    userLine.className = "post-user-line";
 
-
-    user.className =
-        "post-user";
-
-
-    const userLine =
-        document.createElement(
-            "div"
-        );
-
-
-    userLine.className =
-        "post-user-line";
-
-
-    const author =
-        document.createElement(
-            "strong"
-        );
-
-
+    const author = document.createElement("strong");
     author.textContent =
-        post.author ||
-        currentUser.name;
+        post.author || currentUser.name;
 
-
-    const username =
-        document.createElement(
-            "span"
-        );
-
-
-    username.className =
-        "post-username";
-
-
+    const username = document.createElement("span");
+    username.className = "post-username";
     username.textContent =
-        post.username ||
-        currentUser.username;
+        post.username || currentUser.username;
 
-
-    const time =
-        document.createElement(
-            "span"
-        );
-
-
-    time.className =
-        "post-time";
-
-
+    const time = document.createElement("span");
+    time.className = "post-time";
     time.textContent =
         `• ${post.createdAt || "agora"}`;
-
 
     userLine.append(
         author,
@@ -1972,124 +1422,42 @@ function createProfilePostCard(
         time
     );
 
-
-    user.appendChild(
-        userLine
+    user.append(
+        userLine,
+        createProfilePostText(post.content || "")
     );
 
+    header.append(avatar, user);
+    article.appendChild(header);
 
-    user.appendChild(
-        createProfilePostText(
-            post.content || ""
-        )
+    const actions = document.createElement("div");
+    actions.className = "post-actions";
+
+    const commentButton = createProfilePostAction(
+        "💬",
+        (post.comments || []).length,
+        "Comentar"
     );
 
-
-    header.append(
-        avatar,
-        user
+    const repostButton = createProfilePostAction(
+        post.reposted ? "✅" : "🔁",
+        Number(post.reposts || 0),
+        "Repostar"
     );
 
-
-    article.appendChild(
-        header
+    const likeButton = createProfilePostAction(
+        post.liked ? "❤️" : "♡",
+        Number(post.likes || 0),
+        "Curtir"
     );
 
-
-    const actions =
-        document.createElement(
-            "div"
-        );
-
-
-    actions.className =
-        "post-actions";
-
-
-    const commentButton =
-        createProfilePostAction(
-            "💬",
-            (post.comments || []).length,
-            "Comentar"
-        );
-
-
-    const repostButton =
-        createProfilePostAction(
-            "🔁",
-            Number(
-                post.reposts || 0
-            ),
-            "Repostar"
-        );
-
-
-    const likeButton =
-        createProfilePostAction(
-            post.liked
-                ? "❤️"
-                : "♡",
-
-            Number(
-                post.likes || 0
-            ),
-
-            "Curtir"
-        );
-
-
-    const canDeletePost =
-        post.userId != null &&
-        String(post.userId) ===
-        String(currentUser.id);
-
-
-    let deletePostButton =
-        null;
-
-
-    if (canDeletePost) {
-
-        deletePostButton =
-            document.createElement(
-                "button"
-            );
-
-
-        deletePostButton.type =
-            "button";
-
-        deletePostButton.className =
-            "post-action post-delete-button";
-
-
-        deletePostButton.innerHTML =
-            `
-                <span>🗑</span>
-                <span>Excluir</span>
-            `;
+    if (post.liked) {
+        likeButton.classList.add("liked");
     }
 
-
-    if (
-        post.liked
-    ) {
-
-        likeButton.classList.add(
-            "liked"
-        );
+    if (post.reposted) {
+        repostButton.classList.add("reposted");
     }
-
-
-    if (
-        post.reposted
-    ) {
-
-        repostButton.classList.add(
-            "reposted"
-        );
-    }
-
 
     actions.append(
         commentButton,
@@ -2097,208 +1465,206 @@ function createProfilePostCard(
         likeButton
     );
 
+    const canDeletePost =
+        post.userId != null &&
+        String(post.userId) === String(currentUser.id);
 
-    if (deletePostButton) {
+    if (canDeletePost) {
+        const deleteButton =
+            document.createElement("button");
 
-        actions.appendChild(
-            deletePostButton
-        );
+        deleteButton.type = "button";
 
+        deleteButton.className =
+            "post-action post-delete-button";
 
-        deletePostButton.addEventListener(
-            "click",
-            () => {
+        deleteButton.innerHTML =
+            "<span>🗑</span><span>Excluir</span>";
 
-                deleteProfilePost(
-                    post.id
-                );
+        deleteButton.addEventListener("click", () => {
+            deleteProfilePost(post.id);
+        });
 
-            }
-        );
+        actions.appendChild(deleteButton);
     }
 
-
-    article.appendChild(
-        actions
-    );
-
+    article.appendChild(actions);
 
     const commentsSection =
-        createProfileCommentsSection(
-            post,
-            allPosts
-        );
+        createProfileCommentsSection(post);
 
+    article.appendChild(commentsSection);
 
-    article.appendChild(
-        commentsSection
-    );
+    commentButton.addEventListener("click", () => {
+        const key = String(post.id);
 
+        if (activeProfileCommentPostIds.has(key)) {
+            activeProfileCommentPostIds.delete(key);
+            commentsSection.classList.remove("active");
 
-    commentButton.addEventListener(
-        "click",
-        () => {
-
-            commentsSection.classList.toggle(
-                "active"
-            );
-
+        } else {
+            activeProfileCommentPostIds.add(key);
+            commentsSection.classList.add("active");
         }
-    );
+    });
 
+    likeButton.addEventListener("click", () => {
+        toggleProfilePostLike(post.id, likeButton);
+    });
 
-    likeButton.addEventListener(
-        "click",
-        () => {
-
-            toggleProfilePostLike(
-                post.id
-            );
-
-        }
-    );
-
-
-    repostButton.addEventListener(
-        "click",
-        () => {
-
-            toggleProfilePostRepost(
-                post.id
-            );
-
-        }
-    );
-
+    repostButton.addEventListener("click", () => {
+        toggleProfilePostRepost(post.id, repostButton);
+    });
 
     return article;
 }
 
 
 /* =========================================
-   RENDERIZAR POSTS
+   RENDERIZAR PUBLICAÇÕES DO PERFIL
 ========================================= */
 
 function renderProfilePosts() {
+    if (!profilePostsList) return;
 
-    if (
-        !profilePostsList
-    ) {
+    profilePostsList.innerHTML = "";
 
-        return;
-    }
+    if (!profilePostsLoaded) {
+        const message = document.createElement("div");
+        message.className = "profile-posts-empty";
 
+        const title = document.createElement("strong");
+        const description = document.createElement("p");
 
-    const posts =
-        loadProfilePostsData();
+        if (profilePostsError) {
+            title.textContent =
+                "Não foi possível carregar suas publicações.";
 
+            description.textContent =
+                profilePostsError;
 
-    const userPosts =
-        getCurrentUserPosts(
-            posts
-        );
+            const retryButton =
+                document.createElement("button");
 
+            retryButton.type = "button";
+            retryButton.className = "btn btn-primary";
+            retryButton.textContent = "Tentar novamente";
 
-    profilePostsList.innerHTML =
-        "";
+            retryButton.addEventListener("click", () => {
+                loadProfilePostsFromApi();
+            });
 
-
-    if (
-        profilePostsCount
-    ) {
-
-        profilePostsCount.textContent =
-            userPosts.length;
-    }
-
-
-    if (
-        userPosts.length === 0
-    ) {
-
-        profilePostsList.innerHTML = `
-
-            <div class="profile-posts-empty">
-
-                <span>
-                    📰
-                </span>
-
-                <strong>
-                    Você ainda não publicou nada.
-                </strong>
-
-                <p>
-                    Crie um post no Feed e ele aparecerá aqui automaticamente.
-                </p>
-
-            </div>
-
-        `;
-
-
-        return;
-    }
-
-
-    userPosts.forEach(
-        (post) => {
-
-            profilePostsList.appendChild(
-                createProfilePostCard(
-                    post,
-                    posts
-                )
+            message.append(
+                title,
+                description,
+                retryButton
             );
 
+        } else {
+            title.textContent = profilePostsLoading
+                ? "Carregando suas publicações..."
+                : "Preparando o Feed...";
+
+            description.textContent = profilePostsLoading
+                ? "Buscando publicações no servidor."
+                : "Aguarde enquanto validamos sua sessão.";
+
+            message.append(title, description);
         }
-    );
+
+        profilePostsList.appendChild(message);
+
+        if (profilePostsCount) {
+            profilePostsCount.textContent = "0";
+        }
+
+        return;
+    }
+
+    const userPosts =
+        getCurrentUserPosts(profileFeedPosts);
+
+    if (profilePostsCount) {
+        profilePostsCount.textContent =
+            String(userPosts.length);
+    }
+
+    if (userPosts.length === 0) {
+        profilePostsList.innerHTML = `
+            <div class="profile-posts-empty">
+                <span>📰</span>
+                <strong>Você ainda não publicou nada.</strong>
+                <p>
+                    Crie uma publicação no Feed e ela aparecerá aqui automaticamente.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+    userPosts.forEach((post) => {
+        profilePostsList.appendChild(
+            createProfilePostCard(post)
+        );
+    });
 }
 
 
 /* =========================================
-   SINCRONIZAÇÃO ENTRE ABAS DO NAVEGADOR
-========================================= */
-
-window.addEventListener(
-    "storage",
-    (event) => {
-
-        if (
-            event.key ===
-            getProfilePostsStorageKey()
-        ) {
-
-            renderProfilePosts();
-        }
-
-    }
-);
-
-
-/* =========================================
-   SINCRONIZAÇÃO COM A SESSÃO
+   SINCRONIZAÇÃO COM A SESSÃO E O PERFIL
 ========================================= */
 
 window.addEventListener(
     "overclock:session-ready",
-    () => {
+    (event) => {
+        const user = event.detail || {};
+
+        if (user.id) {
+            localStorage.setItem(
+                "userId",
+                String(user.id)
+            );
+        }
+
+        if (user.name) {
+            localStorage.setItem(
+                "userName",
+                user.name
+            );
+        }
+
+        if (user.email) {
+            localStorage.setItem(
+                "userEmail",
+                user.email
+            );
+        }
+
+        if (user.username && user.id) {
+            localStorage.setItem(
+                `overclockSocietyUsername_${user.id}`,
+                user.username.replace(/^@+/, "")
+            );
+        }
 
         renderProfilePosts();
+        loadProfileFromApi();
+        loadProfilePostsFromApi();
+    }
+);
 
 
-        console.log(
-            "👤 Perfil sincronizado com a sessão."
-        );
+window.addEventListener(
+    "overclock:profile-updated",
+    () => {
+        loadProfilePostsFromApi();
     }
 );
 
 
 /* =========================================
-   ABRIR ABA PELA URL
-
-   Exemplo:
-   perfil.html?tab=posts
+   ABRIR ABA PELA URL E INICIALIZAR
 ========================================= */
 
 const requestedProfileTab =
@@ -2306,33 +1672,18 @@ const requestedProfileTab =
         window.location.search
     ).get("tab");
 
-
-if (
-    requestedProfileTab ===
-    "posts"
-) {
-
-    openProfileTab(
-        "posts"
-    );
+if (requestedProfileTab === "posts") {
+    openProfileTab("posts");
+} else {
+    openProfileTab("profile");
 }
 
-
-/* =========================================
-   INICIALIZAÇÃO
-========================================= */
-
 updatePlatforms();
-
 updateGenres();
-
 updateCurrentGame();
-
 updateStats();
-
 renderProfilePosts();
 
-
 console.log(
-    "👤 Perfil carregado com sucesso."
+    "👤 Perfil integrado às publicações do PostgreSQL."
 );

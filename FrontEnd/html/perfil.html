@@ -1171,41 +1171,28 @@
 
                     <div class="current-game">
 
+    <div class="current-game-image">
+        ER
+    </div>
 
+    <div>
 
-                        <div class="current-game-image">
+        <span>
+            Jogando agora
+        </span>
 
-                            ER
+        <strong>
+            Elden Ring
+        </strong>
 
-                        </div>
+        <!-- ADICIONE ESTE TRECHO -->
+        <small id="currentGameAvailability">
+            🟢 Disponível
+        </small>
 
+    </div>
 
-
-                        <div>
-
-
-
-                            <span>
-
-                                Jogando agora
-
-                            </span>
-
-
-
-                            <strong>
-
-                                Elden Ring
-
-                            </strong>
-
-
-
-                        </div>
-
-
-
-                    </div>
+</div>
 
 
 
@@ -1416,12 +1403,7 @@
                         >
 
 
-
                     </div>
-
-
-
-
 
                     <div class="form-group">
 
@@ -1686,7 +1668,60 @@
             </div>
 
 
+<!-- ==========================
+     JOGO ATUAL
+=========================== -->
 
+<div class="edit-section">
+
+    <div class="edit-section-title">
+        Jogo atual
+    </div>
+
+    <div class="form-row">
+
+        <div class="form-group">
+
+            <label for="currentGame">
+                Nome do jogo
+            </label>
+
+            <input
+                type="text"
+                id="currentGame"
+                maxlength="100"
+                placeholder="Ex.: Elden Ring"
+            >
+
+        </div>
+
+        <div class="form-group">
+
+            <label for="currentGameStatus">
+                Disponibilidade
+            </label>
+
+            <select id="currentGameStatus">
+
+                <option value="available">
+                    🟢 Disponível
+                </option>
+
+                <option value="busy">
+                    🔴 Ocupado
+                </option>
+
+                <option value="away">
+                    🟡 Ausente
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+</div>
 
 
             <!-- ==========================

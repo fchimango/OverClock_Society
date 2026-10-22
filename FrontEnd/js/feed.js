@@ -1,645 +1,423 @@
 /* =========================================
-
-   ELEMENTOS
-
+   OVERCLOCK SOCIETY — FEED INTEGRADO À API
+   Publicações, comentários, curtidas e repostagens
+   são persistidos no PostgreSQL pelo backend.
 ========================================= */
 
-const postInput =
-    document.getElementById("postInput");
+const postInput = document.getElementById("postInput");
+const publishPostButton = document.getElementById("publishPostButton");
+const characterCounter = document.getElementById("characterCounter");
+const postsList = document.getElementById("postsList");
+const feedFilter = document.getElementById("feedFilter");
+const activeHashtag = document.getElementById("activeHashtag");
+const clearFilterButton = document.getElementById("clearFilterButton");
+const trendingGames = document.getElementById("trendingGames");
+const searchInput = document.getElementById("searchInput");
+const profileButton = document.getElementById("profileButton");
 
-const publishPostButton =
-    document.getElementById(
-        "publishPostButton"
-    );
-
-const characterCounter =
-    document.getElementById(
-        "characterCounter"
-    );
-
-const postsList =
-    document.getElementById("postsList");
-
-const feedFilter =
-    document.getElementById("feedFilter");
-
-const activeHashtag =
-    document.getElementById(
-        "activeHashtag"
-    );
-
-const clearFilterButton =
-    document.getElementById(
-        "clearFilterButton"
-    );
-
-const trendingGames =
-    document.getElementById(
-        "trendingGames"
-    );
-
-
-/* =========================================
-
-   JOGOS / HASHTAGS VÁLIDAS
-
-   Futuramente isso poderá vir
-   diretamente da API.
-
-========================================= */
+const FEED_API_BASE_URL =
+    ["127.0.0.1", "localhost"].includes(window.location.hostname)
+        ? "http://127.0.0.1:8000"
+        : "https://overclock-api.onrender.com";
 
 const games = [
-
-    {
-        name: "Elden Ring",
-        hashtag: "eldenring"
-    },
-
-    {
-        name: "Hollow Knight",
-        hashtag: "hollowknight"
-    },
-
-    {
-        name: "Minecraft",
-        hashtag: "minecraft"
-    },
-
-    {
-        name: "Valorant",
-        hashtag: "valorant"
-    },
-
-    {
-        name: "Terraria",
-        hashtag: "terraria"
-    },
-
-    {
-        name: "Zelda",
-        hashtag: "zelda"
-    },
-
-    {
-        name: "God of War",
-        hashtag: "godofwar"
-    },
-
-    {
-        name: "Stardew Valley",
-        hashtag: "stardewvalley"
-    },
-
-    {
-        name: "Resident Evil 4",
-        hashtag: "residentevil4"
-    },
-
-    {
-        name: "Hades",
-        hashtag: "hades"
-    },
-
-    {
-        name: "Sekiro",
-        hashtag: "sekiro"
-    },
-
-    {
-        name: "Cyberpunk 2077",
-        hashtag: "cyberpunk2077"
-    },
-
-    {
-        name: "Celeste",
-        hashtag: "celeste"
-    },
-
-    {
-        name: "Spider-Man",
-        hashtag: "spiderman"
-    }
-
+    { name: "Elden Ring", hashtag: "eldenring" },
+    { name: "Hollow Knight", hashtag: "hollowknight" },
+    { name: "Minecraft", hashtag: "minecraft" },
+    { name: "Valorant", hashtag: "valorant" },
+    { name: "Terraria", hashtag: "terraria" },
+    { name: "Zelda", hashtag: "zelda" },
+    { name: "God of War", hashtag: "godofwar" },
+    { name: "Stardew Valley", hashtag: "stardewvalley" },
+    { name: "Resident Evil 4", hashtag: "residentevil4" },
+    { name: "Hades", hashtag: "hades" },
+    { name: "Sekiro", hashtag: "sekiro" },
+    { name: "Cyberpunk 2077", hashtag: "cyberpunk2077" },
+    { name: "Celeste", hashtag: "celeste" },
+    { name: "Spider-Man", hashtag: "spiderman" }
 ];
 
-
-/* =========================================
-
-   POSTS INICIAIS
-
-========================================= */
-
-const initialPosts = [
-
-    {
-        id: 1,
-
-        author: "Maria",
-
-        username: "@maria",
-
-        avatar: "M",
-
-        content:
-            "Finalmente comecei minha segunda run de #eldenring. Dessa vez vou tentar uma build completamente diferente.",
-
-        createdAt: "há 12 min",
-
-        likes: 14,
-
-        reposts: 3,
-
-        liked: false,
-
-        reposted: false,
-
-        comments: [
-
-            {
-                author: "Pedro",
-
-                avatar: "P",
-
-                text: "Boa sorte kkk essa segunda run sempre vira mais 100 horas."
-            }
-
-        ]
-    },
-
-    {
-        id: 2,
-
-        author: "Pedro",
-
-        username: "@pedro",
-
-        avatar: "P",
-
-        content:
-            "Alguém ainda joga #terraria por aqui? Estou pensando em começar um mundo novo.",
-
-        createdAt: "há 36 min",
-
-        likes: 9,
-
-        reposts: 1,
-
-        liked: false,
-
-        reposted: false,
-
-        comments: []
-    },
-
-    {
-        id: 3,
-
-        author: "Lucas",
-
-        username: "@lucas",
-
-        avatar: "L",
-
-        content:
-            "Terminei #hollowknight ontem. Agora entendi por que tanta gente gosta desse jogo.",
-
-        createdAt: "há 1 h",
-
-        likes: 22,
-
-        reposts: 5,
-
-        liked: false,
-
-        reposted: false,
-
-        comments: [
-
-            {
-                author: "Mariana",
-
-                avatar: "M",
-
-                text: "Agora é esperar Silksong 😅"
-            }
-
-        ]
-    },
-
-    {
-        id: 4,
-
-        author: "Ana",
-
-        username: "@ana",
-
-        avatar: "A",
-
-        content:
-            "Dia tranquilo jogando #minecraft e esquecendo completamente que tenho trabalho para entregar.",
-
-        createdAt: "há 2 h",
-
-        likes: 18,
-
-        reposts: 2,
-
-        liked: false,
-
-        reposted: false,
-
-        comments: []
-    }
-
-];
-
-
-/* =========================================
-   ARMAZENAMENTO LOCAL
-
-   Solução temporária enquanto o projeto
-   ainda não possui banco de dados.
-========================================= */
-
-const CURRENT_USER_ID =
-    localStorage.getItem("userId");
-
-const CURRENT_USER_NAME =
-    localStorage.getItem("userName") ||
-    "Usuário";
-
-const POSTS_STORAGE_KEY =
-    `overclockSocietyFeedPosts_${CURRENT_USER_ID}`;
-
-
-function cloneInitialPosts() {
-
-    return JSON.parse(
-        JSON.stringify(
-            initialPosts
-        )
-    );
-}
-
-
-function loadPosts() {
-
-    const storedPosts =
-        localStorage.getItem(
-            POSTS_STORAGE_KEY
-        );
-
-
-    if (storedPosts) {
-
-        try {
-
-            const parsedPosts =
-                JSON.parse(
-                    storedPosts
-                );
-
-
-            if (
-                Array.isArray(
-                    parsedPosts
-                )
-            ) {
-
-                return parsedPosts;
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "Não foi possível carregar os posts salvos.",
-                error
-            );
-        }
-    }
-
-
-    const defaultPosts =
-        cloneInitialPosts();
-
-
-    localStorage.setItem(
-        POSTS_STORAGE_KEY,
-        JSON.stringify(
-            defaultPosts
-        )
-    );
-
-
-    return defaultPosts;
-}
-
-
-function savePosts() {
-
-    localStorage.setItem(
-        POSTS_STORAGE_KEY,
-        JSON.stringify(
-            posts
-        )
-    );
-}
-
-
-let posts =
-    loadPosts();
-
-
-/* =========================================
-
-   FILTRO ATUAL
-
-========================================= */
-
+let posts = [];
 let currentHashtagFilter = null;
 
+const activeCommentPostIds = new Set();
+let postsLoadSequence = 0;
+
 
 /* =========================================
+   USUÁRIO ATUAL E API
+========================================= */
 
-   UTILIDADES
+function getCurrentUserId() {
+    return localStorage.getItem("userId");
+}
 
+
+function getCurrentUserName() {
+    return localStorage.getItem("userName") || "Usuário";
+}
+
+
+function getCurrentUsername() {
+    const id = getCurrentUserId();
+
+    const stored = id
+        ? localStorage.getItem(
+            `overclockSocietyUsername_${id}`
+        )
+        : null;
+
+    if (stored) {
+        return `@${stored.replace(/^@+/, "")}`;
+    }
+
+    const normalized = getCurrentUserName()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9._]/g, "");
+
+    return `@${normalized || "usuario"}`;
+}
+
+
+function getAvatarLetter(name) {
+    return (
+        String(name || "?")
+            .trim()
+            .charAt(0)
+            .toUpperCase() || "?"
+    );
+}
+
+
+function updateComposerIdentity(
+    name = getCurrentUserName()
+) {
+    const composerAvatar =
+        document.querySelector(".composer-avatar");
+
+    if (composerAvatar) {
+        composerAvatar.textContent =
+            getAvatarLetter(name);
+    }
+}
+
+
+function getApiErrorMessage(body, fallback) {
+    if (typeof body?.detail === "string") {
+        return body.detail;
+    }
+
+    if (Array.isArray(body?.detail)) {
+        return body.detail
+            .map((item) => {
+                if (typeof item === "string") {
+                    return item;
+                }
+
+                return item?.msg || "Dados inválidos.";
+            })
+            .join(" ");
+    }
+
+    return fallback;
+}
+
+
+async function feedApiRequest(path, options = {}) {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        throw new Error(
+            "Sua sessão não foi encontrada. Entre novamente."
+        );
+    }
+
+    const headers = {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`
+    };
+
+    if (
+        options.body &&
+        !headers["Content-Type"]
+    ) {
+        headers["Content-Type"] = "application/json";
+    }
+
+    const response = await fetch(
+        `${FEED_API_BASE_URL}${path}`,
+        {
+            ...options,
+            headers
+        }
+    );
+
+    if (response.status === 204) {
+        return null;
+    }
+
+    const body = await response
+        .json()
+        .catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(
+            getApiErrorMessage(
+                body,
+                "Não foi possível concluir a operação."
+            )
+        );
+    }
+
+    return body;
+}
+
+
+/* =========================================
+   JOGOS E HASHTAGS
 ========================================= */
 
 function normalizeHashtag(value) {
-
-    return value
+    return String(value || "")
         .toLowerCase()
-        .replace("#", "")
+        .replace(/^#/, "")
         .trim();
 }
 
 
 function isValidGameHashtag(hashtag) {
-
-    const normalized =
-        normalizeHashtag(hashtag);
-
+    const normalized = normalizeHashtag(hashtag);
 
     return games.some(
-        (game) =>
-            game.hashtag === normalized
+        (game) => game.hashtag === normalized
     );
 }
 
 
 function getGameByHashtag(hashtag) {
-
-    const normalized =
-        normalizeHashtag(hashtag);
-
+    const normalized = normalizeHashtag(hashtag);
 
     return games.find(
-        (game) =>
-            game.hashtag === normalized
+        (game) => game.hashtag === normalized
     );
 }
 
 
-/* =========================================
-
-   CRIAR TEXTO DO POST
-
-========================================= */
-
 function createPostTextElement(content) {
+    const paragraph = document.createElement("p");
 
-    const paragraph =
-        document.createElement("p");
+    paragraph.className = "post-text";
 
+    const parts = String(content || "")
+        .split(/(#[a-zA-ZÀ-ÿ0-9_-]+)/g);
 
-    paragraph.className =
-        "post-text";
+    parts.forEach((part) => {
+        if (
+            part.startsWith("#") &&
+            isValidGameHashtag(part)
+        ) {
+            const hashtag =
+                document.createElement("button");
 
+            hashtag.type = "button";
+            hashtag.className = "game-hashtag";
+            hashtag.textContent = part;
+            hashtag.style.border = "none";
+            hashtag.style.background = "transparent";
+            hashtag.style.padding = "0";
+            hashtag.style.font = "inherit";
 
-    const parts =
-        content.split(
-            /(#[a-zA-ZÀ-ÿ0-9_-]+)/g
-        );
+            hashtag.addEventListener(
+                "click",
+                () => filterByHashtag(part)
+            );
 
+            paragraph.appendChild(hashtag);
 
-    parts.forEach(
-        (part) => {
-
-            if (
-                part.startsWith("#") &&
-                isValidGameHashtag(part)
-            ) {
-
-                const hashtag =
-                    document.createElement(
-                        "button"
-                    );
-
-
-                hashtag.type =
-                    "button";
-
-
-                hashtag.className =
-                    "game-hashtag";
-
-
-                hashtag.textContent =
-                    part;
-
-
-                hashtag.style.border =
-                    "none";
-
-                hashtag.style.background =
-                    "transparent";
-
-                hashtag.style.padding =
-                    "0";
-
-                hashtag.style.font =
-                    "inherit";
-
-
-                hashtag.addEventListener(
-                    "click",
-                    () => {
-
-                        filterByHashtag(
-                            part
-                        );
-
-                    }
-                );
-
-
-                paragraph.appendChild(
-                    hashtag
-                );
-
-            } else {
-
-                paragraph.appendChild(
-                    document.createTextNode(
-                        part
-                    )
-                );
-
-            }
-
+        } else {
+            paragraph.appendChild(
+                document.createTextNode(part)
+            );
         }
-    );
-
+    });
 
     return paragraph;
 }
 
 
 /* =========================================
-
-   RENDERIZAR POSTS
-
+   CARREGAR PUBLICAÇÕES DO POSTGRESQL
 ========================================= */
 
-function renderPosts() {
+async function loadPosts() {
+    const requestNumber = ++postsLoadSequence;
+
+    if (postsList) {
+        postsList.setAttribute("aria-busy", "true");
+    }
+
+    try {
+        const result = await feedApiRequest(
+            "/feed/posts"
+        );
+
+        // Impede uma resposta antiga de substituir
+        // os dados de uma atualização mais recente.
+        if (requestNumber !== postsLoadSequence) {
+            return;
+        }
+
+        posts = Array.isArray(result)
+            ? result
+            : [];
+
+        renderPosts();
+        renderTrendingGames();
+
+    } catch (error) {
+        if (requestNumber !== postsLoadSequence) {
+            return;
+        }
+
+        console.error(
+            "Erro ao carregar o Feed:",
+            error
+        );
+
+        showFeedError(error.message);
+
+    } finally {
+        if (
+            requestNumber === postsLoadSequence &&
+            postsList
+        ) {
+            postsList.removeAttribute("aria-busy");
+        }
+    }
+}
+
+
+function showFeedError(message) {
+    if (!postsList) return;
 
     postsList.innerHTML = "";
 
+    const errorElement =
+        document.createElement("div");
 
-    let visiblePosts =
-        posts;
+    errorElement.className = "empty-feed";
 
+    errorElement.textContent =
+        `Não foi possível carregar o Feed. ${message}`;
+
+    postsList.appendChild(errorElement);
+}
+
+
+function applySearchFilter() {
+    const term =
+        searchInput?.value.trim().toLowerCase() || "";
+
+    document.querySelectorAll(".post-card")
+        .forEach((card) => {
+            card.style.display =
+                card.textContent.toLowerCase().includes(term)
+                    ? ""
+                    : "none";
+        });
+}
+
+
+function renderPosts() {
+    if (!postsList) return;
+
+    postsList.innerHTML = "";
+
+    let visiblePosts = posts;
 
     if (currentHashtagFilter) {
-
-        visiblePosts =
-            posts.filter(
-                (post) => {
-
-                    const regex =
-                        new RegExp(
-                            `#${currentHashtagFilter}\\b`,
-                            "i"
-                        );
-
-
-                    return regex.test(
-                        post.content
-                    );
-
-                }
-            );
-
-    }
-
-
-    if (
-        visiblePosts.length === 0
-    ) {
-
-        const empty =
-            document.createElement(
-                "div"
-            );
-
-
-        empty.className =
-            "empty-feed";
-
-
-        empty.textContent =
-            "Nenhuma publicação encontrada.";
-
-
-        postsList.appendChild(
-            empty
+        const regex = new RegExp(
+            `#${currentHashtagFilter}(?![a-z0-9_])`,
+            "i"
         );
 
+        visiblePosts = posts.filter(
+            (post) => regex.test(post.content || "")
+        );
+    }
 
+    if (visiblePosts.length === 0) {
+        const empty =
+            document.createElement("div");
+
+        empty.className = "empty-feed";
+
+        empty.textContent = currentHashtagFilter
+            ? "Nenhuma publicação encontrada para esta hashtag."
+            : (
+                "Ainda não há publicações. Seja o primeiro "
+                + "a compartilhar algo com a comunidade!"
+            );
+
+        postsList.appendChild(empty);
         return;
     }
 
+    visiblePosts.forEach((post) => {
+        postsList.appendChild(
+            createPostCard(post)
+        );
+    });
 
-    visiblePosts.forEach(
-        (post) => {
-
-            postsList.appendChild(
-                createPostCard(
-                    post
-                )
-            );
-
-        }
-    );
+    applySearchFilter();
 }
 
 
 /* =========================================
-
-   PERFIL DE OUTRO USUÁRIO
-
-   Nesta fase apenas Maria possui um perfil
-   demonstrativo.
-
+   LINKS DE PERFIS DEMONSTRATIVOS
 ========================================= */
 
 function enableDemoUserProfileLink(
     element,
     username
 ) {
-
     if (
-        String(username)
+        String(username || "")
             .trim()
-            .toLowerCase() !==
-        "@maria"
+            .toLowerCase() !== "@maria"
     ) {
-
         return;
     }
 
-
     const openProfile = () => {
-
         window.location.href =
             "perfil-usuario.html?user=maria";
     };
 
-
-    element.classList.add(
-        "user-profile-link"
-    );
-
+    element.classList.add("user-profile-link");
     element.tabIndex = 0;
-
-    element.setAttribute(
-        "role",
-        "link"
-    );
+    element.setAttribute("role", "link");
 
     element.setAttribute(
         "aria-label",
         "Abrir perfil de Maria"
     );
 
-
     element.addEventListener(
         "click",
         openProfile
     );
 
-
     element.addEventListener(
         "keydown",
         (event) => {
-
             if (
                 event.key === "Enter" ||
                 event.key === " "
             ) {
-
                 event.preventDefault();
-
                 openProfile();
             }
         }
@@ -648,92 +426,81 @@ function enableDemoUserProfileLink(
 
 
 /* =========================================
-
-   CRIAR CARD
-
+   BOTÕES DE AÇÃO
 ========================================= */
 
+function createActionButton(icon, count, label) {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "post-action";
+
+    const iconSpan = document.createElement("span");
+    iconSpan.textContent = icon;
+
+    const countSpan = document.createElement("span");
+    countSpan.textContent = String(count ?? 0);
+
+    const labelSpan = document.createElement("span");
+    labelSpan.textContent = label;
+
+    button.append(
+        iconSpan,
+        countSpan,
+        labelSpan
+    );
+
+    button.setAttribute(
+        "aria-label",
+        `${label}: ${count ?? 0}`
+    );
+
+    return button;
+}
+
+
 function createPostCard(post) {
-
     const article =
-        document.createElement(
-            "article"
-        );
+        document.createElement("article");
 
-
-    article.className =
-        "post-card";
-
-
-    /* HEADER */
+    article.className = "post-card";
 
     const header =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    header.className =
-        "post-header";
-
+    header.className = "post-header";
 
     const avatar =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    avatar.className =
-        "post-avatar";
-
+    avatar.className = "post-avatar";
 
     avatar.textContent =
-        post.avatar;
-
+        post.avatar || getAvatarLetter(post.author);
 
     const user =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    user.className =
-        "post-user";
-
+    user.className = "post-user";
 
     const userLine =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    userLine.className =
-        "post-user-line";
-
+    userLine.className = "post-user-line";
 
     const author =
-        document.createElement(
-            "strong"
-        );
-
+        document.createElement("strong");
 
     author.textContent =
-        post.author;
-
+        post.author || "Usuário";
 
     const username =
-        document.createElement(
-            "span"
-        );
+        document.createElement("span");
 
-
-    username.className =
-        "post-username";
-
+    username.className = "post-username";
 
     username.textContent =
-        post.username;
-
+        post.username || "@usuario";
 
     enableDemoUserProfileLink(
         avatar,
@@ -750,20 +517,13 @@ function createPostCard(post) {
         post.username
     );
 
-
     const time =
-        document.createElement(
-            "span"
-        );
+        document.createElement("span");
 
-
-    time.className =
-        "post-time";
-
+    time.className = "post-time";
 
     time.textContent =
-        `• ${post.createdAt}`;
-
+        `• ${post.createdAt || "agora"}`;
 
     userLine.append(
         author,
@@ -771,119 +531,52 @@ function createPostCard(post) {
         time
     );
 
-
-    user.appendChild(
-        userLine
+    user.append(
+        userLine,
+        createPostTextElement(post.content)
     );
-
-
-    user.appendChild(
-        createPostTextElement(
-            post.content
-        )
-    );
-
 
     header.append(
         avatar,
         user
     );
 
-
-    article.appendChild(
-        header
-    );
-
-
-    /* AÇÕES */
+    article.appendChild(header);
 
     const actions =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
+    actions.className = "post-actions";
 
-    actions.className =
-        "post-actions";
+    const comments = Array.isArray(post.comments)
+        ? post.comments
+        : [];
 
+    const commentButton = createActionButton(
+        "💬",
+        comments.length,
+        "Comentar"
+    );
 
-    const commentButton =
-        createActionButton(
-            "💬",
-            post.comments.length,
-            "Comentar"
-        );
+    const repostButton = createActionButton(
+        post.reposted ? "✅" : "🔁",
+        post.reposts,
+        "Repostar"
+    );
 
-
-    const repostButton =
-        createActionButton(
-            "🔁",
-            post.reposts,
-            "Repostar"
-        );
-
-
-    const likeButton =
-        createActionButton(
-            post.liked
-                ? "❤️"
-                : "♡",
-
-            post.likes,
-
-            "Curtir"
-        );
-
-
-    const canDeletePost =
-        post.userId != null &&
-        String(post.userId) ===
-        String(CURRENT_USER_ID);
-
-
-    let deletePostButton =
-        null;
-
-
-    if (canDeletePost) {
-
-        deletePostButton =
-            document.createElement(
-                "button"
-            );
-
-
-        deletePostButton.type =
-            "button";
-
-
-        deletePostButton.className =
-            "post-action post-delete-button";
-
-
-        deletePostButton.innerHTML =
-            `
-                <span>🗑</span>
-                <span>Excluir</span>
-            `;
-    }
-
+    const likeButton = createActionButton(
+        post.liked ? "❤️" : "♡",
+        post.likes,
+        "Curtir"
+    );
 
     if (post.liked) {
-
-        likeButton.classList.add(
-            "liked"
-        );
+        likeButton.classList.add("liked");
     }
-
 
     if (post.reposted) {
-
-        repostButton.classList.add(
-            "reposted"
-        );
+        repostButton.classList.add("reposted");
     }
-
 
     actions.append(
         commentButton,
@@ -891,1094 +584,822 @@ function createPostCard(post) {
         likeButton
     );
 
+    const currentUserId = getCurrentUserId();
 
-    if (deletePostButton) {
+    const canDeletePost =
+        post.userId != null &&
+        String(post.userId) === String(currentUserId);
 
-        actions.appendChild(
-            deletePostButton
-        );
+    if (canDeletePost) {
+        const deleteButton =
+            document.createElement("button");
 
+        deleteButton.type = "button";
 
-        deletePostButton.addEventListener(
+        deleteButton.className =
+            "post-action post-delete-button";
+
+        deleteButton.innerHTML =
+            "<span>🗑</span><span>Excluir</span>";
+
+        deleteButton.addEventListener(
             "click",
-            () => {
-
-                deletePost(
-                    post.id
-                );
-
-            }
+            () => deletePost(post.id)
         );
+
+        actions.appendChild(deleteButton);
     }
 
-
-    article.appendChild(
-        actions
-    );
-
-
-    /* COMENTÁRIOS */
+    article.appendChild(actions);
 
     const commentsSection =
-        createCommentsSection(
-            post
-        );
+        createCommentsSection(post);
 
-
-    article.appendChild(
-        commentsSection
-    );
-
-
-    /* EVENTOS */
+    article.appendChild(commentsSection);
 
     commentButton.addEventListener(
         "click",
         () => {
+            const key = String(post.id);
 
-            commentsSection.classList.toggle(
-                "active"
-            );
+            if (activeCommentPostIds.has(key)) {
+                activeCommentPostIds.delete(key);
+                commentsSection.classList.remove("active");
 
+            } else {
+                activeCommentPostIds.add(key);
+                commentsSection.classList.add("active");
+            }
         }
     );
-
 
     likeButton.addEventListener(
         "click",
-        () => {
-
-            toggleLike(
-                post.id
-            );
-
-        }
+        () => toggleLike(post.id, likeButton)
     );
-
 
     repostButton.addEventListener(
         "click",
-        () => {
-
-            toggleRepost(
-                post.id
-            );
-
-        }
+        () => toggleRepost(post.id, repostButton)
     );
-
 
     return article;
 }
 
 
 /* =========================================
-
-   BOTÃO DE AÇÃO
-
-========================================= */
-
-function createActionButton(
-    icon,
-    count,
-    label
-) {
-
-    const button =
-        document.createElement(
-            "button"
-        );
-
-
-    button.type =
-        "button";
-
-
-    button.className =
-        "post-action";
-
-
-    button.innerHTML =
-        `
-            <span>${icon}</span>
-            <span>${count}</span>
-            <span>${label}</span>
-        `;
-
-
-    return button;
-}
-
-
-/* =========================================
-
    COMENTÁRIOS
-
 ========================================= */
 
 function createCommentsSection(post) {
-
     const section =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
+    section.className = "comments-section";
 
-    section.className =
-        "comments-section";
-
+    if (
+        activeCommentPostIds.has(String(post.id))
+    ) {
+        section.classList.add("active");
+    }
 
     const list =
-        document.createElement(
-            "div"
+        document.createElement("div");
+
+    list.className = "comments-list";
+
+    (post.comments || []).forEach((comment) => {
+        list.appendChild(
+            createComment(comment, post.id)
         );
-
-
-    list.className =
-        "comments-list";
-
-
-    post.comments.forEach(
-        (comment) => {
-
-            const commentElement =
-                createComment(
-                    comment,
-                    post.id
-                );
-
-
-            list.appendChild(
-                commentElement
-            );
-
-        }
-    );
-
+    });
 
     const form =
-        document.createElement(
-            "form"
-        );
+        document.createElement("form");
 
-
-    form.className =
-        "comment-form";
-
+    form.className = "comment-form";
 
     const input =
-        document.createElement(
-            "input"
-        );
+        document.createElement("input");
 
+    input.type = "text";
+    input.placeholder = "Escreva um comentário...";
+    input.maxLength = 180;
+    input.required = true;
 
-    input.type =
-        "text";
-
-
-    input.placeholder =
-        "Escreva um comentário...";
-
-
-    input.maxLength =
-        180;
-
-
-    const button =
-        document.createElement(
-            "button"
-        );
-
-
-    button.type =
-        "submit";
-
-
-    button.textContent =
-        "Enviar";
-
-
-    form.append(
-        input,
-        button
+    input.setAttribute(
+        "aria-label",
+        "Texto do comentário"
     );
 
+    const button =
+        document.createElement("button");
+
+    button.type = "submit";
+    button.textContent = "Enviar";
+
+    form.append(input, button);
 
     form.addEventListener(
         "submit",
-        (event) => {
-
+        async (event) => {
             event.preventDefault();
 
+            const text = input.value.trim();
 
-            const text =
-                input.value.trim();
+            if (!text) return;
 
+            button.disabled = true;
+            button.textContent = "Enviando...";
 
-            if (!text) {
+            activeCommentPostIds.add(
+                String(post.id)
+            );
 
-                return;
+            try {
+                await feedApiRequest(
+                    `/feed/posts/${post.id}/comments`,
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            content: text
+                        })
+                    }
+                );
+
+                await loadPosts();
+
+            } catch (error) {
+                console.error(
+                    "Erro ao criar comentário:",
+                    error
+                );
+
+                alert(
+                    "Não foi possível enviar o comentário: "
+                    + error.message
+                );
+
+            } finally {
+                button.disabled = false;
+                button.textContent = "Enviar";
             }
-
-
-            post.comments.push({
-
-                id:
-                    Date.now(),
-
-                userId:
-                    CURRENT_USER_ID,
-
-                author:
-                    CURRENT_USER_NAME,
-
-                avatar:
-                    CURRENT_USER_NAME
-                        .charAt(0)
-                        .toUpperCase(),
-
-                text
-
-            });
-
-
-            savePosts();
-
-
-            renderPosts();
-
         }
     );
-
 
     section.append(
         list,
         form
     );
 
-
     return section;
 }
 
 
-/* =========================================
-
-   CRIAR COMENTÁRIO
-
-========================================= */
-
-function createComment(
-    comment,
-    postId
-) {
-
+function createComment(comment, postId) {
     const element =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    element.className =
-        "comment";
-
+    element.className = "comment";
 
     const avatar =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    avatar.className =
-        "comment-avatar";
-
+    avatar.className = "comment-avatar";
 
     avatar.textContent =
-        comment.avatar;
-
+        comment.avatar || getAvatarLetter(comment.author);
 
     const body =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    body.className =
-        "comment-body";
-
+    body.className = "comment-body";
 
     const user =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    user.className =
-        "comment-user";
-
+    user.className = "comment-user";
 
     user.textContent =
-        comment.author;
-
+        comment.author || "Usuário";
 
     const text =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    text.className =
-        "comment-text";
-
+    text.className = "comment-text";
 
     text.textContent =
-        comment.text;
-
+        comment.text || "";
 
     body.append(
         user,
         text
     );
 
+    const currentUserId =
+        getCurrentUserId();
 
     const canDeleteComment =
         comment.id != null &&
-        String(comment.userId) ===
-        String(CURRENT_USER_ID);
-
+        String(comment.userId) === String(currentUserId);
 
     if (canDeleteComment) {
-
         const deleteButton =
-            document.createElement(
-                "button"
-            );
+            document.createElement("button");
 
-
-        deleteButton.type =
-            "button";
-
+        deleteButton.type = "button";
 
         deleteButton.className =
             "comment-delete-button";
 
-
         deleteButton.textContent =
             "🗑 Excluir";
 
-
         deleteButton.addEventListener(
             "click",
-            () => {
-
-                deleteComment(
-                    postId,
-                    comment.id
-                );
-
-            }
+            () => deleteComment(postId, comment.id)
         );
 
-
-        body.appendChild(
-            deleteButton
-        );
+        body.appendChild(deleteButton);
     }
-
 
     element.append(
         avatar,
         body
     );
 
-
     return element;
 }
 
 
 /* =========================================
-
-   EXCLUIR POST
-
+   EXCLUSÕES — AUTORIZAÇÃO NO BACKEND
 ========================================= */
 
-function deletePost(postId) {
+async function deletePost(postId) {
+    const post = posts.find(
+        (item) => String(item.id) === String(postId)
+    );
 
-    const post =
-        posts.find(
-            (item) =>
-                String(item.id) ===
-                String(postId)
-        );
-
-
-    if (!post) {
-
-        return;
-    }
-
+    if (!post) return;
 
     if (
         String(post.userId) !==
-        String(CURRENT_USER_ID)
+        String(getCurrentUserId())
     ) {
-
         console.warn(
-            "Você não pode excluir este post."
+            "Você só pode excluir suas próprias publicações."
         );
 
         return;
     }
 
-
-    const confirmed =
-        window.confirm(
-            "Deseja realmente excluir este post?"
-        );
-
-
-    if (!confirmed) {
-
+    if (
+        !window.confirm(
+            "Deseja realmente excluir esta publicação?"
+        )
+    ) {
         return;
     }
 
-
-    posts =
-        posts.filter(
-            (item) =>
-                String(item.id) !==
-                String(postId)
+    try {
+        await feedApiRequest(
+            `/feed/posts/${postId}`,
+            {
+                method: "DELETE"
+            }
         );
 
+        activeCommentPostIds.delete(
+            String(postId)
+        );
 
-    savePosts();
+        await loadPosts();
 
+    } catch (error) {
+        console.error(
+            "Erro ao excluir publicação:",
+            error
+        );
 
-    renderPosts();
-
-
-    renderTrendingGames();
+        alert(
+            "Não foi possível excluir a publicação: "
+            + error.message
+        );
+    }
 }
 
 
-/* =========================================
+async function deleteComment(postId, commentId) {
+    const post = posts.find(
+        (item) => String(item.id) === String(postId)
+    );
 
-   EXCLUIR COMENTÁRIO
+    const comment = (post?.comments || []).find(
+        (item) => String(item.id) === String(commentId)
+    );
 
-========================================= */
-
-function deleteComment(
-    postId,
-    commentId
-) {
-
-    const post =
-        posts.find(
-            (item) =>
-                String(item.id) ===
-                String(postId)
-        );
-
-
-    if (!post) {
-
-        return;
-    }
-
-
-    const comment =
-        (post.comments || []).find(
-            (item) =>
-                String(item.id) ===
-                String(commentId)
-        );
-
-
-    if (!comment) {
-
-        return;
-    }
-
+    if (!comment) return;
 
     if (
         String(comment.userId) !==
-        String(CURRENT_USER_ID)
+        String(getCurrentUserId())
     ) {
-
         console.warn(
-            "Você não pode excluir este comentário."
+            "Você só pode excluir seus próprios comentários."
         );
 
         return;
     }
-
-
-    const confirmed =
-        window.confirm(
-            "Deseja realmente excluir este comentário?"
-        );
-
-
-    if (!confirmed) {
-
-        return;
-    }
-
-
-    post.comments =
-        (post.comments || []).filter(
-            (item) =>
-                String(item.id) !==
-                String(commentId)
-        );
-
-
-    savePosts();
-
-
-    renderPosts();
-}
-
-
-/* =========================================
-
-   CURTIR
-
-========================================= */
-
-function toggleLike(postId) {
-
-    const post =
-        posts.find(
-            (post) =>
-                post.id === postId
-        );
-
-
-    if (!post) {
-
-        return;
-    }
-
-
-    post.liked =
-        !post.liked;
-
-
-    post.likes +=
-        post.liked
-            ? 1
-            : -1;
-
-
-    savePosts();
-
-
-    renderPosts();
-}
-
-
-/* =========================================
-
-   REPOSTAR
-
-========================================= */
-
-function toggleRepost(postId) {
-
-    const post =
-        posts.find(
-            (post) =>
-                post.id === postId
-        );
-
-
-    if (!post) {
-
-        return;
-    }
-
-
-    post.reposted =
-        !post.reposted;
-
-
-    post.reposts +=
-        post.reposted
-            ? 1
-            : -1;
-
-
-    savePosts();
-
-
-    renderPosts();
-}
-
-
-/* =========================================
-
-   PUBLICAR
-
-========================================= */
-
-function publishPost() {
-
-    const content =
-        postInput.value.trim();
-
-
-    if (!content) {
-
-        return;
-    }
-
-
-    const newPost = {
-
-        id:
-            Date.now(),
-
-        userId:
-            CURRENT_USER_ID,
-
-        author:
-            CURRENT_USER_NAME,
-
-        username:
-            `@${CURRENT_USER_NAME
-                .toLowerCase()
-                .replace(/\s+/g, "")}`,
-
-        avatar:
-            CURRENT_USER_NAME
-                .charAt(0)
-                .toUpperCase(),
-
-        content,
-
-        createdAt:
-            "agora",
-
-        likes:
-            0,
-
-        reposts:
-            0,
-
-        liked:
-            false,
-
-        reposted:
-            false,
-
-        comments:
-            []
-    };
-
-
-    posts.unshift(
-        newPost
-    );
-
-
-    savePosts();
-
-
-    postInput.value =
-        "";
-
-
-    updateCharacterCounter();
-
-
-    clearHashtagFilter();
-
-
-    renderPosts();
-
-
-    renderTrendingGames();
-}
-
-
-/* =========================================
-
-   FILTRAR POR HASHTAG
-
-========================================= */
-
-function filterByHashtag(hashtag) {
-
-    const normalized =
-        normalizeHashtag(hashtag);
-
 
     if (
-        !isValidGameHashtag(
-            normalized
+        !window.confirm(
+            "Deseja realmente excluir este comentário?"
         )
     ) {
+        return;
+    }
+
+    activeCommentPostIds.add(
+        String(postId)
+    );
+
+    try {
+        await feedApiRequest(
+            `/feed/posts/${postId}/comments/${commentId}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        await loadPosts();
+
+    } catch (error) {
+        console.error(
+            "Erro ao excluir comentário:",
+            error
+        );
+
+        alert(
+            "Não foi possível excluir o comentário: "
+            + error.message
+        );
+    }
+}
+
+
+/* =========================================
+   CURTIR E REPOSTAR
+========================================= */
+
+async function toggleLike(postId, button) {
+    if (button) {
+        button.disabled = true;
+    }
+
+    try {
+        const result = await feedApiRequest(
+            `/feed/posts/${postId}/like`,
+            {
+                method: "POST"
+            }
+        );
+
+        const post = posts.find(
+            (item) => String(item.id) === String(postId)
+        );
+
+        if (post) {
+            post.liked = result.liked;
+            post.likes = result.likes;
+        }
+
+        renderPosts();
+
+    } catch (error) {
+        console.error(
+            "Erro ao atualizar curtida:",
+            error
+        );
+
+        alert(
+            "Não foi possível atualizar a curtida: "
+            + error.message
+        );
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+        }
+    }
+}
+
+
+async function toggleRepost(postId, button) {
+    if (button) {
+        button.disabled = true;
+    }
+
+    try {
+        const result = await feedApiRequest(
+            `/feed/posts/${postId}/repost`,
+            {
+                method: "POST"
+            }
+        );
+
+        const post = posts.find(
+            (item) => String(item.id) === String(postId)
+        );
+
+        if (post) {
+            post.reposted = result.reposted;
+            post.reposts = result.reposts;
+        }
+
+        renderPosts();
+
+    } catch (error) {
+        console.error(
+            "Erro ao atualizar repostagem:",
+            error
+        );
+
+        alert(
+            "Não foi possível atualizar a repostagem: "
+            + error.message
+        );
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+        }
+    }
+}
+
+
+/* =========================================
+   PUBLICAR
+========================================= */
+
+async function publishPost() {
+    const content =
+        postInput?.value.trim() || "";
+
+    if (!content) {
+        postInput?.focus();
+        return;
+    }
+
+    if (content.length > 280) {
+        alert(
+            "A publicação deve ter no máximo 280 caracteres."
+        );
 
         return;
     }
 
+    if (publishPostButton) {
+        publishPostButton.disabled = true;
+        publishPostButton.textContent = "Publicando...";
+    }
 
-    currentHashtagFilter =
-        normalized;
-
-
-    const game =
-        getGameByHashtag(
-            normalized
+    try {
+        await feedApiRequest(
+            "/feed/posts",
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    content
+                })
+            }
         );
 
+        postInput.value = "";
 
-    activeHashtag.textContent =
-        `#${game.hashtag}`;
+        updateCharacterCounter();
+        clearHashtagFilter();
+
+        await loadPosts();
+
+    } catch (error) {
+        console.error(
+            "Erro ao publicar:",
+            error
+        );
+
+        alert(
+            "Não foi possível publicar: "
+            + error.message
+        );
+
+    } finally {
+        if (publishPostButton) {
+            publishPostButton.disabled = false;
+            publishPostButton.textContent = "Publicar";
+        }
+    }
+}
 
 
-    feedFilter.classList.add(
-        "active"
-    );
+/* =========================================
+   FILTRO POR HASHTAG
+========================================= */
 
+function filterByHashtag(
+    hashtag,
+    shouldScroll = true
+) {
+    const normalized = normalizeHashtag(hashtag);
+
+    if (!isValidGameHashtag(normalized)) {
+        return;
+    }
+
+    currentHashtagFilter = normalized;
+
+    const game = getGameByHashtag(normalized);
+
+    if (activeHashtag) {
+        activeHashtag.textContent =
+            `#${game.hashtag}`;
+    }
+
+    feedFilter?.classList.add("active");
 
     renderPosts();
 
+    if (shouldScroll) {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    }
+}
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+
+function clearHashtagFilter() {
+    currentHashtagFilter = null;
+
+    feedFilter?.classList.remove("active");
+
+    if (activeHashtag) {
+        activeHashtag.textContent = "";
+    }
+}
+
+
+/* =========================================
+   JOGOS EM DESTAQUE
+========================================= */
+
+function renderTrendingGames() {
+    if (!trendingGames) return;
+
+    trendingGames.innerHTML = "";
+
+    const ranking = games
+        .map((game) => {
+            const regex = new RegExp(
+                `#${game.hashtag}(?![a-z0-9_])`,
+                "i"
+            );
+
+            const postsCount = posts.filter(
+                (post) => regex.test(post.content || "")
+            ).length;
+
+            return {
+                ...game,
+                postsCount
+            };
+        })
+        .filter((game) => game.postsCount > 0)
+        .sort((a, b) => b.postsCount - a.postsCount)
+        .slice(0, 5);
+
+    if (ranking.length === 0) {
+        const empty =
+            document.createElement("p");
+
+        empty.className = "empty-feed";
+
+        empty.textContent =
+            "As hashtags em destaque aparecerão aqui.";
+
+        trendingGames.appendChild(empty);
+        return;
+    }
+
+    ranking.forEach((game) => {
+        const item =
+            document.createElement("div");
+
+        item.className = "trending-game";
+        item.tabIndex = 0;
+        item.setAttribute("role", "button");
+
+        item.setAttribute(
+            "aria-label",
+            `Filtrar por #${game.hashtag}`
+        );
+
+        const left =
+            document.createElement("div");
+
+        const name =
+            document.createElement("strong");
+
+        name.textContent =
+            `#${game.hashtag}`;
+
+        const gameName =
+            document.createElement("span");
+
+        gameName.textContent =
+            game.name;
+
+        left.append(
+            name,
+            gameName
+        );
+
+        const count =
+            document.createElement("span");
+
+        count.textContent =
+            `${game.postsCount} posts`;
+
+        item.append(
+            left,
+            count
+        );
+
+        item.addEventListener(
+            "click",
+            () => filterByHashtag(game.hashtag)
+        );
+
+        item.addEventListener(
+            "keydown",
+            (event) => {
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
+                    event.preventDefault();
+
+                    filterByHashtag(
+                        game.hashtag
+                    );
+                }
+            }
+        );
+
+        trendingGames.appendChild(item);
     });
 }
 
 
 /* =========================================
-
-   LIMPAR FILTRO
-
-========================================= */
-
-function clearHashtagFilter() {
-
-    currentHashtagFilter =
-        null;
-
-
-    feedFilter.classList.remove(
-        "active"
-    );
-}
-
-
-/* =========================================
-
-   TENDÊNCIAS
-
-========================================= */
-
-function renderTrendingGames() {
-
-    trendingGames.innerHTML =
-        "";
-
-
-    const ranking =
-        games
-            .map(
-                (game) => {
-
-                    const regex =
-                        new RegExp(
-                            `#${game.hashtag}\\b`,
-                            "gi"
-                        );
-
-
-                    const postsCount =
-                        posts.filter(
-                            (post) =>
-                                regex.test(
-                                    post.content
-                                )
-                        ).length;
-
-
-                    return {
-                        ...game,
-                        postsCount
-                    };
-
-                }
-            )
-
-            .filter(
-                (game) =>
-                    game.postsCount > 0
-            )
-
-            .sort(
-                (a, b) =>
-                    b.postsCount -
-                    a.postsCount
-            )
-
-            .slice(
-                0,
-                5
-            );
-
-
-    ranking.forEach(
-        (game) => {
-
-            const item =
-                document.createElement(
-                    "div"
-                );
-
-
-            item.className =
-                "trending-game";
-
-
-            const left =
-                document.createElement(
-                    "div"
-                );
-
-
-            const name =
-                document.createElement(
-                    "strong"
-                );
-
-
-            name.textContent =
-                `#${game.hashtag}`;
-
-
-            const gameName =
-                document.createElement(
-                    "span"
-                );
-
-
-            gameName.textContent =
-                game.name;
-
-
-            left.append(
-                name,
-                gameName
-            );
-
-
-            const count =
-                document.createElement(
-                    "span"
-                );
-
-
-            count.textContent =
-                `${game.postsCount} posts`;
-
-
-            item.append(
-                left,
-                count
-            );
-
-
-            item.addEventListener(
-                "click",
-                () => {
-
-                    filterByHashtag(
-                        game.hashtag
-                    );
-
-                }
-            );
-
-
-            trendingGames.appendChild(
-                item
-            );
-
-        }
-    );
-}
-
-
-/* =========================================
-
-   CONTADOR
-
+   CONTADOR, PESQUISA E NAVEGAÇÃO
 ========================================= */
 
 function updateCharacterCounter() {
+    if (!postInput || !characterCounter) {
+        return;
+    }
 
     characterCounter.textContent =
         `${postInput.value.length} / 280`;
 }
 
 
-/* =========================================
-
-   PESQUISA
-
-========================================= */
-
-const searchInput =
-    document.getElementById(
-        "searchInput"
+if (searchInput) {
+    searchInput.addEventListener(
+        "input",
+        applySearchFilter
     );
-
-
-searchInput.addEventListener(
-    "input",
-    () => {
-
-        const term =
-            searchInput.value
-                .trim()
-                .toLowerCase();
-
-
-        document
-            .querySelectorAll(
-                ".post-card"
-            )
-
-            .forEach(
-                (card) => {
-
-                    const text =
-                        card.textContent
-                            .toLowerCase();
-
-
-                    card.style.display =
-                        text.includes(term)
-                            ? ""
-                            : "none";
-
-                }
-            );
-
-    }
-);
-
-
-/* =========================================
-
-   PERFIL
-
-========================================= */
-
-const profileButton =
-    document.getElementById(
-        "profileButton"
-    );
+}
 
 
 if (profileButton) {
-
     profileButton.addEventListener(
         "click",
         () => {
-
-            window.location.href =
-                "perfil.html";
-
+            window.location.href = "perfil.html";
         }
     );
 }
 
 
-/* =========================================
-
-   EVENTOS
-
-========================================= */
-
-postInput.addEventListener(
+postInput?.addEventListener(
     "input",
     updateCharacterCounter
 );
 
 
-publishPostButton.addEventListener(
+publishPostButton?.addEventListener(
     "click",
     publishPost
 );
 
 
-postInput.addEventListener(
+postInput?.addEventListener(
     "keydown",
     (event) => {
-
         if (
             event.ctrlKey &&
             event.key === "Enter"
         ) {
-
             publishPost();
         }
-
     }
 );
 
 
-clearFilterButton.addEventListener(
+clearFilterButton?.addEventListener(
     "click",
     () => {
-
         clearHashtagFilter();
-
         renderPosts();
-
     }
 );
 
 
 /* =========================================
-
-   INICIALIZAÇÃO
-
+   INICIALIZAÇÃO DA SESSÃO
 ========================================= */
+
+window.addEventListener(
+    "overclock:session-ready",
+    (event) => {
+        const user = event.detail || {};
+
+        if (user.id) {
+            localStorage.setItem(
+                "userId",
+                String(user.id)
+            );
+        }
+
+        if (user.name) {
+            localStorage.setItem(
+                "userName",
+                user.name
+            );
+        }
+
+        if (user.email) {
+            localStorage.setItem(
+                "userEmail",
+                user.email
+            );
+        }
+
+        if (user.username && user.id) {
+            localStorage.setItem(
+                `overclockSocietyUsername_${user.id}`,
+                user.username.replace(/^@+/, "")
+            );
+        }
+
+        updateComposerIdentity(
+            user.name || getCurrentUserName()
+        );
+
+        loadPosts();
+    }
+);
+
+
+window.addEventListener(
+    "overclock:profile-updated",
+    () => {
+        loadPosts();
+    }
+);
+
 
 const requestedHashtag =
     new URLSearchParams(
         window.location.search
-    ).get(
-        "hashtag"
-    );
+    ).get("hashtag");
 
 
 if (
     requestedHashtag &&
-    isValidGameHashtag(
-        requestedHashtag
-    )
+    isValidGameHashtag(requestedHashtag)
 ) {
-
     filterByHashtag(
-        requestedHashtag
+        requestedHashtag,
+        false
     );
-
-} else {
-
-    renderPosts();
 }
-
-
-renderTrendingGames();
 
 
 updateCharacterCounter();
 
-
 console.log(
-    "📰 Feed carregado com sucesso."
+    "📰 Feed preparado; aguardando a validação da sessão."
 );

@@ -8,10 +8,11 @@ from fastapi.responses import JSONResponse
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 import auth
+import feed_routes
 import models
 
 from database import Base, engine, get_db
@@ -19,8 +20,35 @@ from database import Base, engine, get_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Cria tabelas que ainda não existem ao iniciar.
+    # Cria tabelas que ainda não existem, incluindo
+    # posts, comments, post_likes e post_reposts.
     Base.metadata.create_all(bind=engine)
+
+    # Atualiza a tabela users existente.
+    with engine.begin() as connection:
+        connection.execute(
+            text("""
+                ALTER TABLE users
+                ADD COLUMN IF NOT EXISTS username VARCHAR(32)
+            """)
+        )
+
+        connection.execute(
+            text("""
+                ALTER TABLE users
+                ADD COLUMN IF NOT EXISTS profile_data JSONB
+                NOT NULL DEFAULT '{}'::jsonb
+            """)
+        )
+
+        connection.execute(
+            text("""
+                CREATE UNIQUE INDEX IF NOT EXISTS
+                ix_users_username
+                ON users (username)
+                WHERE username IS NOT NULL
+            """)
+        )
 
     yield
 
@@ -39,7 +67,6 @@ origens = os.getenv(
     "http://127.0.0.1:5500,http://localhost:5500"
 ).split(",")
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -52,10 +79,11 @@ app.add_middleware(
 
 
 # =========================================
-# ROTAS DE AUTENTICAÇÃO
+# ROTAS
 # =========================================
 
 app.include_router(auth.router)
+app.include_router(feed_routes.router)
 
 
 # =========================================
@@ -70,8 +98,13 @@ async def erro_de_validacao(
     mensagens = {
         "email": "Informe um e-mail válido.",
         "name": "Informe seu nome (mínimo de 2 caracteres).",
+        "username": "Informe um nome de usuário válido.",
         "password": "A senha precisa ter no mínimo 8 caracteres.",
         "contact": "O contato deve ter no máximo 60 caracteres.",
+        "content": (
+            "O texto é obrigatório e deve respeitar "
+            "o limite de caracteres."
+        )
     }
 
     erros = []
@@ -167,9 +200,8 @@ def create_lead(
 ):
     email = lead.email.lower()
 
-    # Honeypot:
-    # se estiver preenchido, tratamos
-    # como tentativa automatizada.
+    # Honeypot: se estiver preenchido,
+    # tratamos como automatização.
     if lead.website:
         return {
             "message": "Cadastro realizado!"

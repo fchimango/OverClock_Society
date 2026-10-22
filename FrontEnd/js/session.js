@@ -32,10 +32,54 @@ function getInitial(name) {
         return "?";
     }
 
-    return name
-        .trim()
-        .charAt(0)
-        .toUpperCase();
+    return name.trim().charAt(0).toUpperCase();
+}
+
+
+function normalizeOverclockUsername(value) {
+    return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9._]/g, "");
+}
+
+
+function getOverclockUsernameKey(userId) {
+    return `overclockSocietyUsername_${userId}`;
+}
+
+
+function getOverclockUsername(user) {
+    const userId =
+        user?.id ??
+        localStorage.getItem("userId");
+
+    // O nome de usuário do backend tem prioridade.
+    const apiUsername =
+        normalizeOverclockUsername(user?.username);
+
+    const savedUsername = userId
+        ? normalizeOverclockUsername(
+            localStorage.getItem(
+                getOverclockUsernameKey(userId)
+            )
+        )
+        : "";
+
+    const generatedUsername =
+        normalizeOverclockUsername(
+            user?.name ||
+            localStorage.getItem("userName") ||
+            "usuario"
+        );
+
+    return (
+        apiUsername ||
+        savedUsername ||
+        generatedUsername ||
+        "usuario"
+    );
 }
 
 
@@ -53,27 +97,18 @@ function updateHeaderUser(user) {
             ".profile-name strong"
         );
 
-    nameElements.forEach(
-        (element) => {
-            element.textContent =
-                user.name;
-        }
-    );
-
+    nameElements.forEach((element) => {
+        element.textContent = user.name;
+    });
 
     const avatarElements =
         document.querySelectorAll(
             ".profile-button .avatar"
         );
 
-    avatarElements.forEach(
-        (element) => {
-            element.textContent =
-                getInitial(
-                    user.name
-                );
-        }
-    );
+    avatarElements.forEach((element) => {
+        element.textContent = getInitial(user.name);
+    });
 }
 
 
@@ -87,15 +122,10 @@ function updateOwnProfile(user) {
             .split("/")
             .pop();
 
-    /*
-     * Não alteramos perfil-usuario.html,
-     * pois aquela página representa
-     * outro usuário.
-     */
+    // Esta função não modifica o perfil de outra pessoa.
     if (currentPage !== "perfil.html") {
         return;
     }
-
 
     const profileIdentityName =
         document.querySelector(
@@ -107,31 +137,40 @@ function updateOwnProfile(user) {
             user.name;
     }
 
-
     const profileNameInput =
-        document.getElementById(
-            "profileName"
-        );
+        document.getElementById("profileName");
 
     if (profileNameInput) {
-        profileNameInput.value =
-            user.name;
+        profileNameInput.value = user.name;
     }
 
+    const profileUsernameInput =
+        document.getElementById("profileUsername");
+
+    const profileIdentityUsername =
+        document.querySelector(".profile-username");
+
+    const username =
+        getOverclockUsername(user);
+
+    if (profileUsernameInput) {
+        profileUsernameInput.value = username;
+    }
+
+    if (profileIdentityUsername) {
+        profileIdentityUsername.textContent =
+            `@${username}`;
+    }
 
     const profileAvatar =
-        document.querySelector(
-            ".profile-avatar"
-        );
+        document.querySelector(".profile-avatar");
 
     if (
         profileAvatar &&
         !profileAvatar.style.backgroundImage
     ) {
         profileAvatar.textContent =
-            getInitial(
-                user.name
-            );
+            getInitial(user.name);
     }
 }
 
@@ -141,7 +180,6 @@ function updateOwnProfile(user) {
 ========================================= */
 
 function applyUserToPage(user) {
-    
     updateHeaderUser(user);
     updateOwnProfile(user);
 }
@@ -160,40 +198,28 @@ async function validateSession() {
         return;
     }
 
-
-    /*
-     * Usa o nome salvo enquanto
-     * consulta a API.
-     *
-     * Isso evita que "João" apareça
-     * rapidamente antes da resposta.
-     */
+    // Exibe os dados já conhecidos enquanto consulta a API.
     const cachedName =
-        localStorage.getItem(
-            "userName"
-        );
+        localStorage.getItem("userName");
 
     if (cachedName) {
         applyUserToPage({
+            id: localStorage.getItem("userId"),
             name: cachedName
         });
     }
 
-
     try {
-        const response =
-            await fetch(
-                `${SESSION_API_URL}/auth/me`,
-                {
-                    method: "GET",
+        const response = await fetch(
+            `${SESSION_API_URL}/auth/me`,
+            {
+                method: "GET",
 
-                    headers: {
-                        Authorization:
-                            `Bearer ${token}`
-                    }
+                headers: {
+                    Authorization: `Bearer ${token}`
                 }
-            );
-
+            }
+        );
 
         if (!response.ok) {
             clearSession();
@@ -201,10 +227,7 @@ async function validateSession() {
             return;
         }
 
-
-        const user =
-            await response.json();
-
+        const user = await response.json();
 
         localStorage.setItem(
             "userId",
@@ -221,26 +244,33 @@ async function validateSession() {
             user.email
         );
 
+        if (user.username) {
+            localStorage.setItem(
+                getOverclockUsernameKey(user.id),
+                normalizeOverclockUsername(user.username)
+            );
+        }
 
         applyUserToPage(user);
 
-window.dispatchEvent(
-    new CustomEvent(
-        "overclock:session-ready",
-        {
-            detail: {
-                id:
-                    String(user.id),
+        // As demais páginas podem esperar este evento
+        // antes de carregar os dados específicos do usuário.
+        window.dispatchEvent(
+            new CustomEvent(
+                "overclock:session-ready",
+                {
+                    detail: {
+                        id: String(user.id),
+                        name: user.name,
+                        email: user.email,
 
-                name:
-                    user.name,
-
-                email:
-                    user.email
-            }
-        }
-    )
-);
+                        username:
+                            user.username ||
+                            getOverclockUsername(user)
+                    }
+                }
+            )
+        );
 
         console.log(
             "✅ Sessão válida:",
@@ -253,11 +283,7 @@ window.dispatchEvent(
             error
         );
 
-        /*
-         * Não apagamos o token aqui,
-         * porque o problema pode ser
-         * apenas o servidor offline.
-         */
+        // Não apagamos o token quando há falha de conexão.
         goToLogin();
     }
 }
@@ -269,28 +295,20 @@ window.dispatchEvent(
 
 function configureLogout() {
     const logoutLinks =
-        document.querySelectorAll(
-            ".logout-link"
+        document.querySelectorAll(".logout-link");
+
+    logoutLinks.forEach((logoutLink) => {
+        logoutLink.addEventListener(
+            "click",
+            (event) => {
+                event.preventDefault();
+
+                clearSession();
+
+                window.location.href = "index.html";
+            }
         );
-
-    logoutLinks.forEach(
-        (logoutLink) => {
-
-            logoutLink.addEventListener(
-                "click",
-                (event) => {
-
-                    event.preventDefault();
-
-                    clearSession();
-
-                    window.location.href =
-                        "index.html";
-                }
-            );
-
-        }
-    );
+    });
 }
 
 
