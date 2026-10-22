@@ -4,11 +4,78 @@
 
 (() => {
 
-    const CURRENT_USER_ID =
-    localStorage.getItem("userId");
+    const NOTIFICATIONS_API_BASE_URL =
+        ["127.0.0.1", "localhost"].includes(window.location.hostname)
+            ? "http://127.0.0.1:8000"
+            : "https://overclock-api.onrender.com";
 
-const STORAGE_KEY =
-    `overclockSocietyNotifications_${CURRENT_USER_ID}`;
+    let refreshPromise = null;
+
+    async function notificationsApiRequest(path = "", options = {}) {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            throw new Error("Sua sessão não foi encontrada. Entre novamente na sua conta.");
+        }
+
+        const headers = {
+            Authorization: `Bearer ${token}`,
+            ...(options.body ? { "Content-Type": "application/json" } : {}),
+            ...(options.headers || {})
+        };
+
+        const response = await fetch(
+            `${NOTIFICATIONS_API_BASE_URL}/notifications${path}`,
+            {
+                method: options.method || "GET",
+                headers,
+                ...(options.body ? { body: JSON.stringify(options.body) } : {}),
+                ...(options.keepalive ? { keepalive: true } : {})
+            }
+        );
+
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+            const detail = Array.isArray(payload?.detail)
+                ? payload.detail.map((item) => item.msg || String(item)).join(" ")
+                : typeof payload?.detail === "string"
+                    ? payload.detail
+                    : `O servidor respondeu com o status ${response.status}.`;
+            const error = new Error(detail);
+            error.status = response.status;
+            throw error;
+        }
+
+        return payload || {};
+    }
+
+    function isPersistedNotificationId(id) {
+        const parsed = Number(id);
+        return Number.isSafeInteger(parsed) && parsed > 0;
+    }
+
+    async function persistNotificationRead(id) {
+        if (!isPersistedNotificationId(id)) return false;
+        try {
+            await notificationsApiRequest(`/${Number(id)}/read`, {
+                method: "PATCH",
+                keepalive: true
+            });
+            return true;
+        } catch (error) {
+            console.warn("Não foi possível atualizar a leitura da notificação no banco.", error);
+            return false;
+        }
+    }
+
+    async function persistAllNotificationsRead() {
+        try {
+            await notificationsApiRequest("/read-all", { method: "PATCH" });
+            return true;
+        } catch (error) {
+            console.warn("Não foi possível marcar as notificações como lidas no banco.", error);
+            return false;
+        }
+    }
 
 
     /* =========================================
@@ -35,335 +102,7 @@ const STORAGE_KEY =
     };
 
 
-    /* =========================================
-       NOTIFICAÇÕES INICIAIS
-    ========================================= */
-
-    const INITIAL_NOTIFICATIONS = [
-
-        /* =========================
-           JOGOS
-        ========================= */
-
-        {
-            id: "game-steam-elden-ring",
-
-            category: "games",
-
-            kind: "sale",
-
-            title:
-                "Promoção na Steam",
-
-            message:
-                "Exemplo de promoção: Elden Ring está com desconto na Steam.",
-
-            createdAt:
-                "Há 18 min",
-
-            read:
-                false,
-
-            prototype:
-                true,
-
-            /*
-             * IMPORTANTE:
-             *
-             * Promoções não levam para
-             * nenhuma página.
-             *
-             * Ao clicar, apenas marcamos
-             * como lida.
-             */
-
-            target:
-                null
-        },
-
-
-        {
-            id: "game-update-minecraft",
-
-            category: "games",
-
-            kind: "update",
-
-            title:
-                "Novidade de jogo",
-
-            message:
-                "Exemplo: Minecraft recebeu uma nova atualização de conteúdo.",
-
-            createdAt:
-                "Há 2 h",
-
-            read:
-                false,
-
-            prototype:
-                true,
-
-            target:
-                "meus-jogos.html"
-        },
-
-
-        /* =========================
-           AMIGOS
-        ========================= */
-
-        {
-            id: "friend-request-mariana",
-
-            category:
-                "friends",
-
-            kind:
-                "friend-request",
-
-            title:
-                "Nova solicitação",
-
-            message:
-                "Mariana enviou uma solicitação de amizade.",
-
-            createdAt:
-                "Há 24 min",
-
-            read:
-                false,
-
-            friendName:
-                "Mariana",
-
-            status:
-                "pending",
-
-            target:
-                "amigos.html"
-        },
-
-
-        {
-            id: "friend-request-gabriel",
-
-            category:
-                "friends",
-
-            kind:
-                "friend-request",
-
-            title:
-                "Nova solicitação",
-
-            message:
-                "Gabriel enviou uma solicitação de amizade.",
-
-            createdAt:
-                "Há 1 h",
-
-            read:
-                false,
-
-            friendName:
-                "Gabriel",
-
-            status:
-                "pending",
-
-            target:
-                "amigos.html"
-        },
-
-
-        {
-            id: "friend-request-ana",
-
-            category:
-                "friends",
-
-            kind:
-                "friend-request",
-
-            title:
-                "Nova solicitação",
-
-            message:
-                "Ana enviou uma solicitação de amizade.",
-
-            createdAt:
-                "Hoje",
-
-            read:
-                true,
-
-            friendName:
-                "Ana",
-
-            status:
-                "pending",
-
-            target:
-                "amigos.html"
-        },
-
-
-        /* =========================
-           FEED
-        ========================= */
-
-        {
-            id:
-                "feed-like-maria",
-
-            category:
-                "feed",
-
-            kind:
-                "like",
-
-            title:
-                "Nova curtida",
-
-            message:
-                "Maria, Ana e Gabriel curtiram sua publicação.",
-
-            createdAt:
-                "Há 8 min",
-
-            read:
-                false,
-
-            actorName:
-                "Maria",
-
-            actors: [
-
-                {
-                    name: "Maria",
-                    avatar: "M"
-                },
-
-                {
-                    name: "Ana",
-                    avatar: "A"
-                },
-
-                {
-                    name: "Gabriel",
-                    avatar: "G"
-                }
-
-            ],
-
-            postId:
-                "demo-post-1",
-
-            target:
-                "perfil.html?tab=posts"
-        },
-
-
-        {
-            id:
-                "feed-comment-lucas",
-
-            category:
-                "feed",
-
-            kind:
-                "comment",
-
-            title:
-                "Novo comentário",
-
-            message:
-                "Lucas e Mariana comentaram em sua publicação.",
-
-            createdAt:
-                "Há 32 min",
-
-            read:
-                false,
-
-            actorName:
-                "Lucas",
-
-            actors: [
-
-                {
-                    name: "Lucas",
-                    avatar: "L"
-                },
-
-                {
-                    name: "Mariana",
-                    avatar: "M"
-                }
-
-            ],
-
-            postId:
-                "demo-post-1",
-
-            target:
-                "perfil.html?tab=posts"
-        },
-
-
-        {
-            id:
-                "feed-repost-pedro",
-
-            category:
-                "feed",
-
-            kind:
-                "repost",
-
-            title:
-                "Novo repost",
-
-            message:
-                "Pedro, Carlos e Beatriz repostaram sua publicação.",
-
-            createdAt:
-                "Há 3 h",
-
-            read:
-                true,
-
-            actorName:
-                "Pedro",
-
-            actors: [
-
-                {
-                    name: "Pedro",
-                    avatar: "P"
-                },
-
-                {
-                    name: "Carlos",
-                    avatar: "C"
-                },
-
-                {
-                    name: "Beatriz",
-                    avatar: "B"
-                }
-
-            ],
-
-            postId:
-                "demo-post-1",
-
-            target:
-                "perfil.html?tab=posts"
-        }
-
-    ];
+    /* A API é a fonte de verdade; nenhuma notificação fictícia é inserida. */
 
 
     /* =========================================
@@ -385,16 +124,6 @@ const STORAGE_KEY =
     /* =========================================
        UTILIDADES
     ========================================= */
-
-    function cloneInitialNotifications() {
-
-        return JSON.parse(
-            JSON.stringify(
-                INITIAL_NOTIFICATIONS
-            )
-        );
-    }
-
 
     function normalizeText(value) {
 
@@ -654,319 +383,38 @@ const STORAGE_KEY =
 
 
     /* =========================================
-       MIGRAR NOTIFICAÇÕES ANTIGAS
-
-       Isso evita precisar limpar
-       localStorage manualmente.
-    ========================================= */
-
-    function migrateStoredNotifications(
-        list
-    ) {
-
-        let changed =
-            false;
-
-
-        const demoActors = {
-
-            "feed-like-maria": [
-
-                {
-                    name: "Maria",
-                    avatar: "M"
-                },
-
-                {
-                    name: "Ana",
-                    avatar: "A"
-                },
-
-                {
-                    name: "Gabriel",
-                    avatar: "G"
-                }
-
-            ],
-
-
-            "feed-comment-lucas": [
-
-                {
-                    name: "Lucas",
-                    avatar: "L"
-                },
-
-                {
-                    name: "Mariana",
-                    avatar: "M"
-                }
-
-            ],
-
-
-            "feed-repost-pedro": [
-
-                {
-                    name: "Pedro",
-                    avatar: "P"
-                },
-
-                {
-                    name: "Carlos",
-                    avatar: "C"
-                },
-
-                {
-                    name: "Beatriz",
-                    avatar: "B"
-                }
-
-            ]
-
-        };
-
-
-        list.forEach(
-            (notification) => {
-
-                /*
-                 * =========================
-                 * PROMOÇÃO
-                 * =========================
-                 *
-                 * Caso uma versão antiga
-                 * ainda possua:
-                 *
-                 * target: "meus-jogos.html"
-                 *
-                 * removemos automaticamente.
-                 */
-
-                if (
-                    notification.category ===
-                        "games" &&
-
-                    notification.kind ===
-                        "sale" &&
-
-                    notification.target
-                ) {
-
-                    notification.target =
-                        null;
-
-                    changed =
-                        true;
-                }
-
-
-                /*
-                 * Daqui para baixo
-                 * interessa apenas ao Feed.
-                 */
-
-                if (
-                    notification.category !==
-                    "feed"
-                ) {
-
-                    return;
-                }
-
-
-                /*
-                 * Atualiza as notificações
-                 * demonstrativas antigas.
-                 */
-
-                if (
-                    demoActors[
-                        notification.id
-                    ] &&
-
-                    (
-                        !Array.isArray(
-                            notification.actors
-                        ) ||
-
-                        notification.actors.length <=
-                            1
-                    )
-                ) {
-
-                    notification.actors =
-                        demoActors[
-                            notification.id
-                        ];
-
-
-                    notification.postId =
-                        notification.postId ||
-                        "demo-post-1";
-
-
-                    changed =
-                        true;
-                }
-
-
-                /*
-                 * Se ainda não existir actors,
-                 * converte actorName para
-                 * o novo formato.
-                 */
-
-                if (
-                    !Array.isArray(
-                        notification.actors
-                    ) ||
-
-                    notification.actors.length ===
-                        0
-                ) {
-
-                    const actor =
-                        notification.actorName ||
-                        "Alguém";
-
-
-                    notification.actors = [
-
-                        {
-                            name:
-                                actor,
-
-                            avatar:
-                                notification.actorAvatar ||
-                                getActorInitial(
-                                    actor
-                                )
-                        }
-
-                    ];
-
-
-                    changed =
-                        true;
-                }
-
-            }
-        );
-
-
-        return changed;
-    }
-
-
-    /* =========================================
        CARREGAR
     ========================================= */
 
-    function loadNotifications() {
-
-        let stored =
-            null;
-
-
+    async function loadNotifications({ quiet = false } = {}) {
         try {
-
-            stored =
-                window.localStorage.getItem(
-                    STORAGE_KEY
-                );
-
+            const response = await notificationsApiRequest("");
+            notifications = Array.isArray(response.notifications)
+                ? response.notifications
+                : [];
+            return true;
         } catch (error) {
-
-            console.warn(
-                "localStorage indisponível. As notificações funcionarão apenas enquanto a página estiver aberta.",
-                error
-            );
-
-        }
-
-
-        if (stored) {
-
-            try {
-
-                const parsed =
-                    JSON.parse(
-                        stored
-                    );
-
-
-                if (
-                    Array.isArray(
-                        parsed
-                    )
-                ) {
-
-                    notifications =
-                        parsed;
-
-
-                    if (
-                        migrateStoredNotifications(
-                            notifications
-                        )
-                    ) {
-
-                        saveNotifications();
-                    }
-
-
-                    return;
-                }
-
-            } catch (error) {
-
-                console.warn(
-                    "Não foi possível carregar as notificações.",
-                    error
-                );
-
+            notifications = [];
+            if (!quiet) {
+                console.warn("Não foi possível carregar as notificações do PostgreSQL.", error);
             }
+            return false;
         }
-
-
-        /*
-         * Primeiro acesso.
-         */
-
-        notifications =
-            cloneInitialNotifications();
-
-
-        saveNotifications();
     }
 
+    async function refreshNotifications({ quiet = true } = {}) {
+        if (refreshPromise) return refreshPromise;
 
-    /* =========================================
-       SALVAR
-    ========================================= */
-
-    function saveNotifications() {
+        refreshPromise = (async () => {
+            const loaded = await loadNotifications({ quiet });
+            render();
+            return loaded;
+        })();
 
         try {
-
-            window.localStorage.setItem(
-
-                STORAGE_KEY,
-
-                JSON.stringify(
-                    notifications
-                )
-
-            );
-
-        } catch (error) {
-
-            console.warn(
-                "Não foi possível salvar as notificações no localStorage.",
-                error
-            );
-
+            return await refreshPromise;
+        } finally {
+            refreshPromise = null;
         }
     }
 
@@ -980,9 +428,7 @@ const STORAGE_KEY =
     ) {
 
         return notifications.find(
-            (notification) =>
-                notification.id ===
-                id
+            (notification) => String(notification.id) === String(id)
         );
     }
 
@@ -1109,32 +555,17 @@ const STORAGE_KEY =
        MARCAR COMO LIDA
     ========================================= */
 
-    function markAsRead(
-        id
-    ) {
+    async function markAsRead(id) {
+        const notification = getNotificationById(id);
+        if (!notification || notification.read) return false;
 
-        const notification =
-            getNotificationById(
-                id
-            );
-
-
-        if (
-            !notification ||
-            notification.read
-        ) {
-
-            return;
-        }
-
-
-        notification.read =
-            true;
-
-
-        saveNotifications();
-
+        notification.read = true;
         render();
+
+        if (isPersistedNotificationId(notification.id)) {
+            await persistNotificationRead(notification.id);
+        }
+        return true;
     }
 
 
@@ -1142,41 +573,16 @@ const STORAGE_KEY =
        MARCAR TODAS COMO LIDAS
     ========================================= */
 
-    function markAllAsRead() {
+    async function markAllAsRead() {
+        const unread = notifications.filter((notification) => !notification.read);
+        if (!unread.length) return false;
 
-        let changed =
-            false;
-
-
-        notifications.forEach(
-            (notification) => {
-
-                if (
-                    !notification.read
-                ) {
-
-                    notification.read =
-                        true;
-
-                    changed =
-                        true;
-                }
-
-            }
-        );
-
-
-        if (
-            !changed
-        ) {
-
-            return;
-        }
-
-
-        saveNotifications();
-
+        notifications.forEach((notification) => {
+            notification.read = true;
+        });
         render();
+        await persistAllNotificationsRead();
+        return true;
     }
 
 
@@ -1184,69 +590,21 @@ const STORAGE_KEY =
        ADICIONAR NOTIFICAÇÃO
     ========================================= */
 
-    function addNotification(
-        data
-    ) {
-
+    function addNotification(data) {
         const notification = {
-
-            id:
-                data.id ||
-                `notification-${Date.now()}-${Math.random()
-                    .toString(16)
-                    .slice(2)}`,
-
-
-            category:
-                data.category ||
-                "feed",
-
-
-            kind:
-                data.kind ||
-                "generic",
-
-
-            title:
-                data.title ||
-                "Nova notificação",
-
-
-            message:
-                data.message ||
-                "Você possui uma nova notificação.",
-
-
-            createdAt:
-                data.createdAt ||
-                "Agora",
-
-
-            read:
-                Boolean(
-                    data.read
-                ),
-
-
-            target:
-                data.target ||
-                null,
-
-
+            id: data.id || `temporary-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            category: data.category || "feed",
+            kind: data.kind || "generic",
+            title: data.title || "Nova notificação",
+            message: data.message || "Você possui uma nova notificação.",
+            createdAt: data.createdAt || "Agora",
+            read: Boolean(data.read),
+            target: data.target || null,
             ...data
         };
 
-
-        notifications.unshift(
-            notification
-        );
-
-
-        saveNotifications();
-
+        notifications.unshift(notification);
         render();
-
-
         return notification;
     }
 
@@ -1303,96 +661,32 @@ const STORAGE_KEY =
        ACEITAR / RECUSAR AMIZADE
     ========================================= */
 
-    function resolveFriendRequest(
-        friendName,
-        status
-    ) {
+    function resolveFriendRequest(friendName, status) {
+        if (status !== "accepted" && status !== "declined") return false;
 
-        if (
-            status !== "accepted" &&
-            status !== "declined"
-        ) {
+        const notification = getFriendRequestNotification(friendName);
+        if (!notification) return false;
 
-            return false;
-        }
-
-
-        const notification =
-            getFriendRequestNotification(
-                friendName
-            );
-
-
-        if (
-            !notification
-        ) {
-
-            return false;
-        }
-
-
-        notification.status =
-            status;
-
-
-        notification.read =
-            true;
-
-
-        if (
-            status ===
-            "accepted"
-        ) {
-
-            notification.title =
-                "Solicitação aceita";
-
-
-            notification.message =
-                `${notification.friendName} agora está na sua lista de amigos.`;
-
-        } else {
-
-            notification.title =
-                "Solicitação recusada";
-
-
-            notification.message =
-                `A solicitação de ${notification.friendName} foi recusada.`;
-
-        }
-
-
-        saveNotifications();
+        notification.status = status;
+        notification.read = true;
+        notification.title = status === "accepted"
+            ? "Solicitação aceita"
+            : "Solicitação recusada";
+        notification.message = status === "accepted"
+            ? `${notification.friendName} agora está na sua lista de amigos.`
+            : `A solicitação de ${notification.friendName} foi recusada.`;
 
         render();
+        void persistNotificationRead(notification.id);
 
-
-        /*
-         * Permite que amigos.js saiba
-         * que o pedido foi resolvido.
-         */
-
-        window.dispatchEvent(
-
-            new CustomEvent(
-                "overclock:friend-request-resolved",
-                {
-
-                    detail: {
-
-                        friendName:
-                            notification.friendName,
-
-                        status
-
-                    }
-
-                }
-            )
-
-        );
-
+        // amigos.js resolve a solicitação no endpoint /friends/requests/{id}/...
+        window.dispatchEvent(new CustomEvent("overclock:friend-request-resolved", {
+            detail: {
+                friendName: notification.friendName,
+                status,
+                requestId: notification.requestId || null
+            }
+        }));
 
         return true;
     }
@@ -1405,317 +699,34 @@ const STORAGE_KEY =
        ação + post
     ========================================= */
 
-    function notifyFeedAction({
-
+    async function notifyFeedAction({
         action,
-
         actorName,
-
         actorAvatar = null,
-
         postId = null,
-
         commentText = ""
-
     }) {
+        // O servidor identifica o autor da publicação e o usuário autenticado;
+        // não aceitamos no cliente um destinatário arbitrário.
+        if (!["like", "comment", "repost"].includes(action)) return null;
+        const parsedPostId = Number(postId);
+        if (!Number.isSafeInteger(parsedPostId) || parsedPostId <= 0) return null;
 
-        /*
-         * Somente estas ações
-         * são permitidas.
-         */
-
-        if (
-            action !== "like" &&
-            action !== "comment" &&
-            action !== "repost"
-        ) {
-
+        try {
+            const response = await notificationsApiRequest("/feed-action", {
+                method: "POST",
+                body: {
+                    action,
+                    post_id: parsedPostId,
+                    comment_text: String(commentText || "").slice(0, 180) || null
+                }
+            });
+            await refreshNotifications({ quiet: true });
+            return response.notification || null;
+        } catch (error) {
+            console.warn("Não foi possível registrar a notificação da publicação.", error);
             return null;
         }
-
-
-        const actor =
-            actorName ||
-            "Alguém";
-
-
-        /*
-         * Precisamos identificar
-         * de qual publicação é
-         * a interação.
-         */
-
-        const normalizedPostId =
-
-            postId === null ||
-            postId === undefined
-
-                ? "__general__"
-
-                : String(
-                    postId
-                );
-
-
-        /*
-         * Procurar notificação já existente
-         * para:
-         *
-         * MESMO POST
-         * +
-         * MESMA AÇÃO
-         */
-
-        const existing =
-            notifications.find(
-                (notification) => {
-
-                    if (
-                        notification.category !==
-                            "feed" ||
-
-                        notification.kind !==
-                            action
-                    ) {
-
-                        return false;
-                    }
-
-
-                    const currentPostId =
-
-                        notification.postId === null ||
-                        notification.postId === undefined
-
-                            ? "__general__"
-
-                            : String(
-                                notification.postId
-                            );
-
-
-                    return (
-                        currentPostId ===
-                        normalizedPostId
-                    );
-
-                }
-            );
-
-
-        /* =====================================
-           JÁ EXISTE UMA NOTIFICAÇÃO
-
-           Adicionamos o novo usuário
-           dentro dela.
-        ===================================== */
-
-        if (existing) {
-
-            const actors =
-                getFeedActors(
-                    existing
-                );
-
-
-            /*
-             * Evitar colocar a mesma
-             * pessoa duas vezes.
-             */
-
-            const alreadyExists =
-                actors.some(
-                    (item) =>
-
-                        normalizeText(
-                            item.name
-                        ) ===
-
-                        normalizeText(
-                            actor
-                        )
-                );
-
-
-            if (
-                !alreadyExists
-            ) {
-
-                actors.push({
-
-                    name:
-                        actor,
-
-                    avatar:
-                        actorAvatar ||
-                        getActorInitial(
-                            actor
-                        )
-
-                });
-
-            }
-
-
-            existing.actors =
-                actors;
-
-
-            existing.actorName =
-                actors[0]?.name ||
-                actor;
-
-
-            existing.actorAvatar =
-                actors[0]?.avatar ||
-                actorAvatar ||
-                getActorInitial(
-                    actor
-                );
-
-
-            /*
-             * Como houve uma nova interação,
-             * a notificação volta a ser
-             * considerada nova.
-             */
-
-            existing.createdAt =
-                "Agora";
-
-
-            existing.read =
-                false;
-
-
-            if (
-                action === "comment" &&
-                commentText
-            ) {
-
-                existing.lastCommentText =
-                    commentText;
-            }
-
-
-            existing.message =
-                buildFeedSummary(
-                    existing
-                );
-
-
-            /*
-             * Levar novamente para o topo.
-             */
-
-            notifications = [
-
-                existing,
-
-                ...notifications.filter(
-                    (notification) =>
-                        notification !==
-                        existing
-                )
-
-            ];
-
-
-            saveNotifications();
-
-            render();
-
-
-            return existing;
-        }
-
-
-        /* =====================================
-           PRIMEIRA INTERAÇÃO
-
-           Criamos nova notificação.
-        ===================================== */
-
-        const notification =
-            addNotification({
-
-                category:
-                    "feed",
-
-                kind:
-                    action,
-
-                actorName:
-                    actor,
-
-                actorAvatar:
-                    actorAvatar ||
-                    getActorInitial(
-                        actor
-                    ),
-
-                actors: [
-
-                    {
-                        name:
-                            actor,
-
-                        avatar:
-                            actorAvatar ||
-                            getActorInitial(
-                                actor
-                            )
-                    }
-
-                ],
-
-                postId,
-
-                title:
-
-                    action === "like"
-
-                        ? "Nova curtida"
-
-                        : action ===
-                            "comment"
-
-                            ? "Novo comentário"
-
-                            : "Novo repost",
-
-
-                message:
-                    "",
-
-
-                lastCommentText:
-
-                    action === "comment"
-
-                        ? commentText
-
-                        : "",
-
-
-                target:
-                    "perfil.html?tab=posts"
-
-            });
-
-
-        notification.message =
-            buildFeedSummary(
-                notification
-            );
-
-
-        saveNotifications();
-
-        render();
-
-
-        return notification;
     }
 
 
@@ -1872,7 +883,7 @@ const STORAGE_KEY =
             <div
                 class="notification-footer-note"
             >
-                Promoções de jogos são dados simulados nesta versão do protótipo.
+                Notificações geradas pelas atividades da comunidade ficam salvas na sua conta.
             </div>
 
         `;
@@ -2521,15 +1532,10 @@ const STORAGE_KEY =
            ABRIR NOTIFICAÇÃO
         ================================= */
 
-        const openTarget = () => {
+        const openTarget = async () => {
 
-            /*
-             * Sempre marca como lida.
-             */
-
-            markAsRead(
-                notification.id
-            );
+            /* Sempre marca como lida antes de sair da página. */
+            await markAsRead(notification.id);
 
 
             /*
@@ -3030,7 +2036,7 @@ const STORAGE_KEY =
        INICIALIZAÇÃO
     ========================================= */
 
-    function initNotifications() {
+    async function initNotifications() {
 
         /*
          * Procura o sino que já existe
@@ -3056,7 +2062,7 @@ const STORAGE_KEY =
         }
 
 
-        loadNotifications();
+        await loadNotifications({ quiet: false });
 
         createPanel();
 
@@ -3072,6 +2078,10 @@ const STORAGE_KEY =
             (event) => {
 
                 event.stopPropagation();
+
+                if (!panel.classList.contains("active")) {
+                    void refreshNotifications({ quiet: true });
+                }
 
                 togglePanel();
 
@@ -3120,26 +2130,15 @@ const STORAGE_KEY =
         );
 
 
-        /* =================================
-           ALTERAÇÃO EM OUTRA ABA
-        ================================= */
+        window.addEventListener("focus", () => {
+            void refreshNotifications({ quiet: true });
+        });
 
-        window.addEventListener(
-            "storage",
-            (event) => {
-
-                if (
-                    event.key ===
-                    STORAGE_KEY
-                ) {
-
-                    loadNotifications();
-
-                    render();
-                }
-
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                void refreshNotifications({ quiet: true });
             }
-        );
+        });
 
 
         console.log(

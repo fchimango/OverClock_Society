@@ -16,6 +16,7 @@ import feed_routes
 import friends_routes
 import games_routes
 import models
+import notifications_routes
 
 from database import Base, engine, get_db
 
@@ -23,7 +24,7 @@ from database import Base, engine, get_db
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Cria tabelas que ainda não existem, incluindo
-    # posts, comentários, curtidas, repostagens, jogos e amizades.
+    # posts, comentários, curtidas, repostagens, jogos, amizades e notificações.
     Base.metadata.create_all(bind=engine)
 
     # Atualiza a tabela users existente.
@@ -88,6 +89,7 @@ app.include_router(auth.router)
 app.include_router(feed_routes.router)
 app.include_router(games_routes.router)
 app.include_router(friends_routes.router)
+app.include_router(notifications_routes.router)
 
 
 # =========================================

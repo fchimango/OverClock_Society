@@ -39,6 +39,88 @@ def serialize_public_user(user: models.User) -> dict[str, Any]:
     }
 
 
+
+
+def resolve_request_notification(
+    db: Session,
+    recipient_id: int,
+    request_id: int,
+    status: str,
+    other_name: str,
+) -> None:
+    """Keep the inbox notification aligned with the authoritative request."""
+    rows = db.scalars(
+        select(models.Notification).where(
+            models.Notification.recipient_id == recipient_id,
+            models.Notification.category == "friends",
+            models.Notification.kind == "friend-request",
+        )
+    ).all()
+
+    for item in rows:
+        data = dict(item.data or {})
+        if str(data.get("request_id", "")) != str(request_id):
+            continue
+
+        data["status"] = status
+        data["friend_name"] = other_name
+        item.data = data
+        item.is_read = True
+        item.title = "Solicitação aceita" if status == "accepted" else "Solicitação recusada"
+        item.message = (
+            f"{other_name} agora está na sua lista de amigos."
+            if status == "accepted"
+            else f"A solicitação de {other_name} foi recusada."
+        )
+
+
+def create_friend_response_notification(
+    db: Session,
+    recipient_id: int,
+    actor_id: int,
+    request_id: int,
+    actor_name: str,
+    status: str,
+) -> None:
+    """Notify the sender after their request is accepted or declined."""
+    kind = "friend-request-accepted" if status == "accepted" else "friend-request-declined"
+    existing_rows = db.scalars(
+        select(models.Notification).where(
+            models.Notification.recipient_id == recipient_id,
+            models.Notification.category == "friends",
+            models.Notification.kind == kind,
+        )
+    ).all()
+    for row in existing_rows:
+        if str((row.data or {}).get("request_id", "")) == str(request_id):
+            return
+
+    accepted = status == "accepted"
+    db.add(
+        models.Notification(
+            recipient_id=recipient_id,
+            actor_id=actor_id,
+            category="friends",
+            kind=kind,
+            title="Solicitação aceita" if accepted else "Solicitação recusada",
+            message=(
+                f"{actor_name} aceitou sua solicitação de amizade."
+                if accepted
+                else f"{actor_name} recusou sua solicitação de amizade."
+            ),
+            data={
+                "friend_name": actor_name,
+                "friend_id": actor_id,
+                "request_id": request_id,
+                "status": status,
+                "target": "amigos.html",
+            },
+            is_read=False,
+            created_at=datetime.now(timezone.utc),
+        )
+    )
+
+
 def friendship_pair(user_a: int, user_b: int) -> tuple[int, int]:
     """Return an order-independent, canonical pair for a friendship row."""
     return (user_a, user_b) if user_a < user_b else (user_b, user_a)
@@ -281,6 +363,27 @@ def send_friend_request(
     )
     db.add(request)
     try:
+        # Generate the request ID before creating its persistent notification.
+        db.flush()
+        db.add(
+            models.Notification(
+                recipient_id=recipient.id,
+                actor_id=user.id,
+                category="friends",
+                kind="friend-request",
+                title="Nova solicitação",
+                message=f"{user.name} enviou uma solicitação de amizade.",
+                data={
+                    "request_id": request.id,
+                    "friend_name": user.name,
+                    "friend_id": user.id,
+                    "status": "pending",
+                    "target": "amigos.html",
+                },
+                is_read=False,
+                created_at=datetime.now(timezone.utc),
+            )
+        )
         db.commit()
         db.refresh(request)
     except IntegrityError:
@@ -349,6 +452,20 @@ def accept_friend_request(
     for reverse in reverse_requests:
         reverse.status = "accepted"
         reverse.responded_at = now
+        # Keep the other account's notification for the reverse request from
+        # remaining actionable after the friendship has already been accepted.
+        resolve_request_notification(
+            db, reverse.receiver_id, reverse.id, "accepted", user.name
+        )
+
+    sender = db.get(models.User, sender_id)
+    sender_name = sender.name if sender is not None else "O jogador"
+    resolve_request_notification(
+        db, user.id, request.id, "accepted", sender_name
+    )
+    create_friend_response_notification(
+        db, sender_id, user.id, request.id, user.name, "accepted"
+    )
 
     try:
         db.commit()
@@ -366,6 +483,14 @@ def accept_friend_request(
         if refreshed_request is not None and refreshed_request.status == "pending":
             refreshed_request.status = "accepted"
             refreshed_request.responded_at = datetime.now(timezone.utc)
+            sender = db.get(models.User, refreshed_request.sender_id)
+            sender_name = sender.name if sender is not None else "O jogador"
+            resolve_request_notification(
+                db, user.id, refreshed_request.id, "accepted", sender_name
+            )
+            create_friend_response_notification(
+                db, refreshed_request.sender_id, user.id, refreshed_request.id, user.name, "accepted"
+            )
             db.commit()
 
     return {"message": "Solicitação aceita. Vocês agora são amigos."}
@@ -391,6 +516,14 @@ def decline_friend_request(
 
     request.status = "declined"
     request.responded_at = datetime.now(timezone.utc)
+    sender = db.get(models.User, request.sender_id)
+    sender_name = sender.name if sender is not None else "O jogador"
+    resolve_request_notification(
+        db, user.id, request.id, "declined", sender_name
+    )
+    create_friend_response_notification(
+        db, request.sender_id, user.id, request.id, user.name, "declined"
+    )
     db.commit()
 
     return {"message": "Solicitação recusada."}
