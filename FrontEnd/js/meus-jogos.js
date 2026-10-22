@@ -67,16 +67,55 @@ const summaryItems =
 
 
 /* =========================================
-   PERSISTÊNCIA POR USUÁRIO
+   CONFIGURAÇÃO DA API E MIGRAÇÃO
 ========================================= */
 
-const GAMES_USER_ID =
-    localStorage.getItem("userId");
+const GAMES_API_BASE_URL =
+    ["127.0.0.1", "localhost"].includes(window.location.hostname)
+        ? "http://127.0.0.1:8000"
+        : "https://overclock-api.onrender.com";
 
-const GAMES_STORAGE_KEY =
-    GAMES_USER_ID
-        ? `overclockSocietyGames_${GAMES_USER_ID}`
-        : null;
+function getGamesStorageKeys() {
+    const userId = localStorage.getItem("userId");
+
+    return {
+        legacy: userId ? `overclockSocietyGames_${userId}` : null,
+        marker: userId ? `overclockSocietyGamesMigrated_${userId}` : null
+    };
+}
+
+let gamesApiReady = false;
+let gamesApiWarningShown = false;
+let gamesSaveQueue = Promise.resolve();
+
+function showGamesApiWarning(message) {
+    if (gamesApiWarningShown) {
+        return;
+    }
+
+    gamesApiWarningShown = true;
+    window.alert(message);
+}
+
+async function getGamesApiError(response) {
+    try {
+        const body = await response.json();
+
+        if (Array.isArray(body.detail) && body.detail.length) {
+            return body.detail
+                .map((item) => item.msg || item)
+                .join(" ");
+        }
+
+        if (typeof body.detail === "string") {
+            return body.detail;
+        }
+    } catch (error) {
+        // Algumas respostas de erro podem não ter JSON.
+    }
+
+    return `A API respondeu com o status ${response.status}.`;
+}
 
 
 /* =========================================
@@ -472,6 +511,37 @@ function isGameInCategory(
 
 
 /* =========================================
+   LOCALIZAR CARD POR CATEGORIA E NOME
+========================================= */
+
+function findGameCardInCategory(
+    name,
+    category,
+    excludeCard = null
+) {
+    const selector =
+        category === "favorite"
+            ? ".podium-card"
+            : category === "liked"
+                ? ".collection-card"
+                : ".completed-game";
+
+    const normalizedName = normalizeGameName(name);
+
+    return Array.from(
+        document.querySelectorAll(selector)
+    ).find((card) => {
+        if (card === excludeCard) {
+            return false;
+        }
+
+        const cardName = card.querySelector("h3")?.textContent.trim() || "";
+        return normalizeGameName(cardName) === normalizedName;
+    }) || null;
+}
+
+
+/* =========================================
    GARANTIR "JOGOS QUE GOSTO"
 
    Todo favorito também precisa
@@ -662,6 +732,16 @@ function refreshGameOptions(
                         option.value
                     );
 
+                // Durante a edição, mantenha o jogo atual selecionável ao
+                // trocar a categoria. A função de salvamento valida conflitos.
+                if (
+                    editingCard &&
+                    selectedName &&
+                    normalized === normalizeGameName(selectedName)
+                ) {
+                    option.disabled = false;
+                    return;
+                }
 
                 /*
                  * JOGOS ZERADOS
@@ -904,8 +984,12 @@ gameCategory.addEventListener(
         }
 
 
+        // Ao editar, preserva o jogo atualmente selecionado mesmo que ele
+        // já esteja em outra categoria (por exemplo, Favoritos também existe
+        // em Jogos Que Gosto).
         refreshGameOptions(
-            editingCard
+            editingCard,
+            editingCard ? gameName.value : ""
         );
 
     }
@@ -1326,222 +1410,253 @@ function getCardData(card) {
 
 
 /* =========================================
-   PERSISTÊNCIA DOS JOGOS
+   PERSISTÊNCIA NO POSTGRESQL
 ========================================= */
 
 function getCurrentGamesState() {
-
-    const favorites =
-        Array.from(
-            podium.querySelectorAll(
-                ".podium-card"
-            )
-        )
+    const favorites = Array.from(
+        podium.querySelectorAll(".podium-card")
+    )
         .map(getCardData)
         .filter(Boolean);
 
-
-    const liked =
-        Array.from(
-            collectionGrid.querySelectorAll(
-                ".collection-card"
-            )
-        )
+    const liked = Array.from(
+        collectionGrid.querySelectorAll(".collection-card")
+    )
         .map(getCardData)
         .filter(Boolean);
 
-
-    const completed =
-        Array.from(
-            completedList.querySelectorAll(
-                ".completed-game"
-            )
-        )
+    const completed = Array.from(
+        completedList.querySelectorAll(".completed-game")
+    )
         .map(getCardData)
         .filter(Boolean);
 
+    return { favorites, liked, completed };
+}
+
+function buildGamesApiPayload() {
+    const state = getCurrentGamesState();
 
     return {
-        favorites,
-        liked,
-        completed
+        favorites: state.favorites.map((game) => ({
+            name: game.name,
+            genre: game.genre,
+            rating: Number(game.rating ?? 5),
+            position: Number(game.position)
+        })),
+        liked: state.liked.map((game) => ({
+            name: game.name,
+            genre: game.genre,
+            rating: Number(game.rating ?? 5)
+        })),
+        completed: state.completed.map((game) => ({
+            name: game.name,
+            genre: game.genre,
+            rating: Number(game.rating ?? 5),
+            year: Number(game.year) || new Date().getFullYear()
+        }))
     };
 }
 
-
-function saveGamesToStorage() {
-
-    if (!GAMES_STORAGE_KEY) {
-
-        console.warn(
-            "Não foi possível salvar os jogos: userId ausente."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        localStorage.setItem(
-            GAMES_STORAGE_KEY,
-            JSON.stringify(
-                getCurrentGamesState()
-            )
-        );
-
-    } catch (error) {
-
-        console.warn(
-            "Não foi possível salvar os jogos no localStorage.",
-            error
-        );
-    }
+function isValidGamesState(data) {
+    return Boolean(
+        data &&
+        Array.isArray(data.favorites) &&
+        Array.isArray(data.liked) &&
+        Array.isArray(data.completed)
+    );
 }
 
-
 function clearGameSections() {
-
     podium.innerHTML = "";
-
     collectionGrid.innerHTML = "";
-
     completedList.innerHTML = "";
 }
 
-
-function loadGamesFromStorage() {
-
-    if (!GAMES_STORAGE_KEY) {
-
-        return false;
+function renderGamesState(data) {
+    if (!isValidGamesState(data)) {
+        throw new Error("A coleção recebida pela API está em formato inválido.");
     }
 
+    clearGameSections();
 
-    let stored = null;
-
-
-    try {
-
-        stored =
-            localStorage.getItem(
-                GAMES_STORAGE_KEY
-            );
-
-    } catch (error) {
-
-        console.warn(
-            "Não foi possível acessar os jogos salvos.",
-            error
-        );
-
-        return false;
-    }
-
-
-    if (!stored) {
-
-        return false;
-    }
-
-
-    try {
-
-        const data =
-            JSON.parse(stored);
-
-
-        if (
-            !data ||
-            !Array.isArray(data.favorites) ||
-            !Array.isArray(data.liked) ||
-            !Array.isArray(data.completed)
-        ) {
-
-            return false;
+    data.liked.forEach((game) => {
+        if (!game?.name || !game?.genre) {
+            return;
         }
 
-
-        clearGameSections();
-
-
-        data.liked.forEach(
-            (game) => {
-
-                if (
-                    !game?.name ||
-                    !game?.genre
-                ) {
-
-                    return;
-                }
-
-
-                createLikedCard(
-                    game.name,
-                    game.genre,
-                    Number(game.rating ?? 5)
-                );
-            }
+        createLikedCard(
+            game.name,
+            game.genre,
+            Number(game.rating ?? 5)
         );
+    });
 
+    data.favorites.forEach((game) => {
+        const position = Number(game?.position);
 
-        data.favorites.forEach(
-            (game) => {
+        if (!game?.name || !game?.genre || ![1, 2, 3].includes(position)) {
+            return;
+        }
 
-                if (
-                    !game?.name ||
-                    !game?.genre ||
-                    !Number(game.position)
-                ) {
-
-                    return;
-                }
-
-
-                createFavoriteCard(
-                    game.name,
-                    game.genre,
-                    Number(game.rating ?? 5),
-                    Number(game.position)
-                );
-            }
+        createFavoriteCard(
+            game.name,
+            game.genre,
+            Number(game.rating ?? 5),
+            position
         );
+    });
 
+    data.completed.forEach((game) => {
+        if (!game?.name || !game?.genre) {
+            return;
+        }
 
-        data.completed.forEach(
-            (game) => {
-
-                if (
-                    !game?.name ||
-                    !game?.genre
-                ) {
-
-                    return;
-                }
-
-
-                createCompletedCard(
-                    game.name,
-                    game.genre,
-                    Number(game.year) ||
-                        new Date().getFullYear()
-                );
-            }
+        createCompletedCard(
+            game.name,
+            game.genre,
+            Number(game.year) || new Date().getFullYear()
         );
+    });
+}
 
+function getLegacyGamesState() {
+    const keys = getGamesStorageKeys();
 
-        return true;
-
-    } catch (error) {
-
-        console.warn(
-            "Não foi possível carregar os jogos salvos.",
-            error
-        );
-
-        return false;
+    if (!keys.legacy) {
+        return null;
     }
+
+    try {
+        const stored = localStorage.getItem(keys.legacy);
+
+        if (!stored) {
+            return null;
+        }
+
+        const data = JSON.parse(stored);
+        return isValidGamesState(data) ? data : null;
+    } catch (error) {
+        console.warn("Não foi possível ler a coleção antiga do navegador.", error);
+        return null;
+    }
+}
+
+async function loadGamesFromAPI() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        console.warn("Não foi possível carregar os jogos: token de sessão ausente.");
+        return { source: "unavailable", shouldSave: false };
+    }
+
+    try {
+        const response = await fetch(`${GAMES_API_BASE_URL}/games`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(await getGamesApiError(response));
+        }
+
+        const data = await response.json();
+
+        if (!isValidGamesState(data)) {
+            throw new Error("A API de jogos devolveu uma resposta inesperada.");
+        }
+
+        gamesApiReady = true;
+
+        const keys = getGamesStorageKeys();
+        const hasMigrationMarker = Boolean(
+            keys.marker && localStorage.getItem(keys.marker) === "true"
+        );
+        const totalInDatabase =
+            data.favorites.length + data.liked.length + data.completed.length;
+
+        if (totalInDatabase > 0 || hasMigrationMarker) {
+            renderGamesState(data);
+
+            if (keys.marker && totalInDatabase > 0) {
+                localStorage.setItem(keys.marker, "true");
+            }
+
+            return { source: "database", shouldSave: false };
+        }
+
+        // Migra os dados antigos do localStorage apenas uma vez por usuário.
+        const legacyState = getLegacyGamesState();
+
+        if (legacyState) {
+            renderGamesState(legacyState);
+            return { source: "legacy", shouldSave: true };
+        }
+
+        // Primeira visita: preserva os cards de demonstração do HTML.
+        return { source: "demo", shouldSave: true };
+    } catch (error) {
+        gamesApiReady = false;
+        console.error("Não foi possível carregar a coleção pela API.", error);
+        showGamesApiWarning(
+            "Não foi possível conectar ao serviço de jogos. A página manterá os cards atuais, mas as alterações não serão salvas no banco enquanto a API estiver indisponível. Verifique se o FastAPI está funcionando e recarregue a página."
+        );
+        return { source: "unavailable", shouldSave: false };
+    }
+}
+
+function saveGamesToStorage() {
+    if (!gamesApiReady) {
+        console.warn("A coleção não foi enviada porque a API de jogos não está disponível.");
+        return Promise.resolve(false);
+    }
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        console.warn("A coleção não foi enviada: token de sessão ausente.");
+        return Promise.resolve(false);
+    }
+
+    // Captura um retrato desta alteração e serializa os envios para evitar
+    // que requisições simultâneas gravem estados fora de ordem.
+    const payload = buildGamesApiPayload();
+
+    gamesSaveQueue = gamesSaveQueue
+        .catch(() => false)
+        .then(async () => {
+            const response = await fetch(`${GAMES_API_BASE_URL}/games`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(await getGamesApiError(response));
+            }
+
+            const keys = getGamesStorageKeys();
+            if (keys.marker) {
+                localStorage.setItem(keys.marker, "true");
+            }
+
+            return true;
+        })
+        .catch((error) => {
+            console.error("Não foi possível salvar a coleção no PostgreSQL.", error);
+            showGamesApiWarning(
+                `Não foi possível salvar sua coleção no banco de dados. ${error.message || "Confira a conexão com a API e tente novamente."}`
+            );
+            return false;
+        });
+
+    return gamesSaveQueue;
 }
 
 
@@ -1577,20 +1692,9 @@ function openEditGameModal(card) {
         "Salvar alterações";
 
 
-    /*
-     * Categoria não pode ser trocada
-     * durante a edição.
-     *
-     * Para classificar em outra categoria,
-     * usamos "Adicionar jogo".
-     */
-
-    gameCategory.value =
-        data.category;
-
-
-    gameCategory.disabled =
-        true;
+    // A categoria pode ser alterada durante a edição.
+    gameCategory.disabled = false;
+    gameCategory.value = data.category;
 
 
     buildGameOptions();
@@ -2361,7 +2465,8 @@ addGameForm.addEventListener(
                 name,
                 genre,
                 rating,
-                position
+                position,
+                category
             );
 
 
@@ -2534,249 +2639,177 @@ function saveEditedGame(
     name,
     genre,
     rating,
-    position
+    position,
+    targetCategory = gameCategory.value
 ) {
-
-    const category =
-        editingOriginalCategory;
-
-
-    const oldData =
-        getCardData(
-            editingCard
-        );
-
+    const sourceCategory = editingOriginalCategory;
+    const oldData = getCardData(editingCard);
 
     if (!oldData) {
-
         return;
     }
 
+    const sameName =
+        normalizeGameName(name) === normalizeGameName(oldData.name);
 
-    /*
-     * Não repetir dentro da categoria.
-     */
+    const changingCategory = targetCategory !== sourceCategory;
 
-    if (
-        isGameInCategory(
-            name,
-            category,
-            editingCard
-        )
-    ) {
-
-        alert(
-            "Este jogo já existe nesta categoria."
-        );
-
-
+    if (!['favorite', 'liked', 'completed'].includes(targetCategory)) {
+        alert('Selecione uma categoria válida.');
         return;
     }
 
-
-    /*
-     * =========================================
-     * EDITANDO "JOGOS QUE GOSTO"
-     *
-     * Não pode trocar o jogo se o antigo
-     * ainda for Favorito ou Zerado.
-     * =========================================
-     */
-
+    // Quando a categoria não muda, não permite duplicar outro jogo nela.
     if (
-        category === "liked" &&
-
-        normalizeGameName(name) !==
-        normalizeGameName(
-            oldData.name
-        )
+        !changingCategory &&
+        isGameInCategory(name, targetCategory, editingCard)
     ) {
+        alert('Este jogo já existe nesta categoria.');
+        return;
+    }
 
-        const oldIsFavorite =
-            isGameInCategory(
-                oldData.name,
-                "favorite"
-            );
+    // A coleção "Jogos Que Gosto" é a base. Não renomeamos um jogo-base
+    // enquanto ele estiver referenciado como favorito ou zerado.
+    if (sourceCategory === 'liked' && !sameName) {
+        const oldIsFavorite = isGameInCategory(oldData.name, 'favorite');
+        const oldIsCompleted = isGameInCategory(oldData.name, 'completed');
 
-
-        const oldIsCompleted =
-            isGameInCategory(
-                oldData.name,
-                "completed"
-            );
-
-
-        if (
-            oldIsFavorite &&
-            oldIsCompleted
-        ) {
-
+        if (oldIsFavorite || oldIsCompleted) {
             alert(
-                `"${oldData.name}" ainda está como Favorito e Zerado.\n\nRemova essas classificações antes de trocar o jogo em Jogos Que Gosto.`
+                `"${oldData.name}" também está classificado em outra seção.\n\n` +
+                'Remova essa classificação primeiro para poder trocar o nome do jogo.'
             );
-
-
             return;
         }
 
-
-        if (oldIsFavorite) {
-
-            alert(
-                `"${oldData.name}" ainda está nos Favoritos.\n\nRemova-o do pódio antes de trocar este jogo.`
-            );
-
-
-            return;
-        }
-
-
-        if (oldIsCompleted) {
-
-            alert(
-                `"${oldData.name}" ainda está em Jogos Zerados.\n\nRemova-o de Jogos Zerados antes de trocar este jogo.`
-            );
-
-
+        // Impede que renomear a entrada-base crie um duplicado na coleção.
+        if (isGameInCategory(name, 'liked', editingCard)) {
+            alert('Este jogo já existe em "Jogos Que Gosto".');
             return;
         }
     }
 
-
-    /*
-     * =========================================
-     * EDITANDO ZERADO
-     * =========================================
-     */
-
+    // Um jogo zerado precisa ter uma entrada-base em "Jogos Que Gosto".
+    // Se ele vem de Favoritos, garantimos essa entrada automaticamente.
     if (
-        category === "completed" &&
-
-        !isGameInCategory(
-            name,
-            "liked"
-        )
+        targetCategory === 'completed' &&
+        !findGameCardInCategory(name, 'liked') &&
+        sourceCategory !== 'liked' &&
+        sourceCategory !== 'favorite'
     ) {
-
         alert(
             'Um jogo só pode estar em "Jogos Zerados" se também estiver em "Jogos Que Gosto".'
         );
-
-
         return;
     }
 
+    // Ao promover para favorito a partir de outra categoria, valida o limite
+    // e a posição apenas se ainda não existe um favorito com esse nome.
+    const existingFavorite = findGameCardInCategory(
+        name,
+        'favorite',
+        sourceCategory === 'favorite' ? editingCard : null
+    );
 
-    /*
-     * ==================================
-     * FAVORITO
-     * ==================================
-     */
+    const needsNewFavorite =
+        targetCategory === 'favorite' &&
+        sourceCategory !== 'favorite' &&
+        !existingFavorite;
+
+    if (needsNewFavorite && getFavoriteCount() >= 3) {
+        alert('Você já possui 3 jogos favoritos. Remova um antes de adicionar outro.');
+        return;
+    }
 
     if (
-        category === "favorite"
+        needsNewFavorite &&
+        getFavoriteCardByPosition(position)
     ) {
+        alert('Essa posição do pódio já está ocupada. Escolha outra posição.');
+        return;
+    }
 
-        const oldPosition =
-            Number(
-                editingCard.dataset
-                    .position
-            );
+    // EDIÇÃO DENTRO DA MESMA CATEGORIA.
+    if (!changingCategory) {
+        if (targetCategory === 'favorite') {
+            const oldPosition = Number(editingCard.dataset.position);
+            const otherCard = getFavoriteCardByPosition(position, editingCard);
 
+            // Mantém o comportamento existente de trocar a posição com outro favorito.
+            if (otherCard) {
+                applyFavoritePosition(otherCard, oldPosition);
+            }
 
-        const otherCard =
-            getFavoriteCardByPosition(
-                position,
-                editingCard
-            );
-
-
-        /*
-         * Se trocar de posição com
-         * outro favorito.
-         */
-
-        if (otherCard) {
-
-            applyFavoritePosition(
-                otherCard,
-                oldPosition
-            );
+            ensureGameIsLiked(name, genre, rating);
+            applyFavoritePosition(editingCard, position);
+            updateFavoriteCard(editingCard, name, genre, rating);
+            normalizePodium();
+        } else if (targetCategory === 'liked') {
+            updateLikedCard(editingCard, name, genre, rating);
+        } else {
+            updateCompletedCard(editingCard, name, genre);
         }
+    } else if (sourceCategory === 'liked') {
+        // Favoritos e Zerados são marcações adicionais: a entrada-base em
+        // "Jogos Que Gosto" permanece, pois o backend exige essa relação.
+        updateLikedCard(editingCard, name, genre, rating);
+        ensureGameIsLiked(name, genre, rating);
 
+        if (targetCategory === 'favorite') {
+            if (!findGameCardInCategory(name, 'favorite')) {
+                createFavoriteCard(name, genre, rating, position);
+            }
+        } else if (targetCategory === 'completed') {
+            const existingCompleted = findGameCardInCategory(name, 'completed');
 
-        /*
-         * Se o novo jogo escolhido ainda
-         * não estiver na coleção-base,
-         * adiciona automaticamente.
-         */
+            if (existingCompleted) {
+                updateCompletedCard(existingCompleted, name, genre);
+            } else {
+                createCompletedCard(name, genre);
+            }
+        }
+    } else if (sourceCategory === 'favorite') {
+        if (targetCategory === 'favorite') {
+            // Este caso é tratado no bloco de mesma categoria acima; fica aqui
+            // como proteção caso novas categorias sejam adicionadas no futuro.
+            ensureGameIsLiked(name, genre, rating);
+            updateFavoriteCard(editingCard, name, genre, rating);
+        } else {
+            ensureGameIsLiked(name, genre, rating);
+            editingCard.remove();
 
-        ensureGameIsLiked(
-            name,
-            genre,
-            rating
-        );
+            if (targetCategory === 'completed') {
+                const existingCompleted = findGameCardInCategory(name, 'completed');
 
+                if (existingCompleted) {
+                    updateCompletedCard(existingCompleted, name, genre);
+                } else {
+                    createCompletedCard(name, genre);
+                }
+            }
+            // Para targetCategory === 'liked', a entrada-base já existe ou
+            // foi criada por ensureGameIsLiked; removemos apenas o pódio.
+        }
+    } else if (sourceCategory === 'completed') {
+        if (targetCategory === 'completed') {
+            updateCompletedCard(editingCard, name, genre);
+        } else {
+            ensureGameIsLiked(name, genre, rating);
+            editingCard.remove();
 
-        applyFavoritePosition(
-            editingCard,
-            position
-        );
-
-
-        updateFavoriteCard(
-            editingCard,
-            name,
-            genre,
-            rating
-        );
-
-
-        normalizePodium();
+            if (
+                targetCategory === 'favorite' &&
+                !findGameCardInCategory(name, 'favorite')
+            ) {
+                createFavoriteCard(name, genre, rating, position);
+            }
+        }
     }
 
-
-    /*
-     * ==================================
-     * GOSTO
-     * ==================================
-     */
-
-    else if (
-        category === "liked"
-    ) {
-
-        updateLikedCard(
-            editingCard,
-            name,
-            genre,
-            rating
-        );
-    }
-
-
-    /*
-     * ==================================
-     * ZERADO
-     * ==================================
-     */
-
-    else {
-
-        updateCompletedCard(
-            editingCard,
-            name,
-            genre
-        );
-    }
-
-
+    normalizePodium();
     updateSummary();
-
     updateFavoritePositionOptions();
-
     saveGamesToStorage();
-
     closeGameModal();
 }
 
@@ -2943,51 +2976,37 @@ if (seeCompletedGamesButton) {
 
 
 /* =========================================
-   INICIALIZAÇÃO
+   INICIALIZAÇÃO DA PÁGINA
 ========================================= */
 
-buildGameOptions();
+async function initializeGamesPage() {
+    buildGameOptions();
+    initializeGameActions();
+    normalizePodium();
+    updateSummary();
+    updateFavoritePositionOptions();
 
+    const loadResult = await loadGamesFromAPI();
 
-/*
- * Se o usuário já possui uma coleção salva,
- * substituímos os cards de demonstração do HTML
- * pelos dados exclusivos desta conta.
- *
- * Caso ainda não exista armazenamento para o
- * usuário, os cards atuais do HTML funcionam
- * como estado inicial e serão salvos abaixo.
- */
+    // Corrige coleções antigas para garantir que todo favorito também
+    // exista na categoria "Jogos Que Gosto", como a interface já exige.
+    const beforeSync = JSON.stringify(getCurrentGamesState());
+    syncFavoriteGamesWithLiked();
+    normalizePodium();
+    updateSummary();
+    updateFavoritePositionOptions();
+    const afterSync = JSON.stringify(getCurrentGamesState());
 
-loadGamesFromStorage();
+    const stateWasAdjusted = beforeSync !== afterSync;
 
+    if (
+        gamesApiReady &&
+        (loadResult.shouldSave || stateWasAdjusted)
+    ) {
+        await saveGamesToStorage();
+    }
 
-initializeGameActions();
+    console.log("🎮 Meus Jogos carregado com sucesso.");
+}
 
-normalizePodium();
-
-
-/*
- * Garante que todo Favorito também exista
- * em Jogos Que Gosto.
- */
-
-syncFavoriteGamesWithLiked();
-
-
-updateSummary();
-
-updateFavoritePositionOptions();
-
-
-/*
- * Também grava o estado inicial da página
- * na primeira visita deste usuário.
- */
-
-saveGamesToStorage();
-
-
-console.log(
-    "🎮 Meus Jogos carregado com sucesso."
-);
+initializeGamesPage();

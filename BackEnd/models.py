@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -178,4 +178,67 @@ class PostRepost(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False
+    )
+
+# =========================================
+# COLEÇÃO DE JOGOS DOS USUÁRIOS
+# =========================================
+
+class UserGame(Base):
+    __tablename__ = "user_games"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "category",
+            "name",
+            name="uq_user_games_user_category_name",
+        ),
+        Index("ix_user_games_user_category", "user_id", "category"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(160),
+        nullable=False,
+    )
+
+    genre: Mapped[str] = mapped_column(
+        String(120),
+        nullable=False,
+        default="Gênero não informado",
+    )
+
+    # favorite, liked ou completed
+    category: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
+
+    rating: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=5.0,
+    )
+
+    favorite_position: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    completed_year: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
