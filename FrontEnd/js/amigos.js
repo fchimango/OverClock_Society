@@ -1,1736 +1,830 @@
 /* =========================================
-   ELEMENTOS PRINCIPAIS
+   OVERCLOCK SOCIETY — AMIGOS
+   Persistência via API + PostgreSQL
 ========================================= */
 
-const findFriendsButton =
-    document.getElementById(
-        "findFriendsButton"
-    );
+const FRIENDS_API_BASE_URL =
+    ["127.0.0.1", "localhost"].includes(window.location.hostname)
+        ? "http://127.0.0.1:8000"
+        : "https://overclock-api.onrender.com";
 
-const profileButton =
-    document.getElementById(
-        "profileButton"
-    );
+const findFriendsButton = document.getElementById("findFriendsButton");
+const profileButton = document.getElementById("profileButton");
+const searchInput = document.getElementById("searchInput");
+const requestsList = document.getElementById("requestsList");
+const allFriendsList = document.getElementById("allFriendsList");
+const friendsGrid = document.querySelector(".friends-grid");
+const seeOnlineButton = document.getElementById("seeOnlineButton");
+const modalOverlay = document.getElementById("friendsModalOverlay");
+const modalClose = document.getElementById("modalClose");
+const modalButton = document.getElementById("modalButton");
+const playerSearchInput = document.getElementById("playerSearchInput");
+const playerSearchResults = document.getElementById("playerSearchResults");
+const friendsSummaryNumbers = document.querySelectorAll(".friend-summary-card strong");
+const requestCounter = document.querySelector(".request-counter");
 
-const searchInput =
-    document.getElementById(
-        "searchInput"
-    );
+const AVATAR_COLORS = ["purple", "blue", "pink", "green", "orange"];
 
-const requestsList =
-    document.getElementById(
-        "requestsList"
-    );
-
-const allFriendsList =
-    document.getElementById(
-        "allFriendsList"
-    );
-
-const seeOnlineButton =
-    document.getElementById(
-        "seeOnlineButton"
-    );
-
-const modalOverlay =
-    document.getElementById(
-        "friendsModalOverlay"
-    );
-
-const modalClose =
-    document.getElementById(
-        "modalClose"
-    );
-
-const modalButton =
-    document.getElementById(
-        "modalButton"
-    );
+let currentFriends = [];
+let currentRequests = [];
+let activeFriendFilter = "all";
+let currentSearchTerm = "";
+let playerSearchTimer = null;
+let playerSearchSequence = 0;
+let pageMessageTimer = null;
 
 
 /* =========================================
-   PERSISTÊNCIA POR USUÁRIO
+   API
 ========================================= */
 
-const FRIENDS_CURRENT_USER_ID =
-    localStorage.getItem(
-        "userId"
-    );
+async function friendsApiRequest(path, options = {}) {
+    const token = localStorage.getItem("token");
 
-const FRIENDS_STORAGE_KEY =
-    FRIENDS_CURRENT_USER_ID
-        ? `overclockSocietyFriends_${FRIENDS_CURRENT_USER_ID}`
-        : null;
-
-
-/*
- * Status locais das solicitações.
- *
- * As notificações continuam sendo
- * sincronizadas normalmente, mas mantemos
- * também este estado dentro de Amigos.
- */
-
-let localRequestStatuses =
-    {};
-
-
-/*
- * O HTML começa mostrando 24 amigos.
- *
- * Vamos manter esse total demonstrativo
- * e incrementá-lo sempre que uma nova
- * solicitação for aceita.
- */
-
-const friendsSummaryNumbers =
-    document.querySelectorAll(
-        ".friend-summary-card strong"
-    );
-
-let totalFriendsCount =
-    Number(
-        friendsSummaryNumbers[1]
-            ?.textContent
-    ) || 0;
-
-
-/* =========================================
-   UTILIDADES
-========================================= */
-
-function normalizeFriendName(value) {
-
-    return String(
-        value || ""
-    )
-        .trim()
-        .toLocaleLowerCase(
-            "pt-BR"
-        );
-}
-
-
-function getAvatarClass(
-    avatarElement
-) {
-
-    if (!avatarElement) {
-
-        return "blue";
+    if (!token) {
+        throw new Error("Sua sessão não foi encontrada. Entre novamente na sua conta.");
     }
 
+    const headers = {
+        Authorization: `Bearer ${token}`,
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.headers || {})
+    };
 
-    return Array
-        .from(
-            avatarElement.classList
-        )
-        .find(
-            (className) =>
-                className !==
-                "friend-avatar"
-        ) || "blue";
+    const response = await fetch(`${FRIENDS_API_BASE_URL}${path}`, {
+        method: options.method || "GET",
+        headers,
+        ...(options.body ? { body: JSON.stringify(options.body) } : {})
+    });
+
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        let message = `O servidor respondeu com o status ${response.status}.`;
+
+        if (Array.isArray(payload?.detail) && payload.detail.length) {
+            message = payload.detail
+                .map((item) => item.msg || String(item))
+                .join(" ");
+        } else if (typeof payload?.detail === "string") {
+            message = payload.detail;
+        } else if (typeof payload?.message === "string") {
+            message = payload.message;
+        }
+
+        const error = new Error(message);
+        error.status = response.status;
+        throw error;
+    }
+
+    return payload || {};
 }
 
 
 /* =========================================
-   RESUMO
+   UTILIDADES VISUAIS
+========================================= */
+
+function getInitial(name) {
+    const value = String(name || "").trim();
+    return value ? value.charAt(0).toLocaleUpperCase("pt-BR") : "?";
+}
+
+function getAvatarClass(user) {
+    const source = Number(user?.id);
+    const index = Number.isFinite(source)
+        ? Math.abs(source) % AVATAR_COLORS.length
+        : getInitial(user?.name).charCodeAt(0) % AVATAR_COLORS.length;
+
+    return AVATAR_COLORS[index];
+}
+
+function statusLabel(status) {
+    if (status === "online") return "Online";
+    if (status === "away") return "Ausente";
+    return "Offline";
+}
+
+function statusIcon(status) {
+    if (status === "online") return "🟢";
+    if (status === "away") return "🌙";
+    return "⚪";
+}
+
+function setPageMessage(message, type = "info") {
+    let element = document.getElementById("friendsApiMessage");
+
+    if (!element) {
+        element = document.createElement("div");
+        element.id = "friendsApiMessage";
+        element.className = "friends-api-message";
+        element.setAttribute("role", "status");
+
+        const header = document.querySelector(".friends-header");
+        if (header) {
+            header.appendChild(element);
+        } else {
+            document.querySelector(".friends-page")?.prepend(element);
+        }
+    }
+
+    if (pageMessageTimer) {
+        clearTimeout(pageMessageTimer);
+        pageMessageTimer = null;
+    }
+
+    if (!message) {
+        element.textContent = "";
+        element.classList.remove("visible", "error", "success");
+        return;
+    }
+
+    element.textContent = message;
+    element.classList.add("visible");
+    element.classList.toggle("error", type === "error");
+    element.classList.toggle("success", type === "success");
+
+    if (type !== "error") {
+        pageMessageTimer = setTimeout(() => {
+            element.classList.remove("visible");
+        }, 5000);
+    }
+}
+
+function showEmptyState(container, message) {
+    const element = document.createElement("div");
+    element.className = "friends-empty-state";
+    element.textContent = message;
+    container.appendChild(element);
+}
+
+function createAvatar(user, className = "friend-avatar") {
+    const avatar = document.createElement("div");
+    avatar.className = `${className} ${getAvatarClass(user)}`;
+    avatar.textContent = getInitial(user?.name);
+    avatar.setAttribute("aria-hidden", "true");
+    return avatar;
+}
+
+function normalizeSearch(value) {
+    return String(value || "")
+        .trim()
+        .toLocaleLowerCase("pt-BR");
+}
+
+
+/* =========================================
+   RESUMO DA PÁGINA
 ========================================= */
 
 function updateFriendsSummary() {
+    const onlineCount = currentFriends.filter(
+        (friend) => friend.status === "online"
+    ).length;
 
-    if (
-        friendsSummaryNumbers[1]
-    ) {
+    if (friendsSummaryNumbers[0]) {
+        friendsSummaryNumbers[0].textContent = String(onlineCount);
+    }
 
-        friendsSummaryNumbers[1]
-            .textContent =
-            String(
-                totalFriendsCount
-            );
+    if (friendsSummaryNumbers[1]) {
+        friendsSummaryNumbers[1].textContent = String(currentFriends.length);
+    }
+
+    if (friendsSummaryNumbers[2]) {
+        friendsSummaryNumbers[2].textContent = String(currentRequests.length);
+    }
+
+    if (requestCounter) {
+        const count = currentRequests.length;
+        requestCounter.textContent = `${count} ${count === 1 ? "pendente" : "pendentes"}`;
     }
 }
 
 
 /* =========================================
-   DADOS DE UM AMIGO
+   RENDERIZAÇÃO DE SOLICITAÇÕES
 ========================================= */
 
-function getFriendDataFromCard(
-    card
-) {
-
-    if (!card) {
-
-        return null;
-    }
-
-
-    const name =
-        card.dataset.name ||
-        card.querySelector(
-            ".all-friend-info strong"
-        )?.textContent.trim() ||
-        "";
-
-
-    if (!name) {
-
-        return null;
-    }
-
-
-    const status =
-        card.dataset.status ||
-        "offline";
-
-
-    const avatarElement =
-        card.querySelector(
-            ".friend-avatar"
-        );
-
-
-    const avatar =
-        avatarElement
-            ?.textContent
-            .trim() ||
-        name
-            .charAt(0)
-            .toUpperCase();
-
-
-    const avatarClass =
-        getAvatarClass(
-            avatarElement
-        );
-
-
-    const detail =
-        card.querySelector(
-            ".all-friend-info span"
-        )?.textContent.trim() ||
-        (
-            status === "online"
-                ? "🟢 Online"
-                : "⚪ Offline"
-        );
-
-
-    return {
-
-        name,
-
-        status,
-
-        avatar,
-
-        avatarClass,
-
-        detail
-    };
-}
-
-
-/* =========================================
-   ESTADO ATUAL DOS AMIGOS
-========================================= */
-
-function getFriendsState() {
-
-    const friends =
-        Array
-            .from(
-                allFriendsList
-                    .querySelectorAll(
-                        ".all-friend-card"
-                    )
-            )
-            .map(
-                getFriendDataFromCard
-            )
-            .filter(Boolean);
-
-
-    return {
-
-        friends,
-
-        requestStatuses:
-            localRequestStatuses,
-
-        totalFriends:
-            totalFriendsCount
-    };
-}
-
-
-/* =========================================
-   SALVAR AMIGOS
-========================================= */
-
-function saveFriendsToStorage() {
-
-    if (
-        !FRIENDS_STORAGE_KEY
-    ) {
-
-        console.warn(
-            "Não foi possível salvar os amigos: userId ausente."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        localStorage.setItem(
-            FRIENDS_STORAGE_KEY,
-            JSON.stringify(
-                getFriendsState()
-            )
-        );
-
-    } catch (error) {
-
-        console.warn(
-            "Não foi possível salvar os amigos no localStorage.",
-            error
-        );
-    }
-}
-
-
-/* =========================================
-   CRIAR CARD EM "TODOS OS AMIGOS"
-========================================= */
-
-function createAllFriendCard(
-    friend
-) {
-
-    const card =
-        document.createElement(
-            "article"
-        );
-
-
-    card.className =
-        "all-friend-card";
-
-
-    card.dataset.status =
-        friend.status ||
-        "offline";
-
-
-    card.dataset.name =
-        friend.name;
-
-
-    const avatar =
-        document.createElement(
-            "div"
-        );
-
-
-    avatar.className =
-        `friend-avatar ${
-            friend.avatarClass ||
-            "blue"
-        }`;
-
-
-    avatar.textContent =
-        friend.avatar ||
-        friend.name
-            .charAt(0)
-            .toUpperCase();
-
-
-    const info =
-        document.createElement(
-            "div"
-        );
-
-
-    info.className =
-        "all-friend-info";
-
-
-    const name =
-        document.createElement(
-            "strong"
-        );
-
-
-    name.textContent =
-        friend.name;
-
-
-    const detail =
-        document.createElement(
-            "span"
-        );
-
-
-    detail.textContent =
-        friend.detail ||
-        (
-            friend.status ===
-            "online"
-                ? "🟢 Online"
-                : "⚪ Offline"
-        );
-
-
-    const moreButton =
-        document.createElement(
-            "button"
-        );
-
-
-    moreButton.type =
-        "button";
-
-
-    moreButton.className =
-        "friend-more";
-
-
-    moreButton.textContent =
-        "⋮";
-
-
-    info.appendChild(
-        name
-    );
-
-
-    info.appendChild(
-        detail
-    );
-
-
-    card.appendChild(
-        avatar
-    );
-
-
-    card.appendChild(
-        info
-    );
-
-
-    card.appendChild(
-        moreButton
-    );
-
-
-    allFriendsList.appendChild(
-        card
-    );
-
-
+function renderFriendRequest(request) {
+    const user = request.user || {};
+    const card = document.createElement("article");
+    card.className = "request-card";
+    card.dataset.requestId = String(request.id);
+    card.dataset.userId = String(user.id || "");
+    card.dataset.user = user.name || "Jogador";
+
+    card.appendChild(createAvatar(user));
+
+    const info = document.createElement("div");
+    info.className = "request-info";
+
+    const name = document.createElement("strong");
+    name.textContent = user.name || "Jogador";
+    info.appendChild(name);
+
+    const course = document.createElement("span");
+    course.textContent = user.course || "Curso não informado";
+    info.appendChild(course);
+
+    const game = document.createElement("small");
+    game.textContent = user.current_game
+        ? `🎮 ${user.current_game}`
+        : "🎮 Ainda não informou o jogo atual";
+    info.appendChild(game);
+
+    card.appendChild(info);
+
+    const actions = document.createElement("div");
+    actions.className = "request-actions";
+
+    const acceptButton = document.createElement("button");
+    acceptButton.type = "button";
+    acceptButton.className = "request-btn accept";
+    acceptButton.dataset.requestAction = "accept";
+    acceptButton.textContent = "✓ Aceitar";
+
+    const declineButton = document.createElement("button");
+    declineButton.type = "button";
+    declineButton.className = "request-btn decline";
+    declineButton.dataset.requestAction = "decline";
+    declineButton.textContent = "✕ Recusar";
+
+    actions.append(acceptButton, declineButton);
+    card.appendChild(actions);
     return card;
 }
 
-
-/* =========================================
-   CARREGAR AMIGOS
-========================================= */
-
-function loadFriendsFromStorage() {
-
-    if (
-        !FRIENDS_STORAGE_KEY
-    ) {
-
-        return false;
-    }
-
-
-    let stored =
-        null;
-
-
-    try {
-
-        stored =
-            localStorage.getItem(
-                FRIENDS_STORAGE_KEY
-            );
-
-    } catch (error) {
-
-        console.warn(
-            "Não foi possível acessar os amigos salvos.",
-            error
-        );
-
-        return false;
-    }
-
-
-    if (!stored) {
-
-        return false;
-    }
-
-
-    try {
-
-        const data =
-            JSON.parse(
-                stored
-            );
-
-
-        /*
-         * Compatibilidade caso futuramente
-         * seja salvo apenas um array.
-         */
-
-        const friends =
-            Array.isArray(data)
-                ? data
-                : data.friends;
-
-
-        if (
-            !Array.isArray(
-                friends
-            )
-        ) {
-
-            return false;
-        }
-
-
-        if (
-            !Array.isArray(data) &&
-            data.requestStatuses &&
-            typeof data.requestStatuses ===
-                "object"
-        ) {
-
-            localRequestStatuses =
-                data.requestStatuses;
-        }
-
-
-        if (
-            !Array.isArray(data) &&
-            Number.isFinite(
-                Number(
-                    data.totalFriends
-                )
-            )
-        ) {
-
-            totalFriendsCount =
-                Number(
-                    data.totalFriends
-                );
-        }
-
-
-        allFriendsList.innerHTML =
-            "";
-
-
-        friends.forEach(
-            (friend) => {
-
-                if (
-                    !friend ||
-                    !friend.name
-                ) {
-
-                    return;
-                }
-
-
-                createAllFriendCard(
-                    friend
-                );
-            }
-        );
-
-
-        updateFriendsSummary();
-
-
-        return true;
-
-    } catch (error) {
-
-        console.warn(
-            "Não foi possível carregar a lista de amigos.",
-            error
-        );
-
-        return false;
-    }
-}
-
-
-/* =========================================
-   VERIFICAR SE JÁ É AMIGO
-========================================= */
-
-function friendAlreadyExists(
-    userName
-) {
-
-    const normalized =
-        normalizeFriendName(
-            userName
-        );
-
-
-    return Array
-        .from(
-            allFriendsList
-                .querySelectorAll(
-                    ".all-friend-card"
-                )
-        )
-        .some(
-            (card) =>
-
-                normalizeFriendName(
-                    card.dataset.name
-                ) ===
-                normalized
-        );
-}
-
-
-/* =========================================
-   ENCONTRAR SOLICITAÇÃO
-========================================= */
-
-function findRequestCardByUser(
-    userName
-) {
-
-    const normalized =
-        normalizeFriendName(
-            userName
-        );
-
-
-    return Array
-        .from(
-            document.querySelectorAll(
-                ".request-card"
-            )
-        )
-        .find(
-            (card) =>
-
-                normalizeFriendName(
-                    card.dataset.user
-                ) ===
-                normalized
-        ) || null;
-}
-
-
-/* =========================================
-   DADOS DA SOLICITAÇÃO
-========================================= */
-
-function getRequestData(
-    card
-) {
-
-    if (!card) {
-
-        return null;
-    }
-
-
-    const name =
-        card.dataset.user ||
-        card.querySelector(
-            ".request-info strong"
-        )?.textContent.trim() ||
-        "";
-
-
-    if (!name) {
-
-        return null;
-    }
-
-
-    const avatarElement =
-        card.querySelector(
-            ".friend-avatar"
-        );
-
-
-    const avatar =
-        avatarElement
-            ?.textContent
-            .trim() ||
-        name
-            .charAt(0)
-            .toUpperCase();
-
-
-    const avatarClass =
-        getAvatarClass(
-            avatarElement
-        );
-
-
-    const course =
-        card.querySelector(
-            ".request-info span"
-        )?.textContent.trim() ||
-        "";
-
-
-    const game =
-        card.querySelector(
-            ".request-info small"
-        )?.textContent.trim() ||
-        "";
-
-
-    return {
-
-        name,
-
-        avatar,
-
-        avatarClass,
-
-        course,
-
-        game
-    };
-}
-
-
-/* =========================================
-   ADICIONAR SOLICITAÇÃO ACEITA
-   À LISTA DE AMIGOS
-========================================= */
-
-function addFriendFromRequest(
-    requestCard
-) {
-
-    const request =
-        getRequestData(
-            requestCard
-        );
-
-
-    if (!request) {
-
-        return false;
-    }
-
-
-    if (
-        friendAlreadyExists(
-            request.name
-        )
-    ) {
-
-        return false;
-    }
-
-
-    /*
-     * A solicitação não informa se
-     * o usuário está online.
-     *
-     * Por isso ele entra inicialmente
-     * como offline.
-     */
-
-    const detail =
-        request.game
-            ? `⚪ Offline • ${request.game}`
-            : "⚪ Offline";
-
-
-    const card =
-        createAllFriendCard({
-
-            name:
-                request.name,
-
-            status:
-                "offline",
-
-            avatar:
-                request.avatar,
-
-            avatarClass:
-                request.avatarClass,
-
-            detail
+function renderRequests() {
+    requestsList.innerHTML = "";
+
+    if (!currentRequests.length) {
+        showEmptyState(requestsList, "Você não tem solicitações de amizade pendentes.");
+    } else {
+        currentRequests.forEach((request) => {
+            requestsList.appendChild(renderFriendRequest(request));
         });
-
-
-    /*
-     * Coloca o novo amigo no início
-     * da lista.
-     */
-
-    allFriendsList.prepend(
-        card
-    );
-
-
-    totalFriendsCount +=
-        1;
-
+    }
 
     updateFriendsSummary();
-
-
-    saveFriendsToStorage();
-
-
-    return true;
 }
 
 
 /* =========================================
-   STATUS LOCAL DA SOLICITAÇÃO
+   RENDERIZAÇÃO DE AMIGOS
 ========================================= */
 
-function getLocalRequestStatus(
-    userName
-) {
+function createAllFriendCard(friend) {
+    const card = document.createElement("article");
+    card.className = "all-friend-card";
+    card.dataset.friendId = String(friend.id);
+    card.dataset.name = friend.name || "";
+    card.dataset.status = friend.status === "online" ? "online" : "offline";
 
-    return (
-        localRequestStatuses[
-            normalizeFriendName(
-                userName
-            )
-        ] ||
-        "pending"
-    );
-}
+    card.appendChild(createAvatar(friend));
 
+    const info = document.createElement("div");
+    info.className = "all-friend-info";
 
-function setLocalRequestStatus(
-    userName,
-    status
-) {
+    const name = document.createElement("strong");
+    name.textContent = friend.name || "Jogador";
+    info.appendChild(name);
 
-    localRequestStatuses[
-        normalizeFriendName(
-            userName
-        )
-    ] =
-        status;
-
-
-    saveFriendsToStorage();
-}
-
-
-/* =========================================
-   MODAL
-========================================= */
-
-function openModal() {
-
-    modalOverlay.classList.add(
-        "active"
-    );
-
-
-    document.body.style.overflow =
-        "hidden";
-}
-
-
-function closeModal() {
-
-    modalOverlay.classList.remove(
-        "active"
-    );
-
-
-    document.body.style.overflow =
-        "";
-}
-
-
-/* =========================================
-   ENCONTRAR JOGADORES
-========================================= */
-
-findFriendsButton.addEventListener(
-    "click",
-    openModal
-);
-
-
-/* =========================================
-   PERFIL
-========================================= */
-
-profileButton.addEventListener(
-    "click",
-    () => {
-
-        window.location.href =
-            "perfil.html";
-
+    const detail = document.createElement("span");
+    const details = [`${statusIcon(friend.status)} ${statusLabel(friend.status)}`];
+    if (friend.current_game) {
+        details.push(`🎮 ${friend.current_game}`);
     }
-);
+    detail.textContent = details.join(" • ");
+    info.appendChild(detail);
 
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "friend-more";
+    removeButton.textContent = "⋮";
+    removeButton.title = `Remover ${friend.name} dos amigos`;
+    removeButton.setAttribute("aria-label", `Remover ${friend.name} dos amigos`);
 
-/* =========================================
-   CONTADOR DE SOLICITAÇÕES
-========================================= */
+    card.append(info, removeButton);
+    return card;
+}
 
-function updateRequestCounter() {
+function createOnlineFriendCard(friend) {
+    const card = document.createElement("article");
+    card.className = "friend-card";
+    card.dataset.friendId = String(friend.id);
+    card.dataset.name = friend.name || "";
+    card.dataset.status = friend.status === "online" ? "online" : "offline";
 
-    const counter =
-        document.querySelector(
-            ".request-counter"
-        );
+    const top = document.createElement("div");
+    top.className = "friend-card-top";
+    top.appendChild(createAvatar(friend));
 
-
-    const count =
-        document.querySelectorAll(
-            ".request-card"
-        ).length;
-
-
-    if (counter) {
-
-        counter.textContent =
-            `${count} ${
-                count === 1
-                    ? "pendente"
-                    : "pendentes"
-            }`;
+    if (friend.status === "online") {
+        const dot = document.createElement("span");
+        dot.className = "online-dot";
+        dot.setAttribute("aria-label", "Online");
+        top.appendChild(dot);
     }
 
+    const info = document.createElement("div");
+    info.className = "friend-card-info";
 
-    /*
-     * Atualiza também o número
-     * do card de resumo.
-     */
+    const name = document.createElement("h3");
+    name.textContent = friend.name || "Jogador";
+    info.appendChild(name);
 
-    if (
-        friendsSummaryNumbers[2]
-    ) {
+    const course = document.createElement("span");
+    course.textContent = friend.course || "Curso não informado";
+    info.appendChild(course);
 
-        friendsSummaryNumbers[2]
-            .textContent =
-            String(
-                count
+    const game = document.createElement("small");
+    if (friend.current_game) {
+        game.textContent = `🎮 ${friend.current_game}`;
+    } else {
+        game.textContent = `${statusIcon(friend.status)} ${statusLabel(friend.status)}`;
+    }
+    info.appendChild(game);
+
+    card.append(top, info);
+    return card;
+}
+
+function applyFriendFilters() {
+    const normalizedSearch = normalizeSearch(currentSearchTerm);
+
+    allFriendsList.querySelectorAll(".all-friend-card").forEach((card) => {
+        const name = normalizeSearch(card.dataset.name);
+        const status = card.dataset.status;
+        const matchesStatus =
+            activeFriendFilter === "all" ||
+            (activeFriendFilter === "online" && status === "online") ||
+            (activeFriendFilter === "offline" && status !== "online");
+        const matchesSearch = !normalizedSearch || name.includes(normalizedSearch);
+        card.style.display = matchesStatus && matchesSearch ? "flex" : "none";
+    });
+
+    friendsGrid.querySelectorAll(".friend-card").forEach((card) => {
+        const name = normalizeSearch(card.dataset.name);
+        card.style.display = !normalizedSearch || name.includes(normalizedSearch)
+            ? "flex"
+            : "none";
+    });
+}
+
+function renderFriends() {
+    allFriendsList.innerHTML = "";
+    friendsGrid.innerHTML = "";
+
+    const sortedFriends = [...currentFriends].sort((a, b) => {
+        const onlineDifference = Number(b.status === "online") - Number(a.status === "online");
+        return onlineDifference || String(a.name || "").localeCompare(String(b.name || ""), "pt-BR");
+    });
+
+    sortedFriends.forEach((friend) => {
+        allFriendsList.appendChild(createAllFriendCard(friend));
+    });
+
+    const onlineFriends = sortedFriends.filter((friend) => friend.status === "online");
+    onlineFriends.forEach((friend) => {
+        friendsGrid.appendChild(createOnlineFriendCard(friend));
+    });
+
+    if (!sortedFriends.length) {
+        showEmptyState(allFriendsList, "Sua lista de amigos está vazia. Use ‘Encontrar jogadores’ para procurar pessoas da comunidade.");
+    }
+
+    if (!onlineFriends.length) {
+        showEmptyState(friendsGrid, "Nenhum amigo está marcado como online no momento.");
+    }
+
+    updateFriendsSummary();
+    applyFriendFilters();
+}
+
+
+/* =========================================
+   CARREGAR DADOS DA API
+========================================= */
+
+async function refreshFriendsData({ showError = true } = {}) {
+    try {
+        const [friendsResponse, requestsResponse] = await Promise.all([
+            friendsApiRequest("/friends"),
+            friendsApiRequest("/friends/requests")
+        ]);
+
+        currentFriends = Array.isArray(friendsResponse.friends)
+            ? friendsResponse.friends
+            : [];
+        currentRequests = Array.isArray(requestsResponse.requests)
+            ? requestsResponse.requests
+            : [];
+
+        renderFriends();
+        renderRequests();
+        setPageMessage("");
+        return true;
+    } catch (error) {
+        console.error("Não foi possível carregar Amigos pela API.", error);
+        currentFriends = [];
+        currentRequests = [];
+        renderFriends();
+        renderRequests();
+
+        if (showError) {
+            setPageMessage(
+                `Não foi possível carregar a lista de amigos do banco de dados. ${error.message}`,
+                "error"
             );
+        }
+        return false;
     }
 }
 
 
 /* =========================================
-   REMOVER CARD DE SOLICITAÇÃO
+   ACEITAR / RECUSAR SOLICITAÇÕES
 ========================================= */
 
-function removeRequestCardByUser(
-    userName,
-    status = "declined"
-) {
+function syncFriendRequestNotification(friendName, status) {
+    if (
+        friendName &&
+        window.OverclockNotifications &&
+        typeof window.OverclockNotifications.resolveFriendRequest === "function"
+    ) {
+        window.OverclockNotifications.resolveFriendRequest(friendName, status);
+    }
+}
 
-    const card =
-        findRequestCardByUser(
-            userName
+async function resolveFriendRequest(requestId, action, button) {
+    if (!requestId) return;
+
+    const requestBeforeUpdate = currentRequests.find(
+        (request) => String(request.id) === String(requestId)
+    );
+    const friendName = requestBeforeUpdate?.user?.name || "";
+    const originalText = button?.textContent || "";
+    if (button) {
+        button.disabled = true;
+        button.textContent = action === "accept" ? "Aceitando..." : "Recusando...";
+    }
+
+    try {
+        await friendsApiRequest(
+            `/friends/requests/${encodeURIComponent(requestId)}/${action}`,
+            { method: "POST" }
         );
 
+        await refreshFriendsData({ showError: false });
+        // Atualiza também a central de notificações existente, sem usá-la
+        // como fonte de verdade para as amizades do banco.
+        syncFriendRequestNotification(
+            friendName,
+            action === "accept" ? "accepted" : "declined"
+        );
+        setPageMessage(
+            action === "accept"
+                ? "Solicitação aceita. Vocês agora são amigos."
+                : "Solicitação recusada.",
+            "success"
+        );
+    } catch (error) {
+        console.error("Não foi possível resolver a solicitação.", error);
+        setPageMessage(error.message, "error");
+        if (button) {
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    }
+}
 
-    if (!card) {
+window.addEventListener("overclock:friend-request-resolved", async (event) => {
+    const friendName = normalizeSearch(event.detail?.friendName);
+    const status = event.detail?.status;
 
-        updateRequestCounter();
+    if (!friendName || !["accepted", "declined"].includes(status)) return;
 
+    const request = currentRequests.find(
+        (item) => normalizeSearch(item.user?.name) === friendName
+    );
+
+    if (!request) {
+        // A central de notificações ainda pode conter cartões de demonstração;
+        // eles não devem criar amizades inexistentes no banco de dados.
         return;
     }
 
-
-    card.style.opacity =
-        "0";
-
-
-    card.style.transform =
-        status === "accepted"
-            ? "translateX(30px)"
-            : "translateX(-30px)";
-
-
-    setTimeout(
-        () => {
-
-            if (
-                card.isConnected
-            ) {
-
-                card.remove();
-            }
-
-
-            updateRequestCounter();
-
-        },
-        250
+    await resolveFriendRequest(
+        request.id,
+        status === "accepted" ? "accept" : "decline",
+        null
     );
-}
+});
+
+requestsList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-request-action]");
+    if (!button) return;
+
+    const card = button.closest(".request-card");
+    if (!card) return;
+
+    const action = button.dataset.requestAction;
+    if (action !== "accept" && action !== "decline") return;
+
+    await resolveFriendRequest(card.dataset.requestId, action, button);
+});
 
 
 /* =========================================
-   SINCRONIZAÇÃO COM NOTIFICAÇÕES
+   REMOVER AMIZADE
 ========================================= */
 
-function syncFriendRequestsWithNotifications() {
-
-    let changed =
-        false;
-
-
-    document
-        .querySelectorAll(
-            ".request-card"
-        )
-        .forEach(
-            (card) => {
-
-                const userName =
-                    card.dataset.user;
-
-
-                const localStatus =
-                    getLocalRequestStatus(
-                        userName
-                    );
-
-
-                let notificationStatus =
-                    "pending";
-
-
-                if (
-                    window
-                        .OverclockNotifications
-                ) {
-
-                    notificationStatus =
-                        window
-                            .OverclockNotifications
-                            .getFriendRequestStatus(
-                                userName
-                            );
-                }
-
-
-                /*
-                 * Se Amigos já possui um
-                 * estado resolvido, ele
-                 * prevalece.
-                 */
-
-                const status =
-                    localStatus !==
-                    "pending"
-                        ? localStatus
-                        : notificationStatus;
-
-
-                if (
-                    status ===
-                    "pending"
-                ) {
-
-                    return;
-                }
-
-
-                /*
-                 * Caso a solicitação tenha
-                 * sido aceita pela central
-                 * de notificações, garantimos
-                 * que a pessoa entre na lista.
-                 */
-
-                if (
-                    status ===
-                    "accepted"
-                ) {
-
-                    addFriendFromRequest(
-                        card
-                    );
-                }
-
-
-                localRequestStatuses[
-                    normalizeFriendName(
-                        userName
-                    )
-                ] =
-                    status;
-
-
-                card.remove();
-
-
-                changed =
-                    true;
-
-            }
-        );
-
-
-    if (changed) {
-
-        saveFriendsToStorage();
-    }
-
-
-    updateRequestCounter();
-}
-
-
-/* =========================================
-   EVENTO VINDO DAS NOTIFICAÇÕES
-========================================= */
-
-window.addEventListener(
-    "overclock:friend-request-resolved",
-    (event) => {
-
-        const friendName =
-            event.detail.friendName;
-
-
-        const status =
-            event.detail.status;
-
-
-        const card =
-            findRequestCardByUser(
-                friendName
-            );
-
-
-        if (
-            status ===
-                "accepted" &&
-            card
-        ) {
-
-            addFriendFromRequest(
-                card
-            );
-        }
-
-
-        setLocalRequestStatus(
-            friendName,
-            status
-        );
-
-
-        removeRequestCardByUser(
-            friendName,
-            status
-        );
-
-    }
-);
-
-
-/* =========================================
-   SOLICITAÇÕES
-========================================= */
-
-document
-    .querySelectorAll(
-        ".request-card"
-    )
-    .forEach(
-        (card) => {
-
-            const acceptButton =
-                card.querySelector(
-                    ".accept"
-                );
-
-
-            const declineButton =
-                card.querySelector(
-                    ".decline"
-                );
-
-
-            /*
-             * ACEITAR
-             */
-
-            acceptButton.addEventListener(
-                "click",
-                () => {
-
-                    const userName =
-                        card.dataset.user;
-
-
-                    /*
-                     * Primeiro adiciona
-                     * realmente à lista.
-                     */
-
-                    addFriendFromRequest(
-                        card
-                    );
-
-
-                    setLocalRequestStatus(
-                        userName,
-                        "accepted"
-                    );
-
-
-                    let resolved =
-                        false;
-
-
-                    if (
-                        window
-                            .OverclockNotifications
-                    ) {
-
-                        resolved =
-                            window
-                                .OverclockNotifications
-                                .resolveFriendRequest(
-                                    userName,
-                                    "accepted"
-                                );
-                    }
-
-
-                    /*
-                     * Algumas solicitações
-                     * demonstrativas podem
-                     * não existir na central
-                     * de notificações.
-                     */
-
-                    if (!resolved) {
-
-                        removeRequestCardByUser(
-                            userName,
-                            "accepted"
-                        );
-                    }
-
-
-                    console.log(
-                        `${userName} foi adicionado aos amigos.`
-                    );
-
-                }
-            );
-
-
-            /*
-             * RECUSAR
-             */
-
-            declineButton.addEventListener(
-                "click",
-                () => {
-
-                    const userName =
-                        card.dataset.user;
-
-
-                    setLocalRequestStatus(
-                        userName,
-                        "declined"
-                    );
-
-
-                    let resolved =
-                        false;
-
-
-                    if (
-                        window
-                            .OverclockNotifications
-                    ) {
-
-                        resolved =
-                            window
-                                .OverclockNotifications
-                                .resolveFriendRequest(
-                                    userName,
-                                    "declined"
-                                );
-                    }
-
-
-                    if (!resolved) {
-
-                        removeRequestCardByUser(
-                            userName,
-                            "declined"
-                        );
-                    }
-
-
-                    console.log(
-                        `Solicitação de ${userName} recusada.`
-                    );
-
-                }
-            );
-
-        }
+allFriendsList.addEventListener("click", async (event) => {
+    const button = event.target.closest(".friend-more");
+    if (!button) return;
+
+    const card = button.closest(".all-friend-card");
+    if (!card) return;
+
+    const friend = currentFriends.find(
+        (item) => String(item.id) === String(card.dataset.friendId)
     );
+    if (!friend) return;
 
-
-/* =========================================
-   FILTRO DE AMIGOS
-========================================= */
-
-const filterButtons =
-    document.querySelectorAll(
-        ".filter-btn"
+    const confirmed = window.confirm(
+        `Deseja remover ${friend.name} da sua lista de amigos?`
     );
+    if (!confirmed) return;
 
+    button.disabled = true;
 
-filterButtons.forEach(
-    (button) => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                filterButtons.forEach(
-                    (btn) => {
-
-                        btn.classList.remove(
-                            "active"
-                        );
-
-                    }
-                );
-
-
-                button.classList.add(
-                    "active"
-                );
-
-
-                const filter =
-                    button.dataset.filter;
-
-
-                const friends =
-                    allFriendsList
-                        .querySelectorAll(
-                            ".all-friend-card"
-                        );
-
-
-                friends.forEach(
-                    (friend) => {
-
-                        const status =
-                            friend.dataset.status;
-
-
-                        if (
-                            filter === "all" ||
-                            filter === status
-                        ) {
-
-                            friend.style.display =
-                                "flex";
-
-                        } else {
-
-                            friend.style.display =
-                                "none";
-                        }
-
-                    }
-                );
-
-            }
-        );
-
-    }
-);
-
-
-/* =========================================
-   PESQUISA
-========================================= */
-
-searchInput.addEventListener(
-    "input",
-    (event) => {
-
-        const search =
-            event.target.value
-                .trim()
-                .toLowerCase();
-
-
-        const friends =
-            allFriendsList
-                .querySelectorAll(
-                    ".all-friend-card"
-                );
-
-
-        friends.forEach(
-            (friend) => {
-
-                const name =
-                    friend.dataset.name
-                        .toLowerCase();
-
-
-                if (
-                    name.includes(
-                        search
-                    )
-                ) {
-
-                    friend.style.display =
-                        "flex";
-
-                } else {
-
-                    friend.style.display =
-                        "none";
-                }
-
-            }
-        );
-
-    }
-);
-
-
-/* =========================================
-   VER ONLINE
-========================================= */
-
-seeOnlineButton.addEventListener(
-    "click",
-    () => {
-
-        const onlineButton =
-            document.querySelector(
-                '[data-filter="online"]'
-            );
-
-
-        if (onlineButton) {
-
-            onlineButton.click();
-        }
-
-
-        allFriendsList.scrollIntoView({
-            behavior:
-                "smooth"
+    try {
+        await friendsApiRequest(`/friends/${encodeURIComponent(friend.id)}`, {
+            method: "DELETE"
         });
 
+        await refreshFriendsData({ showError: false });
+        setPageMessage(`${friend.name} foi removido da sua lista de amigos.`, "success");
+    } catch (error) {
+        button.disabled = false;
+        setPageMessage(error.message, "error");
     }
-);
+});
 
 
 /* =========================================
-   BOTÕES DOS AMIGOS ONLINE
+   FILTROS E PESQUISA DA LISTA DE AMIGOS
 ========================================= */
 
-document
-    .querySelectorAll(
-        ".friend-action"
-    )
-    .forEach(
-        (button) => {
+const filterButtons = document.querySelectorAll(".filter-btn");
+filterButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        filterButtons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        activeFriendFilter = button.dataset.filter || "all";
+        applyFriendFilters();
+    });
+});
 
-            button.addEventListener(
-                "click",
-                () => {
+if (searchInput) {
+    searchInput.addEventListener("input", (event) => {
+        currentSearchTerm = event.target.value || "";
+        applyFriendFilters();
+    });
+}
 
-                    if (
-                        button.textContent
-                            .includes(
-                                "Jogar"
-                            )
-                    ) {
+if (seeOnlineButton) {
+    seeOnlineButton.addEventListener("click", () => {
+        const onlineButton = document.querySelector('[data-filter="online"]');
+        if (onlineButton) onlineButton.click();
+        allFriendsList.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+}
 
-                        alert(
-                            "Em breve você poderá convidar este amigo para jogar."
-                        );
-
-                    } else {
-
-                        alert(
-                            "O sistema de mensagens será implementado futuramente."
-                        );
-                    }
-
-                }
-            );
-
-        }
-    );
+if (profileButton) {
+    profileButton.addEventListener("click", () => {
+        window.location.href = "perfil.html";
+    });
+}
 
 
 /* =========================================
-   MENU DOS AMIGOS
-
-   Delegação de evento para funcionar
-   também nos novos amigos adicionados
-   dinamicamente.
+   MODAL: ENCONTRAR JOGADORES
 ========================================= */
 
-allFriendsList.addEventListener(
-    "click",
-    (event) => {
+function openFriendsModal() {
+    modalOverlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+    playerSearchInput.value = "";
+    showPlayerSearchState("Digite pelo menos 2 caracteres para pesquisar jogadores.");
+    setTimeout(() => playerSearchInput.focus(), 50);
+}
 
-        const button =
-            event.target.closest(
-                ".friend-more"
-            );
+function closeFriendsModal() {
+    modalOverlay.classList.remove("active");
+    document.body.style.overflow = "";
+}
 
+function showPlayerSearchState(message, type = "info") {
+    playerSearchResults.innerHTML = "";
+    const state = document.createElement("div");
+    state.className = `player-search-state ${type}`;
+    state.textContent = message;
+    playerSearchResults.appendChild(state);
+}
 
-        if (!button) {
+function createPlayerSearchResult(user) {
+    const result = document.createElement("article");
+    result.className = "player-search-result";
 
+    result.appendChild(createAvatar(user, "player-search-avatar"));
+
+    const info = document.createElement("div");
+    info.className = "player-search-info";
+
+    const name = document.createElement("strong");
+    name.textContent = user.name || "Jogador";
+    info.appendChild(name);
+
+    const username = document.createElement("span");
+    username.textContent = user.username ? `@${user.username}` : (user.course || "Curso não informado");
+    info.appendChild(username);
+
+    const game = document.createElement("small");
+    game.textContent = user.current_game
+        ? `🎮 ${user.current_game}`
+        : "Jogador da comunidade";
+    info.appendChild(game);
+
+    const action = document.createElement("button");
+    action.type = "button";
+    action.className = "player-search-action";
+    action.dataset.playerAction = user.relationship || "none";
+    action.dataset.userId = String(user.id);
+    action.dataset.requestId = user.request_id ? String(user.request_id) : "";
+    action.textContent = "Adicionar";
+
+    if (user.relationship === "friend") {
+        action.textContent = "Já são amigos";
+        action.disabled = true;
+    } else if (user.relationship === "outgoing_request") {
+        action.textContent = "Solicitação enviada";
+        action.disabled = true;
+    } else if (user.relationship === "incoming_request") {
+        action.textContent = "Aceitar solicitação";
+        action.dataset.playerAction = "accept";
+    } else {
+        action.dataset.playerAction = "add";
+    }
+
+    result.append(info, action);
+    return result;
+}
+
+async function performPlayerSearch() {
+    const query = playerSearchInput.value.trim();
+    const sequence = ++playerSearchSequence;
+
+    if (query.length < 2) {
+        showPlayerSearchState("Digite pelo menos 2 caracteres para pesquisar jogadores.");
+        return;
+    }
+
+    showPlayerSearchState("Procurando jogadores...");
+
+    try {
+        const response = await friendsApiRequest(
+            `/friends/search?q=${encodeURIComponent(query)}`
+        );
+
+        // Ignora respostas de buscas antigas que terminaram depois da mais nova.
+        if (sequence !== playerSearchSequence) return;
+
+        const users = Array.isArray(response.users) ? response.users : [];
+        playerSearchResults.innerHTML = "";
+
+        if (!users.length) {
+            showPlayerSearchState("Nenhum jogador encontrado com esse nome ou usuário.");
             return;
         }
 
-
-        alert(
-            "Mais opções serão adicionadas futuramente."
-        );
-
+        users.forEach((user) => {
+            playerSearchResults.appendChild(createPlayerSearchResult(user));
+        });
+    } catch (error) {
+        if (sequence !== playerSearchSequence) return;
+        console.error("Falha ao pesquisar jogadores.", error);
+        showPlayerSearchState(error.message, "error");
     }
-);
+}
 
+if (findFriendsButton) {
+    findFriendsButton.addEventListener("click", openFriendsModal);
+}
 
-/* =========================================
-   MODAL
-========================================= */
+if (modalClose) {
+    modalClose.addEventListener("click", closeFriendsModal);
+}
 
-modalClose.addEventListener(
-    "click",
-    closeModal
-);
+if (modalButton) {
+    modalButton.addEventListener("click", closeFriendsModal);
+}
 
+if (modalOverlay) {
+    modalOverlay.addEventListener("click", (event) => {
+        if (event.target === modalOverlay) closeFriendsModal();
+    });
+}
 
-modalButton.addEventListener(
-    "click",
-    closeModal
-);
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modalOverlay.classList.contains("active")) {
+        closeFriendsModal();
+    }
+});
 
+if (playerSearchInput) {
+    playerSearchInput.addEventListener("input", () => {
+        if (playerSearchTimer) clearTimeout(playerSearchTimer);
+        playerSearchTimer = setTimeout(performPlayerSearch, 300);
+    });
 
-modalOverlay.addEventListener(
-    "click",
-    (event) => {
-
-        if (
-            event.target ===
-            modalOverlay
-        ) {
-
-            closeModal();
+    playerSearchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            if (playerSearchTimer) clearTimeout(playerSearchTimer);
+            performPlayerSearch();
         }
+    });
+}
 
-    }
-);
+playerSearchResults.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-player-action]");
+    if (!button || button.disabled) return;
 
+    const action = button.dataset.playerAction;
+    const userId = button.dataset.userId;
+    const requestId = button.dataset.requestId;
 
-document.addEventListener(
-    "keydown",
-    (event) => {
+    if (action === "accept" && requestId) {
+        button.disabled = true;
+        button.textContent = "Aceitando...";
 
-        if (
-            event.key ===
-            "Escape"
-        ) {
-
-            closeModal();
+        try {
+            await friendsApiRequest(`/friends/requests/${encodeURIComponent(requestId)}/accept`, {
+                method: "POST"
+            });
+            await refreshFriendsData({ showError: false });
+            await performPlayerSearch();
+            setPageMessage("Solicitação aceita. Vocês agora são amigos.", "success");
+        } catch (error) {
+            button.disabled = false;
+            button.textContent = "Aceitar solicitação";
+            setPageMessage(error.message, "error");
         }
-
-    }
-);
-
-
-/* =========================================
-   PERFIL DE OUTRO USUÁRIO
-
-   Nesta fase apenas Maria possui
-   um perfil demonstrativo.
-========================================= */
-
-function setupDemoUserProfileLinks() {
-
-    const mariaCard =
-        Array
-            .from(
-                document.querySelectorAll(
-                    ".friend-card"
-                )
-            )
-            .find(
-                (card) =>
-
-                    card.querySelector(
-                        ".friend-card-info h3"
-                    )?.textContent.trim() ===
-                    "Maria"
-            );
-
-
-    if (!mariaCard) {
-
         return;
     }
 
+    if (action !== "add" || !userId) return;
 
-    const triggers = [
+    button.disabled = true;
+    button.textContent = "Enviando...";
 
-        mariaCard.querySelector(
-            ".friend-avatar"
-        ),
+    try {
+        await friendsApiRequest(`/friends/requests/${encodeURIComponent(userId)}`, {
+            method: "POST"
+        });
 
-        mariaCard.querySelector(
-            ".friend-card-info h3"
-        )
-
-    ].filter(Boolean);
-
-
-    const openMariaProfile =
-        () => {
-
-            window.location.href =
-                "perfil-usuario.html?user=maria";
-        };
-
-
-    triggers.forEach(
-        (element) => {
-
-            element.classList.add(
-                "user-profile-link"
-            );
-
-
-            element.tabIndex =
-                0;
-
-
-            element.setAttribute(
-                "role",
-                "link"
-            );
-
-
-            element.setAttribute(
-                "aria-label",
-                "Abrir perfil de Maria"
-            );
-
-
-            element.addEventListener(
-                "click",
-                openMariaProfile
-            );
-
-
-            element.addEventListener(
-                "keydown",
-                (event) => {
-
-                    if (
-                        event.key ===
-                            "Enter" ||
-                        event.key ===
-                            " "
-                    ) {
-
-                        event.preventDefault();
-
-                        openMariaProfile();
-                    }
-
-                }
-            );
-
-        }
-    );
-}
+        button.dataset.playerAction = "outgoing_request";
+        button.textContent = "Solicitação enviada";
+        setPageMessage("Solicitação de amizade enviada.", "success");
+    } catch (error) {
+        button.disabled = false;
+        button.textContent = "Adicionar";
+        setPageMessage(error.message, "error");
+        // Atualiza o estado da relação se já houver uma solicitação no sentido inverso.
+        await performPlayerSearch();
+    }
+});
 
 
 /* =========================================
    INICIALIZAÇÃO
 ========================================= */
 
-/*
- * Se já houver dados desta conta,
- * substitui os amigos demonstrativos
- * do HTML pelos dados salvos.
- */
+async function initializeFriendsPage() {
+    // Remove os dados fixos do HTML: a lista oficial vem do banco de dados.
+    requestsList.innerHTML = "";
+    allFriendsList.innerHTML = "";
+    friendsGrid.innerHTML = "";
 
-const friendsWereLoaded =
-    loadFriendsFromStorage();
+    showEmptyState(requestsList, "Carregando solicitações...");
+    showEmptyState(allFriendsList, "Carregando sua lista de amigos...");
+    showEmptyState(friendsGrid, "Carregando amigos online...");
+    updateFriendsSummary();
 
+    await refreshFriendsData();
 
-/*
- * Primeira visita da conta:
- * os amigos atuais do HTML tornam-se
- * seu estado inicial.
- */
-
-if (!friendsWereLoaded) {
-
-    saveFriendsToStorage();
+    console.log("👥 Página Amigos conectada à API.");
 }
 
-
-/*
- * Remove solicitações anteriormente
- * aceitas ou recusadas e sincroniza
- * com a central de notificações.
- */
-
-syncFriendRequestsWithNotifications();
-
-
-setupDemoUserProfileLinks();
-
-
-updateFriendsSummary();
-
-updateRequestCounter();
-
-
-console.log(
-    "👥 Página Amigos carregada."
-);
+initializeFriendsPage();

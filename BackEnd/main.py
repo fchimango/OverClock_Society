@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 import auth
 import feed_routes
+import friends_routes
 import games_routes
 import models
 
@@ -22,7 +23,7 @@ from database import Base, engine, get_db
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Cria tabelas que ainda não existem, incluindo
-    # posts, comments, post_likes e post_reposts.
+    # posts, comentários, curtidas, repostagens, jogos e amizades.
     Base.metadata.create_all(bind=engine)
 
     # Atualiza a tabela users existente.
@@ -86,6 +87,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(feed_routes.router)
 app.include_router(games_routes.router)
+app.include_router(friends_routes.router)
 
 
 # =========================================

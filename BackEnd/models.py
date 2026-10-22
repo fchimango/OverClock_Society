@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -235,6 +235,92 @@ class UserGame(Base):
     completed_year: Mapped[int | None] = mapped_column(
         Integer,
         nullable=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+
+# =========================================
+# SOLICITAÇÕES DE AMIZADE
+# =========================================
+
+class FriendRequest(Base):
+    __tablename__ = "friend_requests"
+    __table_args__ = (
+        Index("ix_friend_requests_receiver_status", "receiver_id", "status"),
+        Index("ix_friend_requests_sender_status", "sender_id", "status"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    sender_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    receiver_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # pending, accepted ou declined
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        index=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    responded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+
+# =========================================
+# AMIZADES ACEITAS
+# =========================================
+
+class Friendship(Base):
+    __tablename__ = "friendships"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_low_id",
+            "user_high_id",
+            name="uq_friendships_user_pair",
+        ),
+        CheckConstraint(
+            "user_low_id < user_high_id",
+            name="ck_friendships_canonical_pair",
+        ),
+        Index("ix_friendships_low_user", "user_low_id"),
+        Index("ix_friendships_high_user", "user_high_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Os IDs são sempre gravados em ordem crescente para impedir que
+    # (A, B) e (B, A) representem duas amizades diferentes.
+    user_low_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    user_high_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
     )
 
     created_at: Mapped[datetime] = mapped_column(
