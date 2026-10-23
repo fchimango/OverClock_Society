@@ -94,6 +94,154 @@ def fallback_username(name: str | None) -> str:
     return value or "usuario"
 
 
+
+def record_feed_action_notification(
+    db: Session,
+    post: models.Post,
+    actor: models.User,
+    action: str,
+    comment_text: str | None = None,
+) -> None:
+    """Persist a grouped Feed notification for the post owner.
+
+    The recipient is derived from the post in the database. This runs in the
+    same transaction as the like/comment/repost, so direct API clients cannot
+    perform a Feed interaction without creating its corresponding notification.
+    """
+    if action not in {"like", "comment", "repost"}:
+        return
+
+    # Do not notify someone about their own interaction.
+    if post.user_id == actor.id:
+        return
+
+    now = datetime.now(timezone.utc)
+    recipient_id = post.user_id
+    candidates = db.scalars(
+        select(models.Notification)
+        .where(
+            models.Notification.recipient_id == recipient_id,
+            models.Notification.category == "feed",
+            models.Notification.kind == action,
+        )
+        .order_by(
+            models.Notification.created_at.desc(),
+            models.Notification.id.desc(),
+        )
+        .limit(50)
+    ).all()
+
+    item = next(
+        (
+            candidate
+            for candidate in candidates
+            if str((candidate.data or {}).get("post_id", "")) == str(post.id)
+        ),
+        None,
+    )
+
+    actor_data = {
+        "name": actor.name,
+        "avatar": get_avatar(actor.name),
+    }
+
+    if item is None:
+        actors = [actor_data]
+        data = {
+            "post_id": post.id,
+            "actor_ids": [actor.id],
+            "actors": actors,
+            "target": "perfil.html?tab=posts",
+        }
+        if action == "comment" and comment_text:
+            data["last_comment_text"] = comment_text.strip()[:180]
+
+        title = {
+            "like": "Nova curtida",
+            "comment": "Novo comentário",
+            "repost": "Novo repost",
+        }[action]
+        verb = {
+            "like": "curtiu sua publicação",
+            "comment": "comentou em sua publicação",
+            "repost": "repostou sua publicação",
+        }[action]
+
+        item = models.Notification(
+            recipient_id=recipient_id,
+            actor_id=actor.id,
+            category="feed",
+            kind=action,
+            title=title,
+            message=f"{actor.name} {verb}.",
+            data=data,
+            is_read=False,
+            created_at=now,
+        )
+        db.add(item)
+        return
+
+    data = dict(item.data or {})
+    actor_ids: list[int] = []
+    for value in data.get("actor_ids", []) or []:
+        try:
+            actor_ids.append(int(value))
+        except (TypeError, ValueError):
+            continue
+
+    actors = list(data.get("actors", []) or [])
+    if actor.id not in actor_ids:
+        actor_ids.append(actor.id)
+        actors.append(actor_data)
+    elif not any(
+        isinstance(entry, dict)
+        and str(entry.get("name", "")).strip().casefold() == actor.name.strip().casefold()
+        for entry in actors
+    ):
+        actors.append(actor_data)
+
+    data["post_id"] = post.id
+    data["actor_ids"] = actor_ids
+    data["actors"] = actors
+    data["target"] = "perfil.html?tab=posts"
+    if action == "comment" and comment_text:
+        data["last_comment_text"] = comment_text.strip()[:180]
+
+    names = [str(entry.get("name") or "Alguém") for entry in actors if isinstance(entry, dict)]
+    if not names:
+        names = [actor.name]
+
+    if len(names) == 1:
+        action_text = {
+            "like": "curtiu sua publicação",
+            "comment": "comentou em sua publicação",
+            "repost": "repostou sua publicação",
+        }[action]
+        message = f"{names[0]} {action_text}."
+    else:
+        action_text = {
+            "like": "curtiram sua publicação",
+            "comment": "comentaram em sua publicação",
+            "repost": "repostaram sua publicação",
+        }[action]
+        if len(names) == 2:
+            joined_names = f"{names[0]} e {names[1]}"
+        else:
+            joined_names = f"{names[0]}, {names[1]} e mais {len(names) - 2}"
+        message = f"{joined_names} {action_text}."
+
+    item.data = data
+    item.actor_id = actor.id
+    item.title = {
+        "like": "Nova curtida",
+        "comment": "Novo comentário",
+        "repost": "Novo repost",
+    }[action]
+    item.message = message
+    item.is_read = False
+    item.created_at = now
+
+
 def format_relative_time(value: datetime | None) -> str:
     if value is None:
         return "agora"
@@ -370,7 +518,7 @@ def create_comment(
     ),
     db: Session = Depends(get_db)
 ):
-    get_post_or_404(
+    post = get_post_or_404(
         post_id,
         db
     )
@@ -390,6 +538,13 @@ def create_comment(
     )
 
     db.add(comment)
+    record_feed_action_notification(
+        db,
+        post,
+        current_user,
+        "comment",
+        content,
+    )
     db.commit()
     db.refresh(comment)
 
@@ -483,6 +638,13 @@ def toggle_like(
         liked = True
 
     try:
+        if liked:
+            record_feed_action_notification(
+                db,
+                post,
+                current_user,
+                "like",
+            )
         db.commit()
 
     except IntegrityError:
@@ -546,6 +708,13 @@ def toggle_repost(
         reposted = True
 
     try:
+        if reposted:
+            record_feed_action_notification(
+                db,
+                post,
+                current_user,
+                "repost",
+            )
         db.commit()
 
     except IntegrityError:

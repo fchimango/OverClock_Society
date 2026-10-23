@@ -176,6 +176,51 @@ async function feedApiRequest(path, options = {}) {
 
 
 /* =========================================
+   ATUALIZAR A CENTRAL DE NOTIFICAÇÕES
+========================================= */
+
+async function refreshFeedNotificationCenter(action, post, commentText = "") {
+    const notificationCenter = window.OverclockNotifications;
+
+    if (
+        !post ||
+        !notificationCenter ||
+        typeof notificationCenter.notifyFeedAction !== "function"
+    ) {
+        return null;
+    }
+
+    // A própria API do Feed também grava a notificação no PostgreSQL.
+    // Este método confirma/sincroniza a central aberta no navegador.
+    // Publicações próprias não geram notificação para o próprio autor.
+    if (
+        post.userId != null &&
+        String(post.userId) === String(getCurrentUserId())
+    ) {
+        return null;
+    }
+
+    try {
+        return await notificationCenter.notifyFeedAction({
+            action,
+            actorName: getCurrentUserName(),
+            actorAvatar: getAvatarLetter(getCurrentUserName()),
+            postId: post.id,
+            commentText
+        });
+    } catch (error) {
+        // A interação do Feed já foi salva. Uma falha de atualização visual
+        // da central não deve desfazer ou invalidar a curtida/comentário/repost.
+        console.warn(
+            "A interação foi salva, mas não foi possível atualizar a central de notificações.",
+            error
+        );
+        return null;
+    }
+}
+
+
+/* =========================================
    JOGOS E HASHTAGS
 ========================================= */
 
@@ -727,6 +772,12 @@ function createCommentsSection(post) {
                     }
                 );
 
+                await refreshFeedNotificationCenter(
+                    "comment",
+                    post,
+                    text
+                );
+
                 await loadPosts();
 
             } catch (error) {
@@ -974,6 +1025,13 @@ async function toggleLike(postId, button) {
             post.likes = result.likes;
         }
 
+        if (result.liked) {
+            await refreshFeedNotificationCenter(
+                "like",
+                post || { id: postId }
+            );
+        }
+
         renderPosts();
 
     } catch (error) {
@@ -1015,6 +1073,13 @@ async function toggleRepost(postId, button) {
         if (post) {
             post.reposted = result.reposted;
             post.reposts = result.reposts;
+        }
+
+        if (result.reposted) {
+            await refreshFeedNotificationCenter(
+                "repost",
+                post || { id: postId }
+            );
         }
 
         renderPosts();
