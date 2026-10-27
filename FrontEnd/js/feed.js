@@ -43,6 +43,12 @@ let currentHashtagFilter = null;
 const activeCommentPostIds = new Set();
 let postsLoadSequence = 0;
 
+const feedDeepLinkParams = new URLSearchParams(window.location.search);
+const requestedFeedPostId = feedDeepLinkParams.get("postId");
+const requestedFeedCommentId = feedDeepLinkParams.get("commentId");
+const focusFeedReplyComposer = feedDeepLinkParams.get("focusReply") === "1";
+let feedDeepLinkHandled = false;
+
 
 /* =========================================
    USUÁRIO ATUAL E API
@@ -296,6 +302,58 @@ function createPostTextElement(content) {
    CARREGAR PUBLICAÇÕES DO POSTGRESQL
 ========================================= */
 
+/* =========================================
+   ABRIR UMA PUBLICAÇÃO/RESPOSTA DIRETAMENTE
+========================================= */
+
+function focusFeedDeepLinkTarget() {
+    if (!requestedFeedPostId || feedDeepLinkHandled || !postsList) return;
+
+    const postCard = Array.from(postsList.querySelectorAll(".post-card"))
+        .find((card) => card.dataset.postId === String(requestedFeedPostId));
+
+    if (!postCard) return;
+
+    const targetComment = requestedFeedCommentId
+        ? document.getElementById(`feed-comment-${requestedFeedCommentId}`)
+        : null;
+    const target = targetComment || postCard;
+    feedDeepLinkHandled = true;
+
+    target.setAttribute("tabindex", "-1");
+    target.style.outline = "2px solid rgba(29, 155, 240, 0.95)";
+    target.style.outlineOffset = "3px";
+    target.style.boxShadow = "0 0 0 5px rgba(29, 155, 240, 0.14)";
+    target.style.transition = "outline-color 0.2s ease, box-shadow 0.2s ease";
+
+    window.setTimeout(() => {
+        if (!target.isConnected) return;
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        try {
+            target.focus({ preventScroll: true });
+        } catch (error) {
+            target.focus();
+        }
+
+        if (focusFeedReplyComposer) {
+            const input = postCard.querySelector(".comments-section input");
+            if (input) {
+                window.setTimeout(() => {
+                    if (input.isConnected) input.focus({ preventScroll: true });
+                }, 350);
+            }
+        }
+    }, 100);
+
+    window.setTimeout(() => {
+        if (!target.isConnected) return;
+        target.style.removeProperty("outline");
+        target.style.removeProperty("outline-offset");
+        target.style.removeProperty("box-shadow");
+        target.style.removeProperty("transition");
+    }, 4500);
+}
+
 async function loadPosts() {
     const requestNumber = ++postsLoadSequence;
 
@@ -318,8 +376,17 @@ async function loadPosts() {
             ? result
             : [];
 
+        if (requestedFeedPostId) {
+            // Ao vir de uma resposta do perfil, removemos filtros para que
+            // a publicação de destino continue visível e abrimos seus comentários.
+            clearHashtagFilter();
+            if (searchInput) searchInput.value = "";
+            activeCommentPostIds.add(String(requestedFeedPostId));
+        }
+
         renderPosts();
         renderTrendingGames();
+        focusFeedDeepLinkTarget();
 
     } catch (error) {
         if (requestNumber !== postsLoadSequence) {
@@ -421,52 +488,63 @@ function renderPosts() {
 
 
 /* =========================================
-   LINKS DE PERFIS DEMONSTRATIVOS
+   LINKS PARA PERFIS DE USUÁRIOS REAIS
 ========================================= */
 
-function enableDemoUserProfileLink(
-    element,
-    username
-) {
-    if (
-        String(username || "")
-            .trim()
-            .toLowerCase() !== "@maria"
-    ) {
-        return;
+function getUserProfileUrl(user) {
+    // A API atual retorna userId; os outros nomes mantêm compatibilidade
+    // caso o backend ou uma versão antiga use snake_case/authorId.
+    const userId = user?.id
+        ?? user?.userId
+        ?? user?.user_id
+        ?? user?.authorId
+        ?? user?.author_id
+        ?? user?.user?.id
+        ?? null;
+
+    const currentUserId = localStorage.getItem("userId");
+    const ownProfileUrl = new URL("perfil.html", window.location.href).href;
+    const publicProfileUrl = new URL("perfil-usuario.html", window.location.href);
+
+    if (userId !== null && userId !== undefined && /^\d+$/.test(String(userId))) {
+        if (currentUserId && String(currentUserId) === String(userId)) {
+            return ownProfileUrl;
+        }
+
+        publicProfileUrl.searchParams.set("userId", String(userId));
+        return publicProfileUrl.href;
     }
 
-    const openProfile = () => {
-        window.location.href =
-            "perfil-usuario.html?user=maria";
-    };
+    const username = String(
+        user?.username ?? user?.user?.username ?? user?.authorUsername ?? ""
+    ).trim().replace(/^@+/, "");
 
+    if (!username || username.toLocaleLowerCase("pt-BR") === "usuario") {
+        return null;
+    }
+
+    const currentUsername = currentUserId
+        ? String(localStorage.getItem(`overclockSocietyUsername_${currentUserId}`) || "")
+            .trim().replace(/^@+/, "")
+        : "";
+
+    if (currentUserId && currentUsername && currentUsername.toLocaleLowerCase("pt-BR") === username.toLocaleLowerCase("pt-BR")) {
+        return ownProfileUrl;
+    }
+
+    publicProfileUrl.searchParams.set("username", username);
+    return publicProfileUrl.href;
+}
+
+function configureProfileAnchor(element, url, displayName) {
+    if (!element || !url || element.tagName !== "A") return element;
+
+    element.href = url;
     element.classList.add("user-profile-link");
-    element.tabIndex = 0;
-    element.setAttribute("role", "link");
-
-    element.setAttribute(
-        "aria-label",
-        "Abrir perfil de Maria"
-    );
-
-    element.addEventListener(
-        "click",
-        openProfile
-    );
-
-    element.addEventListener(
-        "keydown",
-        (event) => {
-            if (
-                event.key === "Enter" ||
-                event.key === " "
-            ) {
-                event.preventDefault();
-                openProfile();
-            }
-        }
-    );
+    element.setAttribute("aria-label", `Abrir perfil de ${displayName || "jogador"}`);
+    element.setAttribute("title", `Abrir perfil de ${displayName || "jogador"}`);
+    // A navegação é um link HTML real, sem depender de um handler de clique.
+    return element;
 }
 
 
@@ -509,58 +587,43 @@ function createPostCard(post) {
         document.createElement("article");
 
     article.className = "post-card";
+    if (post.id != null) article.dataset.postId = String(post.id);
 
     const header =
         document.createElement("div");
 
     header.className = "post-header";
 
-    const avatar =
-        document.createElement("div");
+    const postAuthor = {
+        id: post.userId ?? post.user_id ?? post.authorId ?? post.author_id ?? post.user?.id,
+        username: post.username ?? post.user?.username ?? post.authorUsername,
+        name: post.author ?? post.user?.name
+    };
+    const profileUrl = getUserProfileUrl(postAuthor);
+    const authorName = String(postAuthor.name || "Usuário").trim();
 
+    // Usamos âncoras nativas no avatar, nome e username. Assim o navegador
+    // consegue navegar mesmo sem depender de listeners JavaScript no elemento.
+    const avatar = document.createElement(profileUrl ? "a" : "div");
     avatar.className = "post-avatar";
+    avatar.textContent = post.avatar || getAvatarLetter(authorName);
+    configureProfileAnchor(avatar, profileUrl, authorName);
 
-    avatar.textContent =
-        post.avatar || getAvatarLetter(post.author);
-
-    const user =
-        document.createElement("div");
-
+    const user = document.createElement("div");
     user.className = "post-user";
 
-    const userLine =
-        document.createElement("div");
-
+    const userLine = document.createElement("div");
     userLine.className = "post-user-line";
 
-    const author =
-        document.createElement("strong");
+    const author = document.createElement(profileUrl ? "a" : "strong");
+    author.className = profileUrl ? "post-author-link" : "post-author-name";
+    author.textContent = authorName;
+    configureProfileAnchor(author, profileUrl, authorName);
 
-    author.textContent =
-        post.author || "Usuário";
-
-    const username =
-        document.createElement("span");
-
+    const username = document.createElement(profileUrl ? "a" : "span");
     username.className = "post-username";
-
-    username.textContent =
-        post.username || "@usuario";
-
-    enableDemoUserProfileLink(
-        avatar,
-        post.username
-    );
-
-    enableDemoUserProfileLink(
-        author,
-        post.username
-    );
-
-    enableDemoUserProfileLink(
-        username,
-        post.username
-    );
+    username.textContent = post.username || "@usuario";
+    configureProfileAnchor(username, profileUrl, authorName);
 
     const time =
         document.createElement("span");
@@ -812,27 +875,31 @@ function createComment(comment, postId) {
         document.createElement("div");
 
     element.className = "comment";
+    if (comment.id != null) {
+        element.id = `feed-comment-${comment.id}`;
+        element.dataset.commentId = String(comment.id);
+    }
 
-    const avatar =
-        document.createElement("div");
+    const commentAuthor = {
+        id: comment.userId ?? comment.user_id ?? comment.authorId ?? comment.author_id,
+        username: comment.username ?? comment.authorUsername,
+        name: comment.author
+    };
+    const commentProfileUrl = getUserProfileUrl(commentAuthor);
+    const commentAuthorName = String(commentAuthor.name || "Usuário").trim();
 
+    const avatar = document.createElement(commentProfileUrl ? "a" : "div");
     avatar.className = "comment-avatar";
+    avatar.textContent = comment.avatar || getAvatarLetter(commentAuthorName);
+    configureProfileAnchor(avatar, commentProfileUrl, commentAuthorName);
 
-    avatar.textContent =
-        comment.avatar || getAvatarLetter(comment.author);
-
-    const body =
-        document.createElement("div");
-
+    const body = document.createElement("div");
     body.className = "comment-body";
 
-    const user =
-        document.createElement("div");
-
+    const user = document.createElement(commentProfileUrl ? "a" : "div");
     user.className = "comment-user";
-
-    user.textContent =
-        comment.author || "Usuário";
+    user.textContent = commentAuthorName;
+    configureProfileAnchor(user, commentProfileUrl, commentAuthorName);
 
     const text =
         document.createElement("div");

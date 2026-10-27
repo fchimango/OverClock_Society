@@ -709,3 +709,52 @@
 .comment-delete-button:hover {
     color: #ef4444;
 }
+
+/* =========================================
+   LINKS NATIVOS PARA PERFIS NO FEED
+   ========================================= */
+.post-avatar.user-profile-link,
+.comment-avatar.user-profile-link {
+    display: flex;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.post-user-line .post-author-link,
+.post-user-line .post-username.user-profile-link,
+.comment-user.user-profile-link {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.post-user-line .post-author-link {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.post-user-line .post-username.user-profile-link {
+    color: #64748b;
+    font-size: 10px;
+}
+
+.comment-user.user-profile-link {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.post-user-line .user-profile-link:hover,
+.comment-user.user-profile-link:hover {
+    color: #a5b4fc;
+}
+
+.post-avatar.user-profile-link:focus-visible,
+.post-user-line .user-profile-link:focus-visible,
+.comment-avatar.user-profile-link:focus-visible,
+.comment-user.user-profile-link:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
