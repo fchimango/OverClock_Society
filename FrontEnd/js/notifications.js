@@ -1015,12 +1015,7 @@
                         <span
                             class="notification-tab-count"
                         >
-                            ${
-                                unreadCount ||
-                                getCategoryCount(
-                                    category
-                                )
-                            }
+                            ${unreadCount}
                         </span>
 
                     `;

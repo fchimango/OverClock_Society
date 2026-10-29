@@ -17,6 +17,8 @@ import friends_routes
 import games_routes
 import models
 import notifications_routes
+import profiles_routes
+import search_routes
 
 from database import Base, engine, get_db
 
@@ -90,6 +92,8 @@ app.include_router(feed_routes.router)
 app.include_router(games_routes.router)
 app.include_router(friends_routes.router)
 app.include_router(notifications_routes.router)
+app.include_router(profiles_routes.router)
+app.include_router(search_routes.router)
 
 
 # =========================================

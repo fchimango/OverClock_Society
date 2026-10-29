@@ -821,3 +821,10 @@
     }
 
 }
+
+/* Links de perfil e estado vazio na lista de amigos do Dashboard */
+.dashboard-player-profile-link { cursor: pointer; }
+.dashboard-player-profile-link:focus-visible { outline: 2px solid #818cf8; outline-offset: 3px; border-radius: 6px; }
+@media (hover: hover) and (pointer: fine) { .dashboard-player-profile-link:hover { color: #a5b4fc; } }
+.dashboard-player-message { grid-column: 1 / -1; margin: 0; padding: 18px; color: #94a3b8; font-size: 13px; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; background: rgba(15,23,42,.5); }
+.dashboard-player-message-link { color: #a5b4fc; margin-left: 6px; text-decoration: underline; }

@@ -10,18 +10,10 @@ const seePlayersButton =
 const profileButton =
     document.getElementById("profileButton");
 
-const searchInput =
-    document.getElementById("searchInput");
-
-
-findPlayersButton.addEventListener(
+findPlayersButton?.addEventListener(
     "click",
     () => {
-
-        alert(
-            "O sistema de busca de jogadores será implementado em breve."
-        );
-
+        window.location.href = "amigos.html";
     }
 );
 
@@ -54,22 +46,6 @@ profileButton.addEventListener(
 
         window.location.href =
             "perfil.html";
-
-    }
-);
-
-
-searchInput.addEventListener(
-    "input",
-    (event) => {
-
-        const value =
-            event.target.value.trim();
-
-        console.log(
-            "Pesquisa:",
-            value
-        );
 
     }
 );

@@ -1027,7 +1027,8 @@
 @media (hover: hover) and (pointer: fine) {
     .friend-card-info .user-profile-link:hover,
     .all-friend-info .user-profile-link:hover,
-    .request-info .user-profile-link:hover {
+    .request-info .user-profile-link:hover,
+    .player-search-info .user-profile-link:hover {
         color: #a5b4fc;
     }
 
@@ -1035,3 +1036,8 @@
         filter: brightness(1.12);
     }
 }
+
+
+/* Links de perfil nos resultados da busca de jogadores */
+.player-search-info .user-profile-link { cursor: pointer; }
+.player-search-info .user-profile-link:focus-visible { outline: 2px solid #818cf8; outline-offset: 3px; border-radius: 6px; }

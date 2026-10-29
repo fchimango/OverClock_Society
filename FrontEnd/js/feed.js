@@ -45,6 +45,8 @@ let postsLoadSequence = 0;
 
 const feedDeepLinkParams = new URLSearchParams(window.location.search);
 const requestedFeedPostId = feedDeepLinkParams.get("postId");
+const requestedFeedSearch = feedDeepLinkParams.get("search");
+if (requestedFeedSearch && searchInput) searchInput.value = requestedFeedSearch;
 const requestedFeedCommentId = feedDeepLinkParams.get("commentId");
 const focusFeedReplyComposer = feedDeepLinkParams.get("focusReply") === "1";
 let feedDeepLinkHandled = false;
@@ -429,16 +431,34 @@ function showFeedError(message) {
 
 
 function applySearchFilter() {
-    const term =
-        searchInput?.value.trim().toLowerCase() || "";
+    // A busca do cabeçalho agora é global. O filtro local do Feed é aplicado
+    // quando a pessoa chega por um resultado de jogo (?search=...), evitando
+    // que a digitação de um nome de jogador esconda todas as publicações atrás.
+    const term = requestedFeedSearch
+        ? requestedFeedSearch.trim().toLocaleLowerCase("pt-BR")
+        : "";
 
-    document.querySelectorAll(".post-card")
-        .forEach((card) => {
-            card.style.display =
-                card.textContent.toLowerCase().includes(term)
-                    ? ""
-                    : "none";
-        });
+    const cards = Array.from(document.querySelectorAll(".post-card"));
+    let visibleCount = 0;
+
+    cards.forEach((card) => {
+        const matches = !term || card.textContent.toLocaleLowerCase("pt-BR").includes(term);
+        card.style.display = matches ? "" : "none";
+        if (matches) visibleCount += 1;
+    });
+
+    let emptyState = document.getElementById("feedSearchEmptyState");
+    if (term && cards.length > 0 && visibleCount === 0) {
+        if (!emptyState) {
+            emptyState = document.createElement("div");
+            emptyState.id = "feedSearchEmptyState";
+            emptyState.className = "empty-feed";
+            postsList?.appendChild(emptyState);
+        }
+        emptyState.textContent = `Nenhuma publicação encontrada para “${requestedFeedSearch}”.`;
+    } else if (emptyState) {
+        emptyState.remove();
+    }
 }
 
 
@@ -1404,14 +1424,6 @@ function updateCharacterCounter() {
 
     characterCounter.textContent =
         `${postInput.value.length} / 280`;
-}
-
-
-if (searchInput) {
-    searchInput.addEventListener(
-        "input",
-        applySearchFilter
-    );
 }
 
 

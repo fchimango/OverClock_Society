@@ -173,6 +173,53 @@ function normalizeSearch(value) {
 }
 
 
+function getFriendProfileUrl(user) {
+    const userId = user?.id ?? user?.userId ?? null;
+    const currentUserId = localStorage.getItem("userId");
+
+    if (userId !== null && /^\d+$/.test(String(userId))) {
+        if (currentUserId && String(currentUserId) === String(userId)) {
+            return "perfil.html";
+        }
+        return `perfil-usuario.html?userId=${encodeURIComponent(String(userId))}`;
+    }
+
+    const username = String(user?.username || "").trim().replace(/^@+/, "");
+    if (username) {
+        return `perfil-usuario.html?username=${encodeURIComponent(username)}`;
+    }
+
+    return null;
+}
+
+function makeFriendProfileLink(element, user) {
+    if (!element) return;
+    const url = getFriendProfileUrl(user);
+    if (!url) return;
+
+    const displayName = String(user?.name || "Jogador").trim();
+    element.classList.add("user-profile-link");
+    element.tabIndex = 0;
+    element.removeAttribute("aria-hidden");
+    element.setAttribute("role", "link");
+    element.setAttribute("aria-label", `Abrir perfil de ${displayName}`);
+    element.style.cursor = "pointer";
+
+    const navigate = (event) => {
+        event?.stopPropagation?.();
+        window.location.href = url;
+    };
+
+    element.addEventListener("click", navigate);
+    element.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            navigate(event);
+        }
+    });
+}
+
+
 /* =========================================
    RESUMO DA PÁGINA
 ========================================= */
@@ -213,24 +260,22 @@ function renderFriendRequest(request) {
     card.dataset.userId = String(user.id || "");
     card.dataset.user = user.name || "Jogador";
 
-    card.appendChild(createAvatar(user));
+    const avatar = createAvatar(user);
+    makeFriendProfileLink(avatar, user);
+    card.appendChild(avatar);
 
     const info = document.createElement("div");
     info.className = "request-info";
 
     const name = document.createElement("strong");
     name.textContent = user.name || "Jogador";
+    makeFriendProfileLink(name, user);
     info.appendChild(name);
 
     const course = document.createElement("span");
     course.textContent = user.course || "Curso não informado";
     info.appendChild(course);
 
-    const game = document.createElement("small");
-    game.textContent = user.current_game
-        ? `🎮 ${user.current_game}`
-        : "🎮 Ainda não informou o jogo atual";
-    info.appendChild(game);
 
     card.appendChild(info);
 
@@ -280,21 +325,20 @@ function createAllFriendCard(friend) {
     card.dataset.name = friend.name || "";
     card.dataset.status = friend.status === "online" ? "online" : "offline";
 
-    card.appendChild(createAvatar(friend));
+    const avatar = createAvatar(friend);
+    makeFriendProfileLink(avatar, friend);
+    card.appendChild(avatar);
 
     const info = document.createElement("div");
     info.className = "all-friend-info";
 
     const name = document.createElement("strong");
     name.textContent = friend.name || "Jogador";
+    makeFriendProfileLink(name, friend);
     info.appendChild(name);
 
     const detail = document.createElement("span");
-    const details = [`${statusIcon(friend.status)} ${statusLabel(friend.status)}`];
-    if (friend.current_game) {
-        details.push(`🎮 ${friend.current_game}`);
-    }
-    detail.textContent = details.join(" • ");
+    detail.textContent = `${statusIcon(friend.status)} ${statusLabel(friend.status)}`;
     info.appendChild(detail);
 
     const removeButton = document.createElement("button");
@@ -317,7 +361,9 @@ function createOnlineFriendCard(friend) {
 
     const top = document.createElement("div");
     top.className = "friend-card-top";
-    top.appendChild(createAvatar(friend));
+    const avatar = createAvatar(friend);
+    makeFriendProfileLink(avatar, friend);
+    top.appendChild(avatar);
 
     if (friend.status === "online") {
         const dot = document.createElement("span");
@@ -331,19 +377,16 @@ function createOnlineFriendCard(friend) {
 
     const name = document.createElement("h3");
     name.textContent = friend.name || "Jogador";
+    makeFriendProfileLink(name, friend);
     info.appendChild(name);
 
     const course = document.createElement("span");
     course.textContent = friend.course || "Curso não informado";
     info.appendChild(course);
 
-    const game = document.createElement("small");
-    if (friend.current_game) {
-        game.textContent = `🎮 ${friend.current_game}`;
-    } else {
-        game.textContent = `${statusIcon(friend.status)} ${statusLabel(friend.status)}`;
-    }
-    info.appendChild(game);
+    const presence = document.createElement("small");
+    presence.textContent = `${statusIcon(friend.status)} ${statusLabel(friend.status)}`;
+    info.appendChild(presence);
 
     card.append(top, info);
     return card;
@@ -637,24 +680,23 @@ function createPlayerSearchResult(user) {
     const result = document.createElement("article");
     result.className = "player-search-result";
 
-    result.appendChild(createAvatar(user, "player-search-avatar"));
+    const avatar = createAvatar(user, "player-search-avatar");
+    makeFriendProfileLink(avatar, user);
+    result.appendChild(avatar);
 
     const info = document.createElement("div");
     info.className = "player-search-info";
 
     const name = document.createElement("strong");
     name.textContent = user.name || "Jogador";
+    makeFriendProfileLink(name, user);
     info.appendChild(name);
 
     const username = document.createElement("span");
-    username.textContent = user.username ? `@${user.username}` : (user.course || "Curso não informado");
+    username.textContent = user.username ? `@${String(user.username).replace(/^@+/, "")}` : (user.course || "Curso não informado");
+    makeFriendProfileLink(username, user);
     info.appendChild(username);
 
-    const game = document.createElement("small");
-    game.textContent = user.current_game
-        ? `🎮 ${user.current_game}`
-        : "Jogador da comunidade";
-    info.appendChild(game);
 
     const action = document.createElement("button");
     action.type = "button";

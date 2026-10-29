@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -18,27 +18,90 @@ router = APIRouter(
 
 
 VALID_STATUSES = {"online", "away", "offline"}
+PRESENCE_TIMEOUT = timedelta(seconds=120)
 
 
-def serialize_public_user(user: models.User) -> dict[str, Any]:
+def get_effective_user_status(user: models.User, db: Session) -> str:
+    """Return online/away only when an authenticated session has sent a recent heartbeat."""
+    profile = user.profile_data or {}
+    preferred_status = profile.get("status", "online")
+    if preferred_status not in VALID_STATUSES:
+        preferred_status = "offline"
+
+    # A saved preference is not proof that the user is currently logged in.
+    presence = db.get(models.UserPresence, user.id)
+    if presence is None or presence.last_seen_at is None:
+        return "offline"
+
+    last_seen = presence.last_seen_at
+    if last_seen.tzinfo is None:
+        last_seen = last_seen.replace(tzinfo=timezone.utc)
+
+    if datetime.now(timezone.utc) - last_seen > PRESENCE_TIMEOUT:
+        return "offline"
+
+    if preferred_status == "offline":
+        return "offline"
+    if preferred_status == "away":
+        return "away"
+    return "online"
+
+
+def serialize_public_user(user: models.User, db: Session) -> dict[str, Any]:
     """Expose only the public information needed by the friends screen."""
     profile = user.profile_data or {}
-    status = profile.get("status", "offline")
-    if status not in VALID_STATUSES:
-        status = "offline"
-
     return {
         "id": user.id,
         "name": user.name,
         "username": user.username or "",
         "course": profile.get("course") or "Curso não informado",
         "semester": profile.get("semester"),
-        "status": status,
-        "current_game": profile.get("current_game") or "",
-        "current_game_status": profile.get("current_game_status") or "available",
+        "status": get_effective_user_status(user, db),
     }
 
 
+
+
+@router.post("/presence/heartbeat")
+def presence_heartbeat(
+    user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Record that the authenticated user currently has the site open."""
+    now = datetime.now(timezone.utc)
+    presence = db.get(models.UserPresence, user.id)
+
+    if presence is None:
+        presence = models.UserPresence(user_id=user.id, last_seen_at=now)
+        db.add(presence)
+    else:
+        presence.last_seen_at = now
+
+    try:
+        db.commit()
+    except IntegrityError:
+        # A second tab can create the row at nearly the same time.
+        db.rollback()
+        presence = db.get(models.UserPresence, user.id)
+        if presence is None:
+            raise HTTPException(status_code=409, detail="Não foi possível atualizar sua presença. Tente novamente.")
+        presence.last_seen_at = now
+        db.commit()
+
+    return {"status": get_effective_user_status(user, db), "last_seen_at": now.isoformat()}
+
+
+@router.post("/presence/offline")
+def presence_offline(
+    user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Immediately clear presence on an explicit logout; abandoned sessions expire automatically."""
+    presence = db.get(models.UserPresence, user.id)
+    if presence is not None:
+        db.delete(presence)
+        db.commit()
+    return {"status": "offline"}
 
 
 def resolve_request_notification(
@@ -143,11 +206,12 @@ def find_friendship(
 def serialize_request(
     request: models.FriendRequest,
     other_user: models.User,
+    db: Session,
 ) -> dict[str, Any]:
     return {
         "id": request.id,
         "created_at": request.created_at.isoformat() if request.created_at else None,
-        "user": serialize_public_user(other_user),
+        "user": serialize_public_user(other_user, db),
     }
 
 
@@ -183,7 +247,7 @@ def list_friends(
         .order_by(models.User.name.asc())
     ).all()
 
-    serialized = [serialize_public_user(friend) for friend in friends]
+    serialized = [serialize_public_user(friend, db) for friend in friends]
     return {"friends": serialized, "count": len(serialized)}
 
 
@@ -205,7 +269,7 @@ def list_incoming_requests(
     for request in requests:
         sender = db.get(models.User, request.sender_id)
         if sender is not None:
-            serialized.append(serialize_request(request, sender))
+            serialized.append(serialize_request(request, sender, db))
 
     return {"requests": serialized, "count": len(serialized)}
 
@@ -295,7 +359,7 @@ def search_players(
 
     results: list[dict[str, Any]] = []
     for candidate in users:
-        item = serialize_public_user(candidate)
+        item = serialize_public_user(candidate, db)
         if candidate.id in friend_ids:
             item["relationship"] = "friend"
         else:
@@ -395,7 +459,7 @@ def send_friend_request(
 
     return {
         "message": "Solicitação de amizade enviada.",
-        "request": serialize_request(request, recipient),
+        "request": serialize_request(request, recipient, db),
     }
 
 

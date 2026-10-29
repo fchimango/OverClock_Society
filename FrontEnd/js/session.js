@@ -10,11 +10,68 @@ const SESSION_API_URL =
         : "https://overclock-api.onrender.com";
 
 
+const PRESENCE_HEARTBEAT_INTERVAL_MS = 45_000;
+let presenceHeartbeatTimer = null;
+let presenceHeartbeatInProgress = false;
+
+async function sendPresenceHeartbeat() {
+    const token = localStorage.getItem("token");
+    if (!token || presenceHeartbeatInProgress) return;
+
+    presenceHeartbeatInProgress = true;
+    try {
+        const response = await fetch(`${SESSION_API_URL}/friends/presence/heartbeat`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok && response.status !== 401) {
+            console.debug("Não foi possível atualizar a presença neste momento.");
+        }
+    } catch (error) {
+        // Falha temporária de rede não encerra a sessão; a presença expira no servidor.
+        console.debug("Heartbeat de presença indisponível temporariamente.");
+    } finally {
+        presenceHeartbeatInProgress = false;
+    }
+}
+
+function startPresenceHeartbeat() {
+    if (!localStorage.getItem("token")) return;
+    if (presenceHeartbeatTimer !== null) {
+        window.clearInterval(presenceHeartbeatTimer);
+    }
+
+    void sendPresenceHeartbeat();
+    presenceHeartbeatTimer = window.setInterval(
+        sendPresenceHeartbeat,
+        PRESENCE_HEARTBEAT_INTERVAL_MS
+    );
+}
+
+async function markPresenceOfflineBeforeLogout() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+        await fetch(`${SESSION_API_URL}/friends/presence/offline`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            keepalive: true
+        });
+    } catch (error) {
+        // O servidor também considera a conta offline se o heartbeat expirar.
+    }
+}
+
 /* =========================================
    UTILIDADES DA SESSÃO
 ========================================= */
 
 function clearSession() {
+    if (presenceHeartbeatTimer !== null) {
+        window.clearInterval(presenceHeartbeatTimer);
+        presenceHeartbeatTimer = null;
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     localStorage.removeItem("userName");
@@ -32,11 +89,14 @@ function getInitial(name) {
         return "?";
     }
 
-    return name.trim().charAt(0).toUpperCase();
+    return name
+        .trim()
+        .charAt(0)
+        .toUpperCase();
 }
 
-
 function normalizeOverclockUsername(value) {
+
     return String(value || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
@@ -46,26 +106,23 @@ function normalizeOverclockUsername(value) {
 
 
 function getOverclockUsernameKey(userId) {
+
     return `overclockSocietyUsername_${userId}`;
 }
 
 
 function getOverclockUsername(user) {
+
     const userId =
         user?.id ??
         localStorage.getItem("userId");
 
-    // O nome de usuário do backend tem prioridade.
-    const apiUsername =
-        normalizeOverclockUsername(user?.username);
-
-    const savedUsername = userId
-        ? normalizeOverclockUsername(
-            localStorage.getItem(
+    const savedUsername =
+        userId
+            ? localStorage.getItem(
                 getOverclockUsernameKey(userId)
             )
-        )
-        : "";
+            : null;
 
     const generatedUsername =
         normalizeOverclockUsername(
@@ -74,12 +131,9 @@ function getOverclockUsername(user) {
             "usuario"
         );
 
-    return (
-        apiUsername ||
-        savedUsername ||
+    return savedUsername ||
         generatedUsername ||
-        "usuario"
-    );
+        "usuario";
 }
 
 
@@ -97,18 +151,27 @@ function updateHeaderUser(user) {
             ".profile-name strong"
         );
 
-    nameElements.forEach((element) => {
-        element.textContent = user.name;
-    });
+    nameElements.forEach(
+        (element) => {
+            element.textContent =
+                user.name;
+        }
+    );
+
 
     const avatarElements =
         document.querySelectorAll(
             ".profile-button .avatar"
         );
 
-    avatarElements.forEach((element) => {
-        element.textContent = getInitial(user.name);
-    });
+    avatarElements.forEach(
+        (element) => {
+            element.textContent =
+                getInitial(
+                    user.name
+                );
+        }
+    );
 }
 
 
@@ -122,10 +185,15 @@ function updateOwnProfile(user) {
             .split("/")
             .pop();
 
-    // Esta função não modifica o perfil de outra pessoa.
+    /*
+     * Não alteramos perfil-usuario.html,
+     * pois aquela página representa
+     * outro usuário.
+     */
     if (currentPage !== "perfil.html") {
         return;
     }
+
 
     const profileIdentityName =
         document.querySelector(
@@ -137,40 +205,58 @@ function updateOwnProfile(user) {
             user.name;
     }
 
+
     const profileNameInput =
-        document.getElementById("profileName");
+        document.getElementById(
+            "profileName"
+        );
 
     if (profileNameInput) {
-        profileNameInput.value = user.name;
+        profileNameInput.value =
+            user.name;
     }
 
     const profileUsernameInput =
-        document.getElementById("profileUsername");
+    document.getElementById(
+        "profileUsername"
+    );
 
-    const profileIdentityUsername =
-        document.querySelector(".profile-username");
+const profileIdentityUsername =
+    document.querySelector(
+        ".profile-username"
+    );
 
-    const username =
-        getOverclockUsername(user);
+const username =
+    getOverclockUsername(user);
 
-    if (profileUsernameInput) {
-        profileUsernameInput.value = username;
-    }
 
-    if (profileIdentityUsername) {
-        profileIdentityUsername.textContent =
-            `@${username}`;
-    }
+if (profileUsernameInput) {
+
+    profileUsernameInput.value =
+        username;
+}
+
+
+if (profileIdentityUsername) {
+
+    profileIdentityUsername.textContent =
+        `@${username}`;
+}
+
 
     const profileAvatar =
-        document.querySelector(".profile-avatar");
+        document.querySelector(
+            ".profile-avatar"
+        );
 
     if (
         profileAvatar &&
         !profileAvatar.style.backgroundImage
     ) {
         profileAvatar.textContent =
-            getInitial(user.name);
+            getInitial(
+                user.name
+            );
     }
 }
 
@@ -180,6 +266,7 @@ function updateOwnProfile(user) {
 ========================================= */
 
 function applyUserToPage(user) {
+    
     updateHeaderUser(user);
     updateOwnProfile(user);
 }
@@ -198,28 +285,40 @@ async function validateSession() {
         return;
     }
 
-    // Exibe os dados já conhecidos enquanto consulta a API.
+
+    /*
+     * Usa o nome salvo enquanto
+     * consulta a API.
+     *
+     * Isso evita que "João" apareça
+     * rapidamente antes da resposta.
+     */
     const cachedName =
-        localStorage.getItem("userName");
+        localStorage.getItem(
+            "userName"
+        );
 
     if (cachedName) {
         applyUserToPage({
-            id: localStorage.getItem("userId"),
             name: cachedName
         });
     }
 
-    try {
-        const response = await fetch(
-            `${SESSION_API_URL}/auth/me`,
-            {
-                method: "GET",
 
-                headers: {
-                    Authorization: `Bearer ${token}`
+    try {
+        const response =
+            await fetch(
+                `${SESSION_API_URL}/auth/me`,
+                {
+                    method: "GET",
+
+                    headers: {
+                        Authorization:
+                            `Bearer ${token}`
+                    }
                 }
-            }
-        );
+            );
+
 
         if (!response.ok) {
             clearSession();
@@ -227,7 +326,10 @@ async function validateSession() {
             return;
         }
 
-        const user = await response.json();
+
+        const user =
+            await response.json();
+
 
         localStorage.setItem(
             "userId",
@@ -244,33 +346,27 @@ async function validateSession() {
             user.email
         );
 
-        if (user.username) {
-            localStorage.setItem(
-                getOverclockUsernameKey(user.id),
-                normalizeOverclockUsername(user.username)
-            );
-        }
 
         applyUserToPage(user);
+        startPresenceHeartbeat();
 
-        // As demais páginas podem esperar este evento
-        // antes de carregar os dados específicos do usuário.
-        window.dispatchEvent(
-            new CustomEvent(
-                "overclock:session-ready",
-                {
-                    detail: {
-                        id: String(user.id),
-                        name: user.name,
-                        email: user.email,
+window.dispatchEvent(
+    new CustomEvent(
+        "overclock:session-ready",
+        {
+            detail: {
+                id:
+                    String(user.id),
 
-                        username:
-                            user.username ||
-                            getOverclockUsername(user)
-                    }
-                }
-            )
-        );
+                name:
+                    user.name,
+
+                email:
+                    user.email
+            }
+        }
+    )
+);
 
         console.log(
             "✅ Sessão válida:",
@@ -283,7 +379,11 @@ async function validateSession() {
             error
         );
 
-        // Não apagamos o token quando há falha de conexão.
+        /*
+         * Não apagamos o token aqui,
+         * porque o problema pode ser
+         * apenas o servidor offline.
+         */
         goToLogin();
     }
 }
@@ -295,20 +395,29 @@ async function validateSession() {
 
 function configureLogout() {
     const logoutLinks =
-        document.querySelectorAll(".logout-link");
-
-    logoutLinks.forEach((logoutLink) => {
-        logoutLink.addEventListener(
-            "click",
-            (event) => {
-                event.preventDefault();
-
-                clearSession();
-
-                window.location.href = "index.html";
-            }
+        document.querySelectorAll(
+            ".logout-link"
         );
-    });
+
+    logoutLinks.forEach(
+        (logoutLink) => {
+
+            logoutLink.addEventListener(
+                "click",
+                async (event) => {
+
+                    event.preventDefault();
+
+                    await markPresenceOfflineBeforeLogout();
+                    clearSession();
+
+                    window.location.href =
+                        "index.html";
+                }
+            );
+
+        }
+    );
 }
 
 
@@ -323,3 +432,9 @@ document.addEventListener(
         validateSession();
     }
 );
+
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && localStorage.getItem("token")) {
+        void sendPresenceHeartbeat();
+    }
+});

@@ -395,3 +395,25 @@ class Notification(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+
+
+# =========================================
+# PRESENÇA ATUAL DOS USUÁRIOS
+# =========================================
+
+class UserPresence(Base):
+    __tablename__ = "user_presence"
+
+    # Um registro por conta. A presença só é considerada online quando
+    # last_seen_at foi atualizado recentemente por uma sessão autenticada.
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
