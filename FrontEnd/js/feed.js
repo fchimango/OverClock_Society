@@ -8,6 +8,7 @@ const postInput = document.getElementById("postInput");
 const publishPostButton = document.getElementById("publishPostButton");
 const characterCounter = document.getElementById("characterCounter");
 const postsList = document.getElementById("postsList");
+const loadMorePostsButton = document.getElementById("loadMorePostsButton");
 const feedFilter = document.getElementById("feedFilter");
 const activeHashtag = document.getElementById("activeHashtag");
 const clearFilterButton = document.getElementById("clearFilterButton");
@@ -16,9 +17,7 @@ const searchInput = document.getElementById("searchInput");
 const profileButton = document.getElementById("profileButton");
 
 const FEED_API_BASE_URL =
-    ["127.0.0.1", "localhost"].includes(window.location.hostname)
-        ? "http://127.0.0.1:8000"
-        : "https://overclock-api.onrender.com";
+    window.OVERCLOCK_API_BASE_URL;
 
 const games = [
     { name: "Elden Ring", hashtag: "eldenring" },
@@ -38,6 +37,9 @@ const games = [
 ];
 
 let posts = [];
+let currentFeedPage = 1;
+let hasMoreFeedPosts = false;
+const FEED_PAGE_SIZE = 20;
 let currentHashtagFilter = null;
 
 const activeCommentPostIds = new Set();
@@ -356,31 +358,58 @@ function focusFeedDeepLinkTarget() {
     }, 4500);
 }
 
-async function loadPosts() {
+async function loadPosts({ append = false } = {}) {
     const requestNumber = ++postsLoadSequence;
+    const requestedPage = append ? currentFeedPage + 1 : 1;
 
     if (postsList) {
         postsList.setAttribute("aria-busy", "true");
     }
+    if (loadMorePostsButton) {
+        loadMorePostsButton.disabled = true;
+        if (!append) loadMorePostsButton.hidden = true;
+    }
 
     try {
-        const result = await feedApiRequest(
-            "/feed/posts"
-        );
-
-        // Impede uma resposta antiga de substituir
-        // os dados de uma atualização mais recente.
-        if (requestNumber !== postsLoadSequence) {
-            return;
+        const params = new URLSearchParams({
+            page: String(requestedPage),
+            page_size: String(FEED_PAGE_SIZE),
+        });
+        // Inclui a publicação de destino apenas na primeira página, para que
+        // notificações antigas continuem abrindo o post sem duplicá-lo sempre.
+        if (!append && requestedFeedPostId) {
+            params.set("post_id", requestedFeedPostId);
         }
 
-        posts = Array.isArray(result)
-            ? result
-            : [];
+        const result = await feedApiRequest(`/feed/posts?${params.toString()}`);
 
-        if (requestedFeedPostId) {
-            // Ao vir de uma resposta do perfil, removemos filtros para que
-            // a publicação de destino continue visível e abrimos seus comentários.
+        // Impede uma resposta antiga de substituir os dados de uma atualização mais recente.
+        if (requestNumber !== postsLoadSequence) return;
+
+        const returnedPosts = Array.isArray(result)
+            ? result
+            : (Array.isArray(result?.posts) ? result.posts : []);
+
+        if (append) {
+            const knownIds = new Set(posts.map((post) => String(post.id)));
+            returnedPosts.forEach((post) => {
+                if (!knownIds.has(String(post.id))) {
+                    posts.push(post);
+                    knownIds.add(String(post.id));
+                }
+            });
+        } else {
+            posts = returnedPosts;
+        }
+
+        currentFeedPage = requestedPage;
+        hasMoreFeedPosts = typeof result?.has_more === "boolean"
+            ? result.has_more
+            : returnedPosts.length >= FEED_PAGE_SIZE;
+
+        if (requestedFeedPostId && !append) {
+            // Ao vir de uma resposta do perfil, removemos filtros para que a publicação
+            // de destino continue visível e abrimos seus comentários.
             clearHashtagFilter();
             if (searchInput) searchInput.value = "";
             activeCommentPostIds.add(String(requestedFeedPostId));
@@ -388,26 +417,38 @@ async function loadPosts() {
 
         renderPosts();
         renderTrendingGames();
-        focusFeedDeepLinkTarget();
+        if (!append) focusFeedDeepLinkTarget();
 
-    } catch (error) {
-        if (requestNumber !== postsLoadSequence) {
-            return;
+        if (loadMorePostsButton) {
+            loadMorePostsButton.hidden = !hasMoreFeedPosts;
+            loadMorePostsButton.disabled = false;
+            loadMorePostsButton.textContent = "Carregar mais publicações";
         }
 
-        console.error(
-            "Erro ao carregar o Feed:",
-            error
-        );
+    } catch (error) {
+        if (requestNumber !== postsLoadSequence) return;
 
-        showFeedError(error.message);
+        console.error("Erro ao carregar o Feed:", error);
+        if (!append) {
+            showFeedError(error.message);
+        } else if (postsList) {
+            const errorElement = document.createElement("div");
+            errorElement.className = "empty-feed";
+            errorElement.textContent = `Não foi possível carregar mais publicações. ${error.message}`;
+            postsList.appendChild(errorElement);
+        }
+        if (loadMorePostsButton) {
+            loadMorePostsButton.hidden = !append;
+            loadMorePostsButton.disabled = false;
+            loadMorePostsButton.textContent = "Tentar novamente";
+        }
 
     } finally {
-        if (
-            requestNumber === postsLoadSequence &&
-            postsList
-        ) {
-            postsList.removeAttribute("aria-busy");
+        if (requestNumber === postsLoadSequence) {
+            postsList?.removeAttribute("aria-busy");
+            if (loadMorePostsButton && !loadMorePostsButton.hidden) {
+                loadMorePostsButton.disabled = false;
+            }
         }
     }
 }
@@ -437,12 +478,19 @@ function applySearchFilter() {
     const term = requestedFeedSearch
         ? requestedFeedSearch.trim().toLocaleLowerCase("pt-BR")
         : "";
+    const normalizedTerm = term.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const compactTerm = normalizedTerm.replace(/[^a-z0-9]/g, "");
 
     const cards = Array.from(document.querySelectorAll(".post-card"));
     let visibleCount = 0;
 
     cards.forEach((card) => {
-        const matches = !term || card.textContent.toLocaleLowerCase("pt-BR").includes(term);
+        const cardText = card.textContent.toLocaleLowerCase("pt-BR");
+        const normalizedCardText = cardText.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const compactCardText = normalizedCardText.replace(/[^a-z0-9]/g, "");
+        const matches = !term || cardText.includes(term) || (
+            compactTerm.length >= 2 && compactCardText.includes(compactTerm)
+        );
         card.style.display = matches ? "" : "none";
         if (matches) visibleCount += 1;
     });
@@ -1447,6 +1495,13 @@ publishPostButton?.addEventListener(
     "click",
     publishPost
 );
+
+
+loadMorePostsButton?.addEventListener("click", () => {
+    if (hasMoreFeedPosts && !loadMorePostsButton.disabled) {
+        void loadPosts({ append: true });
+    }
+});
 
 
 postInput?.addEventListener(

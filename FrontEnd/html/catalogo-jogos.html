@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore jogos, capas, gêneros, plataformas e avaliações no catálogo gamer da Overclock Society.">
+    <title>Catálogo de Jogos | Overclock Society</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/notifications.css">
+    <link rel="stylesheet" href="../css/global-search.css">
+    <link rel="stylesheet" href="../css/catalogo-jogos.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+</head>
+<body>
+    <header class="dashboard-header">
+        <a href="dashboard.html" class="logo" aria-label="Overclock Society - Dashboard">
+            <span class="logo-icon">🎮</span>
+            <span>Overclock<span class="logo-highlight">Society</span></span>
+        </a>
+
+        <div class="header-search">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input
+                type="text"
+                placeholder="Buscar jogadores, jogos e publicações..."
+                id="searchInput"
+                aria-label="Buscar jogadores, jogos e publicações"
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="header-actions">
+            <button class="icon-button" type="button" title="Notificações" aria-label="Notificações">🔔</button>
+            <button class="profile-button" id="profileButton" type="button" aria-label="Abrir meu perfil">
+                <div class="avatar">?</div>
+                <div class="profile-name">
+                    <strong>Carregando...</strong>
+                    <span>Online</span>
+                </div>
+            </button>
+        </div>
+    </header>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <nav aria-label="Menu principal">
+                <span class="sidebar-title">MENU</span>
+                <a href="dashboard.html" class="sidebar-link"><span>🏠</span>Dashboard</a>
+                <a href="perfil.html" class="sidebar-link"><span>👤</span>Meu perfil</a>
+                <a href="meus-jogos.html" class="sidebar-link"><span>🎮</span>Meus jogos</a>
+                <a href="catalogo-jogos.html" class="sidebar-link active" aria-current="page"><span>🕹️</span>Catálogo de jogos</a>
+                <a href="amigos.html" class="sidebar-link"><span>👥</span>Amigos</a>
+                <a href="feed.html" class="sidebar-link"><span>📰</span>Feed</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <a href="perfil.html#configuracoes" class="sidebar-link"><span>⚙️</span>Configurações</a>
+                <a href="index.html" class="sidebar-link logout-link"><span>🚪</span>Sair</a>
+            </div>
+        </aside>
+
+        <main class="dashboard-content catalog-content">
+            <div class="catalog-page">
+                <section class="catalog-hero">
+                    <div class="catalog-hero-copy">
+                        <span class="catalog-eyebrow">OVERCLOCK SOCIETY · GAME DATABASE</span>
+                        <h1>Seu próximo jogo começa aqui<span>.</span></h1>
+                        <p>Explore jogos e capas, filtre por gênero ou plataforma e adicione os seus favoritos à coleção.</p>
+                    </div>
+                    <div class="catalog-hero-icon" aria-hidden="true">🎮</div>
+                </section>
+
+                <section class="catalog-search-panel" aria-label="Pesquisar e filtrar jogos">
+                    <form id="catalogSearchForm" class="catalog-search-form">
+                        <label class="visually-hidden" for="catalogSearchInput">Nome do jogo</label>
+                        <span aria-hidden="true">⌕</span>
+                        <input id="catalogSearchInput" type="search" maxlength="80" placeholder="Buscar jogos no catálogo RAWG..." autocomplete="off">
+                        <button class="btn btn-primary" type="submit">Buscar jogos</button>
+                    </form>
+                    <div class="catalog-filters">
+                        <label>Gênero
+                            <select id="catalogGenreSelect">
+                                <option value="">Todos os gêneros</option>
+                            </select>
+                        </label>
+                        <label>Plataforma
+                            <select id="catalogPlatformSelect">
+                                <option value="">Todas as plataformas</option>
+                            </select>
+                        </label>
+                        <label>Ordenar por
+                            <select id="catalogOrderingSelect">
+                                <option value="-added">Mais recentes na RAWG</option>
+                                <option value="-rating">Melhor avaliação RAWG</option>
+                                <option value="-metacritic">Maior Metacritic</option>
+                                <option value="name">Nome (A–Z)</option>
+                                <option value="released">Data de lançamento</option>
+                            </select>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="catalog-results-section">
+                    <div class="catalog-results-heading">
+                        <div>
+                            <span class="catalog-eyebrow">EXPLORE A BIBLIOTECA</span>
+                            <h2>Catálogo global</h2>
+                        </div>
+                        <p id="catalogResultCount" aria-live="polite"></p>
+                    </div>
+                    <p id="catalogStatus" class="catalog-status" role="status" aria-live="polite">Carregando jogos...</p>
+                    <div id="catalogGrid" class="catalog-grid"></div>
+                    <nav id="catalogPagination" class="catalog-pagination" aria-label="Paginação do catálogo" hidden>
+                        <button id="catalogPreviousPage" class="btn btn-secondary" type="button">← Anterior</button>
+                        <span id="catalogPageLabel"></span>
+                        <button id="catalogNextPage" class="btn btn-secondary" type="button">Próxima →</button>
+                    </nav>
+                </section>
+
+                <footer class="catalog-attribution">
+                    <span>Dados de jogos e capas fornecidos pela</span>
+                    <a href="https://rawg.io/" target="_blank" rel="noopener noreferrer">RAWG — Video Games Database API</a>.
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <dialog id="catalogGameDialog" class="catalog-game-dialog" aria-labelledby="catalogDialogTitle">
+        <button id="catalogDialogClose" class="catalog-dialog-close" type="button" aria-label="Fechar detalhes">×</button>
+        <div id="catalogGameDetails" class="catalog-game-details">
+            <p>Carregando detalhes...</p>
+        </div>
+        <p class="catalog-dialog-attribution">Dados fornecidos pela <a href="https://rawg.io/" target="_blank" rel="noopener noreferrer">RAWG</a>.</p>
+    </dialog>
+
+    <script src="../js/api-config.js"></script>
+    <script src="../js/notifications.js"></script>
+    <script src="../js/catalogo-jogos.js"></script>
+    <script src="../js/session.js"></script>
+    <script src="../js/global-search.js"></script>
+</body>
+</html>

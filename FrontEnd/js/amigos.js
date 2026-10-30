@@ -4,13 +4,11 @@
 ========================================= */
 
 const FRIENDS_API_BASE_URL =
-    ["127.0.0.1", "localhost"].includes(window.location.hostname)
-        ? "http://127.0.0.1:8000"
-        : "https://overclock-api.onrender.com";
+    window.OVERCLOCK_API_BASE_URL;
 
 const findFriendsButton = document.getElementById("findFriendsButton");
 const profileButton = document.getElementById("profileButton");
-const searchInput = document.getElementById("searchInput");
+const friendListSearchInput = document.getElementById("friendListSearchInput");
 const requestsList = document.getElementById("requestsList");
 const allFriendsList = document.getElementById("allFriendsList");
 const friendsGrid = document.querySelector(".friends-grid");
@@ -629,8 +627,8 @@ filterButtons.forEach((button) => {
     });
 });
 
-if (searchInput) {
-    searchInput.addEventListener("input", (event) => {
+if (friendListSearchInput) {
+    friendListSearchInput.addEventListener("input", (event) => {
         currentSearchTerm = event.target.value || "";
         applyFriendFilters();
     });

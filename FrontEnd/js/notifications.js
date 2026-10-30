@@ -5,9 +5,7 @@
 (() => {
 
     const NOTIFICATIONS_API_BASE_URL =
-        ["127.0.0.1", "localhost"].includes(window.location.hostname)
-            ? "http://127.0.0.1:8000"
-            : "https://overclock-api.onrender.com";
+        window.OVERCLOCK_API_BASE_URL;
 
     let refreshPromise = null;
 
@@ -699,34 +697,16 @@
        ação + post
     ========================================= */
 
-    async function notifyFeedAction({
-        action,
-        actorName,
-        actorAvatar = null,
-        postId = null,
-        commentText = ""
-    }) {
-        // O servidor identifica o autor da publicação e o usuário autenticado;
-        // não aceitamos no cliente um destinatário arbitrário.
+    async function notifyFeedAction({ action, postId } = {}) {
+        // Curtidas, comentários e repostagens já gravam a notificação dentro
+        // da transação do endpoint do Feed. Aqui só atualizamos a interface;
+        // não existe um segundo endpoint que possa fabricar notificações.
         if (!["like", "comment", "repost"].includes(action)) return null;
         const parsedPostId = Number(postId);
         if (!Number.isSafeInteger(parsedPostId) || parsedPostId <= 0) return null;
 
-        try {
-            const response = await notificationsApiRequest("/feed-action", {
-                method: "POST",
-                body: {
-                    action,
-                    post_id: parsedPostId,
-                    comment_text: String(commentText || "").slice(0, 180) || null
-                }
-            });
-            await refreshNotifications({ quiet: true });
-            return response.notification || null;
-        } catch (error) {
-            console.warn("Não foi possível registrar a notificação da publicação.", error);
-            return null;
-        }
+        await refreshNotifications({ quiet: true });
+        return null;
     }
 
 

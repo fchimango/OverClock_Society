@@ -2,12 +2,35 @@
    CONFIGURAÇÃO
 ========================================= */
 
-const API_URL =
-    ["127.0.0.1", "localhost"].includes(
-        window.location.hostname
-    )
-        ? "http://127.0.0.1:8000"
-        : "https://overclock-api.onrender.com";
+const API_URL = window.OVERCLOCK_API_BASE_URL;
+
+function getSafeNextPage() {
+    const rawNext = new URLSearchParams(window.location.search).get("next");
+    if (!rawNext || rawNext.includes("\\")) return null;
+
+    try {
+        const currentDirectory = window.location.pathname.replace(/[^/]*$/, "");
+        const destination = new URL(rawNext, window.location.href);
+        if (destination.origin !== window.location.origin) return null;
+        if (!destination.pathname.startsWith(currentDirectory)) return null;
+        if (!destination.pathname.toLowerCase().endsWith(".html")) return null;
+        const relativePath = destination.pathname.slice(currentDirectory.length);
+        if (!relativePath || relativePath.includes("/")) return null;
+        return `${relativePath}${destination.search}${destination.hash}`;
+    } catch {
+        return null;
+    }
+}
+
+const authNextPage = getSafeNextPage();
+const signupLink = document.querySelector('.auth-switch a[href="cadastro.html"]');
+const loginLink = document.querySelector('.auth-switch a[href="login.html"]');
+if (authNextPage && signupLink) {
+    signupLink.href = `cadastro.html?next=${encodeURIComponent(authNextPage)}`;
+}
+if (authNextPage && loginLink) {
+    loginLink.href = `login.html?next=${encodeURIComponent(authNextPage)}`;
+}
 
 
 /* =========================================
@@ -151,8 +174,7 @@ if (loginForm) {
 
                 saveLoginSession(body);
 
-                window.location.href =
-                    "dashboard.html";
+                window.location.href = authNextPage || "dashboard.html";
 
             } catch (error) {
                 console.error(
@@ -343,7 +365,10 @@ if (registerForm) {
                 );
 
                 setTimeout(() => {
-                    window.location.href = "login.html";
+                    const nextQuery = authNextPage
+                        ? `?next=${encodeURIComponent(authNextPage)}`
+                        : "";
+                    window.location.href = `login.html${nextQuery}`;
                 }, 1500);
 
             } catch (error) {

@@ -46,9 +46,7 @@ const profilePostsCount = document.getElementById("profilePostsCount");
 ========================================= */
 
 const PROFILE_API_BASE_URL =
-    ["127.0.0.1", "localhost"].includes(window.location.hostname)
-        ? "http://127.0.0.1:8000"
-        : "https://overclock-api.onrender.com";
+    window.OVERCLOCK_API_BASE_URL;
 
 let PROFILE_API_DATA = null;
 

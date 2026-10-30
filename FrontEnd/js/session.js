@@ -2,12 +2,7 @@
    CONFIGURAÇÃO
 ========================================= */
 
-const SESSION_API_URL =
-    ["127.0.0.1", "localhost"].includes(
-        window.location.hostname
-    )
-        ? "http://127.0.0.1:8000"
-        : "https://overclock-api.onrender.com";
+const SESSION_API_URL = window.OVERCLOCK_API_BASE_URL;
 
 
 const PRESENCE_HEARTBEAT_INTERVAL_MS = 45_000;

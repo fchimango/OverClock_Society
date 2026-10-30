@@ -47,6 +47,11 @@
                 <a href="dashboard.html" class="sidebar-link"><span>🏠</span>Dashboard</a>
                 <a href="perfil.html" class="sidebar-link"><span>👤</span>Meu perfil</a>
                 <a href="meus-jogos.html" class="sidebar-link"><span>🎮</span>Meus jogos</a>
+
+                <a href="catalogo-jogos.html" class="sidebar-link">
+                    <span>🕹️</span>
+                    Catálogo de jogos
+                </a>
                 <a href="amigos.html" class="sidebar-link"><span>👥</span>Amigos</a>
                 <a href="feed.html" class="sidebar-link"><span>📰</span>Feed</a>
                 
@@ -216,6 +221,11 @@
                     </div>
                 </section>
 
+                <div class="page-local-filter public-games-local-filter">
+                    <label for="publicGamesFilterInput">Filtrar jogos deste perfil</label>
+                    <input id="publicGamesFilterInput" type="search" placeholder="Buscar na coleção deste jogador..." autocomplete="off">
+                </div>
+
                 <section class="games-section">
                     <div class="games-section-header">
                         <div>
@@ -251,6 +261,8 @@
             </div>
         </main>
     </div>
+
+    <script src="../js/api-config.js"></script>
 
     <script src="../js/notifications.js"></script>
 

@@ -1622,3 +1622,334 @@
     line-height:
         1.5;
 }
+/* =========================================
+   CAPAS DOS JOGOS (RAWG)
+========================================= */
+.game-cover-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
+}
+
+.podium-game-image.has-game-cover,
+.collection-image.has-game-cover,
+.completed-image.has-game-cover {
+    overflow: hidden;
+    padding: 0;
+    background: #0b1220;
+    letter-spacing: normal;
+}
+
+.completed-image.has-game-cover .game-cover-image {
+    border-radius: inherit;
+}
+
+/* O select guarda apenas o valor da opção RAWG; a interface visível é a busca. */
+.add-game-modal .game-name-storage {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    min-height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.game-search-wrap {
+    position: relative;
+    z-index: 5;
+    width: 100%;
+}
+
+.game-search-results[hidden],
+.selected-game-preview[hidden] {
+    display: none !important;
+}
+
+.game-search-results {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 7px);
+    left: 0;
+    right: 0;
+    max-height: min(300px, 42vh);
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid rgba(148, 163, 184, .22);
+    border-radius: 12px;
+    background: #0b1220;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .5);
+}
+
+.game-search-result {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #f8fafc;
+    text-align: left;
+    cursor: pointer;
+}
+
+.game-search-result:hover,
+.game-search-result:focus-visible {
+    border-color: rgba(129, 140, 248, .38);
+    background: rgba(99, 102, 241, .13);
+    outline: none;
+}
+
+.game-search-result-cover {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 55px;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #1e293b;
+    object-fit: cover;
+}
+
+.game-search-result-fallback {
+    display: grid;
+    place-items: center;
+    color: #a5b4fc;
+}
+
+.game-search-result-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.game-search-result-copy strong {
+    color: #f8fafc;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.game-search-result-copy small {
+    overflow: hidden;
+    color: #94a3b8;
+    font-size: 10px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+}
+
+.game-search-message {
+    padding: 15px 10px;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.55;
+    text-align: center;
+}
+
+.game-search-message.error {
+    color: #fca5a5;
+}
+
+.selected-game-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid rgba(129, 140, 248, .3);
+    border-radius: 10px;
+    background: rgba(99, 102, 241, .1);
+}
+
+.selected-game-preview img {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 48px;
+    border-radius: 5px;
+    object-fit: cover;
+}
+
+.selected-game-preview span {
+    flex: 1;
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.selected-game-preview button {
+    display: grid;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 7px;
+    background: rgba(2, 6, 23, .4);
+    color: #cbd5e1;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+
+/* =========================================
+   CONFIRMAÇÃO DENTRO DA OVERCLOCK SOCIETY
+========================================= */
+
+.game-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(2, 6, 23, 0.78);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.game-confirm-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.game-confirm-dialog {
+    position: relative;
+    width: min(100%, 430px);
+    padding: 32px 28px 26px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 18px;
+    background: linear-gradient(145deg, #111827, #0b1220 72%);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    transform: translateY(14px) scale(0.98);
+    transition: transform 0.22s ease;
+}
+
+.game-confirm-overlay.active .game-confirm-dialog {
+    transform: translateY(0) scale(1);
+}
+
+.game-confirm-close {
+    position: absolute;
+    top: 10px;
+    right: 13px;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #94a3b8;
+    font: inherit;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+.game-confirm-close:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+.game-confirm-icon {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 16px;
+    border: 1px solid rgba(248, 113, 113, 0.18);
+    border-radius: 16px;
+    background: rgba(248, 113, 113, 0.1);
+    font-size: 24px;
+}
+
+.game-confirm-dialog h2 {
+    margin: 0 0 10px;
+    color: #f8fafc;
+    font-size: 22px;
+    letter-spacing: -0.4px;
+}
+
+.game-confirm-dialog p {
+    margin: 0;
+    color: #a5b4c8;
+    font-size: 14px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.game-confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 26px;
+}
+
+.game-confirm-actions button {
+    min-width: 116px;
+}
+
+.game-confirm-delete {
+    padding: 12px 18px;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    border-radius: 9px;
+    background: #dc2626;
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.game-confirm-delete:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.game-confirm-dialog button:focus-visible {
+    outline: 2px solid #a5b4fc;
+    outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+    .game-confirm-dialog {
+        padding: 30px 20px 22px;
+    }
+
+    .game-confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .game-confirm-actions button {
+        width: 100%;
+    }
+}
+
+
+.category-hint {
+    margin-top: 8px;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.category-hint[hidden] {
+    display: none;
+}

@@ -14,6 +14,22 @@ const gameModalClose =
 const gameModalCancel =
     document.getElementById("gameModalCancel");
 
+const gameConfirmOverlay =
+    document.getElementById("gameConfirmOverlay");
+const gameConfirmTitle =
+    document.getElementById("gameConfirmTitle");
+const gameConfirmMessage =
+    document.getElementById("gameConfirmMessage");
+const gameConfirmClose =
+    document.getElementById("gameConfirmClose");
+const gameConfirmCancel =
+    document.getElementById("gameConfirmCancel");
+const gameConfirmAccept =
+    document.getElementById("gameConfirmAccept");
+
+let gameConfirmResolver = null;
+let gameConfirmReturnFocus = null;
+
 const addGameForm =
     document.getElementById("addGameForm");
 
@@ -33,6 +49,8 @@ const gameName =
 
 const gameCategory =
     document.getElementById("gameCategory");
+const gameCategoryHint =
+    document.getElementById("gameCategoryHint");
 
 const favoritePosition =
     document.getElementById("favoritePosition");
@@ -45,6 +63,24 @@ const gameRating =
 
 const favoriteLimitMessage =
     document.getElementById("favoriteLimitMessage");
+
+const gameSearchInput =
+    document.getElementById("gameSearchInput");
+
+const gameSearchResults =
+    document.getElementById("gameSearchResults");
+
+const selectedGamePreview =
+    document.getElementById("selectedGamePreview");
+
+const selectedGameImage =
+    document.getElementById("selectedGameImage");
+
+const selectedGameName =
+    document.getElementById("selectedGameName");
+
+const clearSelectedGameButton =
+    document.getElementById("clearSelectedGame");
 
 
 /* =========================================
@@ -71,9 +107,7 @@ const summaryItems =
 ========================================= */
 
 const GAMES_API_BASE_URL =
-    ["127.0.0.1", "localhost"].includes(window.location.hostname)
-        ? "http://127.0.0.1:8000"
-        : "https://overclock-api.onrender.com";
+    window.OVERCLOCK_API_BASE_URL;
 
 function getGamesStorageKeys() {
     const userId = localStorage.getItem("userId");
@@ -95,6 +129,78 @@ function showGamesApiWarning(message) {
 
     gamesApiWarningShown = true;
     window.alert(message);
+}
+
+
+/* =========================================
+   CONFIRMAÇÃO ESTILIZADA NO SITE
+========================================= */
+
+function closeGameConfirm(result = false) {
+    if (!gameConfirmOverlay || !gameConfirmOverlay.classList.contains("active")) {
+        return;
+    }
+
+    gameConfirmOverlay.classList.remove("active");
+    gameConfirmOverlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = gameModalOverlay?.classList.contains("active") ? "hidden" : "";
+
+    const resolve = gameConfirmResolver;
+    gameConfirmResolver = null;
+    const returnFocus = gameConfirmReturnFocus;
+    gameConfirmReturnFocus = null;
+
+    if (typeof resolve === "function") {
+        resolve(Boolean(result));
+    }
+
+    if (returnFocus?.isConnected && typeof returnFocus.focus === "function") {
+        window.setTimeout(() => returnFocus.focus(), 0);
+    }
+}
+
+function showGameConfirm({
+    title = "Remover jogo?",
+    message = "Deseja remover este jogo desta categoria?",
+    confirmLabel = "Remover jogo"
+} = {}) {
+    return new Promise((resolve) => {
+        if (!gameConfirmOverlay) {
+            // Nunca recorremos ao confirm() nativo do navegador.
+            resolve(false);
+            return;
+        }
+
+        if (gameConfirmResolver) {
+            closeGameConfirm(false);
+        }
+
+        gameConfirmReturnFocus = document.activeElement;
+        gameConfirmTitle.textContent = title;
+        gameConfirmMessage.textContent = message;
+        gameConfirmAccept.textContent = confirmLabel;
+        gameConfirmResolver = resolve;
+        gameConfirmOverlay.classList.add("active");
+        gameConfirmOverlay.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+
+        window.requestAnimationFrame(() => gameConfirmCancel?.focus());
+    });
+}
+
+if (gameConfirmCancel) {
+    gameConfirmCancel.addEventListener("click", () => closeGameConfirm(false));
+}
+if (gameConfirmClose) {
+    gameConfirmClose.addEventListener("click", () => closeGameConfirm(false));
+}
+if (gameConfirmAccept) {
+    gameConfirmAccept.addEventListener("click", () => closeGameConfirm(true));
+}
+if (gameConfirmOverlay) {
+    gameConfirmOverlay.addEventListener("click", (event) => {
+        if (event.target === gameConfirmOverlay) closeGameConfirm(false);
+    });
 }
 
 async function getGamesApiError(response) {
@@ -239,6 +345,392 @@ function escapeHtml(value) {
 
 
 /* =========================================
+   IMAGENS E PESQUISA DE JOGOS NA RAWG
+========================================= */
+
+const RAWG_COVER_CACHE_PREFIX = "overclockSocietyRawgCovers_";
+let rawgSearchTimer = null;
+let rawgSearchSequence = 0;
+let rawgSearchController = null;
+
+function normalizeCoverKey(name) {
+    return String(name || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 160);
+}
+
+function safeRawgImageUrl(value) {
+    try {
+        const url = new URL(String(value || ""));
+        return url.protocol === "https:" ? url.href : "";
+    } catch {
+        return "";
+    }
+}
+
+function getCoverCacheStorageKey() {
+    const userId = localStorage.getItem("userId") || "current";
+    return `${RAWG_COVER_CACHE_PREFIX}${userId}`;
+}
+
+function readCoverCache() {
+    try {
+        const value = JSON.parse(localStorage.getItem(getCoverCacheStorageKey()) || "{}");
+        return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    } catch {
+        return {};
+    }
+}
+
+function getCachedGameCover(name) {
+    const key = normalizeCoverKey(name);
+    if (!key) return "";
+    return safeRawgImageUrl(readCoverCache()[key]);
+}
+
+function saveGameCover(name, imageUrl) {
+    const key = normalizeCoverKey(name);
+    const safeUrl = safeRawgImageUrl(imageUrl);
+    if (!key || !safeUrl) return;
+
+    try {
+        const cache = readCoverCache();
+        cache[key] = safeUrl;
+        const entries = Object.entries(cache);
+        const limitedCache = Object.fromEntries(entries.slice(-500));
+        localStorage.setItem(getCoverCacheStorageKey(), JSON.stringify(limitedCache));
+    } catch (error) {
+        console.debug("Não foi possível salvar o cache local das capas.");
+    }
+
+    applyCoverToMatchingCards(name, safeUrl);
+}
+
+function applyGameCover(imageContainer, name, imageUrl = "") {
+    if (!imageContainer) return;
+    const safeUrl = safeRawgImageUrl(imageUrl) || getCachedGameCover(name);
+    if (!safeUrl) return;
+
+    const existingImage = imageContainer.querySelector("img.game-cover-image");
+    if (existingImage && existingImage.src === safeUrl) return;
+
+    const image = document.createElement("img");
+    image.className = "game-cover-image";
+    image.src = safeUrl;
+    image.alt = `Capa de ${name || "jogo"}`;
+    image.loading = "lazy";
+    image.decoding = "async";
+    image.referrerPolicy = "no-referrer";
+    image.addEventListener("error", () => {
+        image.remove();
+        imageContainer.classList.remove("has-game-cover");
+    }, { once: true });
+
+    imageContainer.replaceChildren(image);
+    imageContainer.classList.add("has-game-cover");
+}
+
+function getCoverFromCard(card) {
+    const image = card?.querySelector("img.game-cover-image");
+    return safeRawgImageUrl(image?.currentSrc || image?.src || "");
+}
+
+function applyCoverToCard(card, name, imageUrl = "") {
+    if (!card) return;
+    const imageContainer = card.querySelector(
+        ".podium-game-image, .collection-image, .completed-image"
+    );
+    applyGameCover(imageContainer, name, imageUrl);
+}
+
+function applyCoverToMatchingCards(name, imageUrl) {
+    const desiredKey = normalizeCoverKey(name);
+    if (!desiredKey) return;
+
+    document.querySelectorAll(".podium-card, .collection-card, .completed-game").forEach((card) => {
+        const cardName = card.querySelector("h3")?.textContent.trim() || "";
+        if (normalizeCoverKey(cardName) === desiredKey) {
+            applyCoverToCard(card, cardName, imageUrl);
+        }
+    });
+}
+
+function ensureGameOption(name, genre = "Gênero não informado", imageUrl = "", rawgId = "") {
+    const cleanedName = String(name || "").trim().slice(0, 160);
+    if (!cleanedName) return null;
+
+    let option = Array.from(gameName.options).find(
+        (candidate) => normalizeGameName(candidate.value) === normalizeGameName(cleanedName)
+    );
+
+    if (!option) {
+        option = document.createElement("option");
+        option.value = cleanedName;
+        option.textContent = cleanedName;
+        gameName.appendChild(option);
+    }
+
+    option.dataset.genre = String(genre || "Gênero não informado").slice(0, 120);
+    const safeUrl = safeRawgImageUrl(imageUrl);
+    if (safeUrl) {
+        option.dataset.imageUrl = safeUrl;
+        option.dataset.rawgId = String(rawgId || "");
+        saveGameCover(cleanedName, safeUrl);
+    }
+
+    return option;
+}
+
+function getSelectedGameImage(name = gameName.value) {
+    const selectedOption = Array.from(gameName.options).find(
+        (option) => normalizeGameName(option.value) === normalizeGameName(name)
+    );
+    const fromOption = safeRawgImageUrl(selectedOption?.dataset.imageUrl || "");
+    if (fromOption) return fromOption;
+
+    const cached = getCachedGameCover(name);
+    if (cached) return cached;
+
+    if (editingCard && normalizeGameName(name) === normalizeGameName(
+        editingCard.querySelector("h3")?.textContent.trim() || ""
+    )) {
+        return getCoverFromCard(editingCard);
+    }
+
+    return "";
+}
+
+function showSelectedGame(name, imageUrl = "") {
+    if (!selectedGamePreview || !selectedGameName) return;
+    const safeUrl = safeRawgImageUrl(imageUrl) || getCachedGameCover(name);
+    selectedGameName.textContent = name || "";
+
+    if (selectedGameImage) {
+        selectedGameImage.hidden = !safeUrl;
+        if (safeUrl) {
+            selectedGameImage.src = safeUrl;
+            selectedGameImage.alt = `Capa de ${name}`;
+        } else {
+            selectedGameImage.removeAttribute("src");
+            selectedGameImage.alt = "";
+        }
+    }
+
+    selectedGamePreview.hidden = !name;
+    selectedGamePreview.classList.toggle("has-image", Boolean(safeUrl));
+}
+
+function clearGameSearchResults() {
+    if (!gameSearchResults) return;
+    gameSearchResults.replaceChildren();
+    gameSearchResults.hidden = true;
+    gameSearchResults.removeAttribute("aria-busy");
+}
+
+function showGameSearchMessage(message, kind = "") {
+    if (!gameSearchResults) return;
+    gameSearchResults.replaceChildren();
+    const item = document.createElement("div");
+    item.className = `game-search-message${kind ? ` ${kind}` : ""}`;
+    item.textContent = message;
+    gameSearchResults.appendChild(item);
+    gameSearchResults.hidden = false;
+    gameSearchResults.removeAttribute("aria-busy");
+}
+
+async function searchRawgGames(term) {
+    const query = String(term || "").trim();
+    const sequence = ++rawgSearchSequence;
+    if (rawgSearchController) rawgSearchController.abort();
+
+    if (query.length < 2) {
+        clearGameSearchResults();
+        return;
+    }
+
+    if (!GAMES_API_BASE_URL) {
+        showGameSearchMessage("A API da Overclock Society ainda não está configurada.", "error");
+        return;
+    }
+
+    rawgSearchController = new AbortController();
+    gameSearchResults.hidden = false;
+    gameSearchResults.replaceChildren();
+    gameSearchResults.setAttribute("aria-busy", "true");
+    showGameSearchMessage("Buscando jogos na RAWG...");
+    gameSearchResults.setAttribute("aria-busy", "true");
+
+    try {
+        const params = new URLSearchParams({
+            q: query,
+            page: "1",
+            page_size: "8",
+            ordering: "-rating"
+        });
+        const response = await fetch(
+            `${GAMES_API_BASE_URL}/catalog/games?${params.toString()}`,
+            { headers: { Accept: "application/json" }, signal: rawgSearchController.signal }
+        );
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(typeof body.detail === "string" ? body.detail : "Não foi possível consultar a RAWG.");
+        }
+        if (sequence !== rawgSearchSequence) return;
+
+        const results = Array.isArray(body.results) ? body.results : [];
+        if (!results.length) {
+            showGameSearchMessage(`Nenhum jogo encontrado para “${query}”.`);
+            return;
+        }
+
+        gameSearchResults.replaceChildren();
+        results.forEach((game) => {
+            if (!game?.name) return;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "game-search-result";
+            button.setAttribute("role", "option");
+            button.setAttribute("aria-selected", "false");
+
+            const imageUrl = safeRawgImageUrl(game.background_image);
+            if (imageUrl) {
+                const image = document.createElement("img");
+                image.className = "game-search-result-cover";
+                image.src = imageUrl;
+                image.alt = "";
+                image.loading = "lazy";
+                image.referrerPolicy = "no-referrer";
+                button.appendChild(image);
+            } else {
+                const fallback = document.createElement("span");
+                fallback.className = "game-search-result-cover game-search-result-fallback";
+                fallback.textContent = "🎮";
+                button.appendChild(fallback);
+            }
+
+            const text = document.createElement("span");
+            text.className = "game-search-result-copy";
+            const title = document.createElement("strong");
+            title.textContent = game.name;
+            const genre = document.createElement("small");
+            genre.textContent = Array.isArray(game.genres)
+                ? game.genres.map((item) => item?.name).filter(Boolean).join(" · ") || "Gênero não informado"
+                : "Gênero não informado";
+            text.append(title, genre);
+            button.appendChild(text);
+
+            button.addEventListener("click", () => {
+                const genreText = Array.isArray(game.genres)
+                    ? game.genres.map((item) => item?.name).filter(Boolean).join(" • ") || "Gênero não informado"
+                    : "Gênero não informado";
+                const option = ensureGameOption(game.name, genreText, imageUrl, game.id);
+                if (!option) return;
+                gameName.value = option.value;
+                gameSearchInput.value = game.name;
+                showSelectedGame(game.name, imageUrl);
+                clearGameSearchResults();
+                refreshGameOptions(editingCard, game.name);
+            });
+
+            gameSearchResults.appendChild(button);
+        });
+        gameSearchResults.hidden = gameSearchResults.children.length === 0;
+        gameSearchResults.removeAttribute("aria-busy");
+    } catch (error) {
+        if (error.name === "AbortError" || sequence !== rawgSearchSequence) return;
+        console.warn("Falha na pesquisa de jogos RAWG:", error);
+        showGameSearchMessage(`${error.message || "Não foi possível pesquisar jogos."} Confira se o backend está ligado e RAWG_API_KEY configurada.`, "error");
+    }
+}
+
+function initializeRawgGameSearch() {
+    if (!gameSearchInput) return;
+
+    gameSearchInput.addEventListener("input", () => {
+        const typed = gameSearchInput.value.trim();
+        const selectedName = gameName.value;
+        if (selectedName && normalizeGameName(typed) !== normalizeGameName(selectedName)) {
+            gameName.value = "";
+            showSelectedGame("", "");
+        }
+
+        if (rawgSearchTimer) window.clearTimeout(rawgSearchTimer);
+        if (typed.length < 2) {
+            clearGameSearchResults();
+            return;
+        }
+        rawgSearchTimer = window.setTimeout(() => void searchRawgGames(typed), 300);
+    });
+
+    gameSearchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") clearGameSearchResults();
+    });
+
+    clearSelectedGameButton?.addEventListener("click", () => {
+        gameName.value = "";
+        gameSearchInput.value = "";
+        showSelectedGame("", "");
+        clearGameSearchResults();
+        gameSearchInput.focus();
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest(".game-search-wrap")) clearGameSearchResults();
+    });
+}
+
+async function hydrateGameCovers() {
+    const cards = Array.from(document.querySelectorAll(".podium-card, .collection-card, .completed-game"));
+    const missingByKey = new Map();
+
+    cards.forEach((card) => {
+        const name = card.querySelector("h3")?.textContent.trim() || "";
+        if (!name) return;
+        const cached = getCachedGameCover(name) || getCoverFromCard(card);
+        if (cached) {
+            saveGameCover(name, cached);
+            applyCoverToCard(card, name, cached);
+        } else {
+            const key = normalizeCoverKey(name);
+            if (key && !missingByKey.has(key)) missingByKey.set(key, name);
+        }
+    });
+
+    if (!GAMES_API_BASE_URL || missingByKey.size === 0) return;
+    const entries = Array.from(missingByKey.entries());
+    let nextIndex = 0;
+    const worker = async () => {
+        while (nextIndex < entries.length) {
+            const index = nextIndex++;
+            const [key, name] = entries[index];
+            try {
+                const params = new URLSearchParams({ q: name, page: "1", page_size: "8", ordering: "-rating" });
+                const response = await fetch(`${GAMES_API_BASE_URL}/catalog/games?${params.toString()}`, {
+                    headers: { Accept: "application/json" }
+                });
+                if (!response.ok) continue;
+                const payload = await response.json();
+                const results = Array.isArray(payload.results) ? payload.results : [];
+                const exact = results.find((game) => normalizeCoverKey(game?.name) === key);
+                const chosen = exact || results[0];
+                const imageUrl = safeRawgImageUrl(chosen?.background_image);
+                if (imageUrl) saveGameCover(name, imageUrl);
+            } catch (error) {
+                // As capas são opcionais; falha no catálogo não deve bloquear a coleção.
+                console.debug(`Capa ainda indisponível para ${name}.`);
+            }
+        }
+    };
+
+    await Promise.all(Array.from({ length: Math.min(3, entries.length) }, () => worker()));
+}
+
+
+/* =========================================
    CATÁLOGO
 ========================================= */
 
@@ -257,40 +749,24 @@ function getGameGenre(
     name,
     card = null
 ) {
-
-    const game =
-        getGameFromCatalog(name);
-
-
-    if (game) {
-
-        return game.genre;
+    const selectedOption = Array.from(gameName.options).find(
+        (option) => normalizeGameName(option.value) === normalizeGameName(name)
+    );
+    const selectedGenre = selectedOption?.dataset.genre;
+    if (selectedGenre && selectedGenre !== "Gênero não informado") {
+        return selectedGenre;
     }
 
-
-    /*
-     * Se for um jogo antigo que não
-     * existe no catálogo temporário,
-     * mantém o gênero que já estava
-     * no card.
-     */
+    const game = getGameFromCatalog(name);
+    if (game) return game.genre;
 
     if (card) {
-
-        const data =
-            getCardData(card);
-
-
-        if (data) {
-
-            return data.genre;
-        }
+        const data = getCardData(card);
+        if (data?.genre) return data.genre;
     }
-
 
     return "Gênero não informado";
 }
-
 
 /* =========================================
    NOTA
@@ -578,57 +1054,16 @@ function ensureGameIsLiked(
 ========================================= */
 
 function buildGameOptions() {
-
-    gameName.innerHTML = "";
-
-
-    const placeholder =
-        document.createElement(
-            "option"
-        );
-
-
+    gameName.replaceChildren();
+    const placeholder = document.createElement("option");
     placeholder.value = "";
-
-    placeholder.textContent =
-        "Selecione um jogo...";
-
-    placeholder.disabled =
-        true;
-
-    placeholder.selected =
-        true;
-
-
-    gameName.appendChild(
-        placeholder
-    );
-
-
-    gameCatalog.forEach(
-        (game) => {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-
-            option.value =
-                game.name;
-
-            option.textContent =
-                game.name;
-
-
-            gameName.appendChild(
-                option
-            );
-
-        }
-    );
+    placeholder.textContent = "Selecione um jogo pesquisado na RAWG...";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    gameName.appendChild(placeholder);
 }
 
+initializeRawgGameSearch();
 
 /* =========================================
    ATUALIZAR JOGOS DISPONÍVEIS
@@ -638,12 +1073,12 @@ function buildGameOptions() {
    1 - Não repetir dentro da mesma
        categoria.
 
-   2 - Zerado só pode ser escolhido
-       se já existir em Jogos Que Gosto.
+   2 - A categoria Zerados pode ser adicionada
+       sem remover outras classificações; a entrada
+       em Jogos Que Gosto é criada quando necessária.
 
-   3 - Favorito pode ser escolhido mesmo
-       sem estar em Jogos Que Gosto,
-       pois será adicionado automaticamente.
+   3 - Favorito também garante a entrada-base em
+       Jogos Que Gosto automaticamente.
 ========================================= */
 
 function refreshGameOptions(
@@ -679,25 +1114,11 @@ function refreshGameOptions(
 
 
         if (!exists) {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-
-            option.value =
-                selectedName;
-
-            option.textContent =
-                selectedName;
-
-            option.dataset.temporary =
-                "true";
-
-
-            gameName.appendChild(
-                option
+            ensureGameOption(
+                selectedName,
+                getGameGenre(selectedName, excludeCard),
+                getCachedGameCover(selectedName),
+                ""
             );
         }
     }
@@ -707,12 +1128,6 @@ function refreshGameOptions(
         getGamesInCategory(
             category,
             excludeCard
-        );
-
-
-    const likedGames =
-        getGamesInCategory(
-            "liked"
         );
 
 
@@ -751,24 +1166,10 @@ function refreshGameOptions(
                     category ===
                     "completed"
                 ) {
-
-                    const isLiked =
-                        likedGames.has(
-                            normalized
-                        );
-
-
                     const alreadyCompleted =
-                        gamesInCategory.has(
-                            normalized
-                        );
+                        gamesInCategory.has(normalized);
 
-
-                    option.disabled =
-                        !isLiked ||
-                        alreadyCompleted;
-
-
+                    option.disabled = alreadyCompleted;
                     return;
                 }
 
@@ -831,6 +1232,9 @@ function openGameModal() {
 
 
     addGameForm.reset();
+    gameSearchInput.value = "";
+    clearGameSearchResults();
+    showSelectedGame("", "");
 
 
     gameCategory.disabled =
@@ -840,6 +1244,7 @@ function openGameModal() {
     gameCategory.value =
         "liked";
 
+    if (gameCategoryHint) gameCategoryHint.hidden = true;
 
     gameModalTitle.textContent =
         "Adicionar jogo";
@@ -942,14 +1347,16 @@ gameModalOverlay.addEventListener(
 document.addEventListener(
     "keydown",
     (event) => {
+        if (event.key !== "Escape") return;
 
-        if (
-            event.key === "Escape"
-        ) {
-
-            closeGameModal();
+        if (gameConfirmOverlay?.classList.contains("active")) {
+            closeGameConfirm(false);
+            return;
         }
 
+        if (gameModalOverlay?.classList.contains("active")) {
+            closeGameModal();
+        }
     }
 );
 
@@ -1692,22 +2099,28 @@ function openEditGameModal(card) {
         "Salvar alterações";
 
 
-    // A categoria pode ser alterada durante a edição.
+    // Ao editar, selecionar Favoritos ou Zerados pode adicionar uma
+    // classificação adicional, sem apagar a classificação existente.
     gameCategory.disabled = false;
     gameCategory.value = data.category;
+    if (gameCategoryHint) {
+        gameCategoryHint.hidden = !["favorite", "completed"].includes(data.category);
+    }
 
 
     buildGameOptions();
 
-
+    const existingCover = getCoverFromCard(card) || getCachedGameCover(data.name);
+    ensureGameOption(data.name, data.genre, existingCover, "");
     refreshGameOptions(
         card,
         data.name
     );
 
-
-    gameName.value =
-        data.name;
+    gameName.value = data.name;
+    gameSearchInput.value = data.name;
+    showSelectedGame(data.name, existingCover);
+    clearGameSearchResults();
 
 
     gameRating.value =
@@ -1780,6 +2193,8 @@ function updateLikedCard(
         ".collection-info strong"
     ).textContent =
         `⭐ ${formatRating(rating)}`;
+
+    applyCoverToCard(card, name, getCachedGameCover(name));
 }
 
 
@@ -1803,6 +2218,8 @@ function updateCompletedCard(
         ".completed-info span"
     ).textContent =
         genre;
+
+    applyCoverToCard(card, name, getCachedGameCover(name));
 }
 
 
@@ -1833,6 +2250,8 @@ function updateFavoriteCard(
         ".podium-rating"
     ).textContent =
         `⭐ ${formatRating(rating)}`;
+
+    applyCoverToCard(card, name, getCachedGameCover(name));
 }
 
 
@@ -1886,6 +2305,7 @@ function createLikedCard(
     `;
 
 
+    applyCoverToCard(card, name, getCachedGameCover(name));
     addGameActions(card);
 
 
@@ -1957,6 +2377,7 @@ function createCompletedCard(
     `;
 
 
+    applyCoverToCard(card, name, getCachedGameCover(name));
     addGameActions(card);
 
 
@@ -2032,6 +2453,7 @@ function createFavoriteCard(
     `;
 
 
+    applyCoverToCard(card, name, getCachedGameCover(name));
     addGameActions(card);
 
 
@@ -2144,7 +2566,7 @@ function initializeGameActions() {
    REMOVER
 ========================================= */
 
-function removeGame(card) {
+async function removeGame(card) {
 
     const data =
         getCardData(card);
@@ -2221,10 +2643,11 @@ function removeGame(card) {
     }
 
 
-    const confirmed =
-        confirm(
-            `Deseja remover "${data.name}" desta categoria?`
-        );
+    const confirmed = await showGameConfirm({
+        title: "Remover jogo?",
+        message: `Deseja remover "${data.name}" desta categoria?`,
+        confirmLabel: "Remover jogo"
+    });
 
 
     if (!confirmed) {
@@ -2446,6 +2869,9 @@ addGameForm.addEventListener(
         }
 
 
+        const selectedImageUrl = getSelectedGameImage(name);
+        if (selectedImageUrl) saveGameCover(name, selectedImageUrl);
+
         const genre =
             getGameGenre(
                 name,
@@ -2500,26 +2926,17 @@ addGameForm.addEventListener(
          * ==================================
          * JOGOS ZERADOS
          *
-         * Precisa existir em Jogos Que Gosto.
+         * É uma marcação independente. Caso o jogo ainda
+         * não esteja em "Jogos Que Gosto", criamos essa
+         * entrada-base sem remover outras categorias.
          * ==================================
          */
 
         if (
-            category ===
-                "completed" &&
-
-            !isGameInCategory(
-                name,
-                "liked"
-            )
+            category === "completed" &&
+            !isGameInCategory(name, "liked")
         ) {
-
-            alert(
-                'Para adicionar um jogo em "Jogos Zerados", primeiro adicione-o em "Jogos Que Gosto".'
-            );
-
-
-            return;
+            ensureGameIsLiked(name, genre, rating);
         }
 
 
@@ -2659,12 +3076,23 @@ function saveEditedGame(
         return;
     }
 
-    // Quando a categoria não muda, não permite duplicar outro jogo nela.
+    // Não repete o mesmo título dentro da categoria selecionada.
     if (
         !changingCategory &&
         isGameInCategory(name, targetCategory, editingCard)
     ) {
         alert('Este jogo já existe nesta categoria.');
+        return;
+    }
+
+    // Ao alternar entre Favoritos e Zerados, o card original será mantido.
+    // Se o usuário também renomear o jogo, evitamos duplicar na categoria de origem.
+    if (
+        changingCategory &&
+        (sourceCategory === 'favorite' || sourceCategory === 'completed') &&
+        isGameInCategory(name, sourceCategory, editingCard)
+    ) {
+        alert('Já existe um jogo com esse nome na categoria original.');
         return;
     }
 
@@ -2770,39 +3198,41 @@ function saveEditedGame(
         }
     } else if (sourceCategory === 'favorite') {
         if (targetCategory === 'favorite') {
-            // Este caso é tratado no bloco de mesma categoria acima; fica aqui
-            // como proteção caso novas categorias sejam adicionadas no futuro.
             ensureGameIsLiked(name, genre, rating);
             updateFavoriteCard(editingCard, name, genre, rating);
+        } else if (targetCategory === 'completed') {
+            // Favorito e zerado são classificações independentes:
+            // mantém o card no pódio e adiciona/atualiza o card de zerado.
+            ensureGameIsLiked(name, genre, rating);
+            updateFavoriteCard(editingCard, name, genre, rating);
+
+            const existingCompleted = findGameCardInCategory(name, 'completed');
+            if (existingCompleted) {
+                updateCompletedCard(existingCompleted, name, genre);
+            } else {
+                createCompletedCard(name, genre);
+            }
         } else {
+            // Selecionar apenas "Jogos Que Gosto" continua sendo uma
+            // transferência do pódio para a coleção-base.
             ensureGameIsLiked(name, genre, rating);
             editingCard.remove();
-
-            if (targetCategory === 'completed') {
-                const existingCompleted = findGameCardInCategory(name, 'completed');
-
-                if (existingCompleted) {
-                    updateCompletedCard(existingCompleted, name, genre);
-                } else {
-                    createCompletedCard(name, genre);
-                }
-            }
-            // Para targetCategory === 'liked', a entrada-base já existe ou
-            // foi criada por ensureGameIsLiked; removemos apenas o pódio.
         }
     } else if (sourceCategory === 'completed') {
         if (targetCategory === 'completed') {
             updateCompletedCard(editingCard, name, genre);
-        } else {
+        } else if (targetCategory === 'favorite') {
+            // Marcar como favorito não apaga o status de jogo zerado.
             ensureGameIsLiked(name, genre, rating);
-            editingCard.remove();
+            updateCompletedCard(editingCard, name, genre);
 
-            if (
-                targetCategory === 'favorite' &&
-                !findGameCardInCategory(name, 'favorite')
-            ) {
+            if (!findGameCardInCategory(name, 'favorite')) {
                 createFavoriteCard(name, genre, rating, position);
             }
+        } else {
+            // Transferência explícita de zerado para a coleção-base.
+            ensureGameIsLiked(name, genre, rating);
+            editingCard.remove();
         }
     }
 
@@ -2900,32 +3330,6 @@ if (profileButton) {
 
 
 /* =========================================
-   PESQUISA
-========================================= */
-
-const searchInput =
-    document.getElementById(
-        "searchInput"
-    );
-
-
-if (searchInput) {
-
-    searchInput.addEventListener(
-        "input",
-        (event) => {
-
-            console.log(
-                "Pesquisa:",
-                event.target.value
-            );
-
-        }
-    );
-}
-
-
-/* =========================================
    VER TODOS - GOSTO
 ========================================= */
 
@@ -2976,6 +3380,76 @@ if (seeCompletedGamesButton) {
 
 
 /* =========================================
+   IMPORTAR JOGO A PARTIR DO CATÁLOGO RAWG
+========================================= */
+
+function openCatalogGameFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const name = String(params.get("addGame") || "").trim().slice(0, 160);
+    if (!name) return;
+
+    const genre = String(params.get("addGenre") || "Gênero não informado")
+        .trim()
+        .slice(0, 120) || "Gênero não informado";
+    const imageUrl = safeRawgImageUrl(params.get("addImage") || "");
+    const rawgId = String(params.get("rawgId") || "").slice(0, 24);
+
+    if (!getGameFromCatalog(name)) {
+        gameCatalog.push({ name, genre });
+    } else {
+        const knownGame = getGameFromCatalog(name);
+        if (knownGame && genre !== "Gênero não informado") knownGame.genre = genre;
+    }
+
+    // Remove parâmetros de importação para que atualizar a página não reabra o modal.
+    params.delete("addGame");
+    params.delete("addGenre");
+    params.delete("addImage");
+    params.delete("addYear");
+    params.delete("rawgId");
+    const remaining = params.toString();
+    window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}${remaining ? `?${remaining}` : ""}${window.location.hash}`
+    );
+
+    const alreadyLiked = isGameInCategory(name, "liked");
+    const alreadyFavorite = isGameInCategory(name, "favorite");
+    const alreadyCompleted = isGameInCategory(name, "completed");
+
+    let targetCategory = "liked";
+    if (alreadyLiked) {
+        if (!alreadyFavorite && getFavoriteCount() < 3) {
+            targetCategory = "favorite";
+        } else if (!alreadyCompleted) {
+            targetCategory = "completed";
+        } else {
+            window.alert("Este jogo já está nas três categorias da sua coleção.");
+            return;
+        }
+    }
+
+    openGameModal();
+    gameCategory.value = targetCategory;
+    gameCategory.dispatchEvent(new Event("change", { bubbles: true }));
+    ensureGameOption(name, genre, imageUrl, rawgId);
+    gameName.value = name;
+    gameSearchInput.value = name;
+    showSelectedGame(name, imageUrl);
+    if (imageUrl) saveGameCover(name, imageUrl);
+    gameRating.value = "";
+
+    if (targetCategory === "favorite") {
+        const freePosition = Array.from(favoritePosition.options).find((option) => !option.disabled);
+        if (freePosition) favoritePosition.value = freePosition.value;
+    }
+
+    gameSearchInput.focus();
+}
+
+
+/* =========================================
    INICIALIZAÇÃO DA PÁGINA
 ========================================= */
 
@@ -3006,6 +3480,8 @@ async function initializeGamesPage() {
         await saveGamesToStorage();
     }
 
+    await hydrateGameCovers();
+    openCatalogGameFromQuery();
     console.log("🎮 Meus Jogos carregado com sucesso.");
 }
 

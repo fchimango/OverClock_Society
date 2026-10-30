@@ -4,9 +4,7 @@
 ========================================= */
 
 const PUBLIC_PROFILE_API_BASE_URL =
-    ["127.0.0.1", "localhost"].includes(window.location.hostname)
-        ? "http://127.0.0.1:8000"
-        : "https://overclock-api.onrender.com";
+    window.OVERCLOCK_API_BASE_URL;
 
 let currentPublicProfile = null;
 let publicProfileEndpoint = null;
@@ -900,9 +898,9 @@ if (profileHeaderButton) {
     });
 }
 
-const searchInput = document.getElementById("searchInput");
-if (searchInput) {
-    searchInput.addEventListener("input", (event) => {
+const publicGamesFilterInput = document.getElementById("publicGamesFilterInput");
+if (publicGamesFilterInput) {
+    publicGamesFilterInput.addEventListener("input", (event) => {
         const term = event.target.value.trim().toLocaleLowerCase("pt-BR");
         document.querySelectorAll(".collection-card, .completed-game, .podium-card").forEach((card) => {
             card.style.display = card.textContent.toLocaleLowerCase("pt-BR").includes(term) ? "" : "none";

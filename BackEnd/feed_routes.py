@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import re
 import unicodedata
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -400,32 +400,142 @@ def serialize_post(
     }
 
 
+def serialize_posts_batch(
+    posts: list[models.Post],
+    db: Session,
+    current_user: models.User,
+) -> list[dict]:
+    """Serialize a page of posts using a bounded number of database queries.
+
+    The older single-post serializer performs several lookups per post. For
+    the feed list, load authors, comments, counts and current-user reactions in
+    batches so the query count does not grow linearly with the page size.
+    """
+    if not posts:
+        return []
+
+    post_ids = [post.id for post in posts]
+    user_ids = {post.user_id for post in posts}
+
+    authors = {
+        user.id: user
+        for user in db.scalars(
+            select(models.User).where(models.User.id.in_(user_ids))
+        ).all()
+    }
+
+    comments_by_post: dict[int, list[dict]] = {post_id: [] for post_id in post_ids}
+    comment_rows = db.execute(
+        select(models.Comment, models.User)
+        .join(models.User, models.Comment.user_id == models.User.id)
+        .where(models.Comment.post_id.in_(post_ids))
+        .order_by(models.Comment.created_at.asc(), models.Comment.id.asc())
+    ).all()
+    for comment, author in comment_rows:
+        comments_by_post.setdefault(comment.post_id, []).append(
+            serialize_comment(comment, author)
+        )
+
+    likes_by_post = {
+        post_id: int(count)
+        for post_id, count in db.execute(
+            select(models.PostLike.post_id, func.count())
+            .where(models.PostLike.post_id.in_(post_ids))
+            .group_by(models.PostLike.post_id)
+        ).all()
+    }
+    reposts_by_post = {
+        post_id: int(count)
+        for post_id, count in db.execute(
+            select(models.PostRepost.post_id, func.count())
+            .where(models.PostRepost.post_id.in_(post_ids))
+            .group_by(models.PostRepost.post_id)
+        ).all()
+    }
+    liked_post_ids = set(
+        db.scalars(
+            select(models.PostLike.post_id).where(
+                models.PostLike.user_id == current_user.id,
+                models.PostLike.post_id.in_(post_ids),
+            )
+        ).all()
+    )
+    reposted_post_ids = set(
+        db.scalars(
+            select(models.PostRepost.post_id).where(
+                models.PostRepost.user_id == current_user.id,
+                models.PostRepost.post_id.in_(post_ids),
+            )
+        ).all()
+    )
+
+    result: list[dict] = []
+    for post in posts:
+        author = authors.get(post.user_id)
+        if author is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Não foi possível localizar o autor da publicação.",
+            )
+
+        result.append({
+            "id": post.id,
+            "userId": post.user_id,
+            "author": author.name,
+            "username": f"@{author.username or fallback_username(author.name)}",
+            "avatar": get_avatar(author.name),
+            "content": post.content,
+            "createdAt": format_relative_time(post.created_at),
+            "createdAtISO": post.created_at.isoformat() if post.created_at else None,
+            "likes": likes_by_post.get(post.id, 0),
+            "reposts": reposts_by_post.get(post.id, 0),
+            "liked": post.id in liked_post_ids,
+            "reposted": post.id in reposted_post_ids,
+            "comments": comments_by_post.get(post.id, []),
+        })
+
+    return result
+
+
 # =========================================
-# LISTAR PUBLICAÇÕES
+# LISTAR PUBLICAÇÕES COM PAGINAÇÃO
 # =========================================
 
 @router.get("/posts")
 def list_posts(
-    current_user: models.User = Depends(
-        get_current_user
-    ),
-    db: Session = Depends(get_db)
+    page: int = Query(default=1, ge=1, le=100000),
+    page_size: int = Query(default=20, ge=1, le=50),
+    post_id: int | None = Query(default=None, ge=1),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    posts = db.scalars(
-        select(models.Post).order_by(
-            models.Post.created_at.desc(),
-            models.Post.id.desc()
-        )
-    ).all()
+    offset = (page - 1) * page_size
 
-    return [
-        serialize_post(
-            post,
-            db,
-            current_user
-        )
-        for post in posts
-    ]
+    # Busca um item extra para saber se existe próxima página sem executar
+    # um COUNT(*) completo da tabela em cada atualização do Feed.
+    fetched_posts = db.scalars(
+        select(models.Post)
+        .order_by(models.Post.created_at.desc(), models.Post.id.desc())
+        .offset(offset)
+        .limit(page_size + 1)
+    ).all()
+    has_more = len(fetched_posts) > page_size
+    page_posts = list(fetched_posts[:page_size])
+    posts_to_serialize = list(page_posts)
+
+    # Links diretos de notificações/perfis devem continuar funcionando mesmo
+    # quando a publicação está fora da primeira página do Feed.
+    if post_id is not None and all(post.id != post_id for post in posts_to_serialize):
+        target_post = db.get(models.Post, post_id)
+        if target_post is not None:
+            posts_to_serialize.append(target_post)
+
+    return {
+        "posts": serialize_posts_batch(posts_to_serialize, db, current_user),
+        "page": page,
+        "page_size": page_size,
+        "has_more": has_more,
+    }
 
 
 # =========================================

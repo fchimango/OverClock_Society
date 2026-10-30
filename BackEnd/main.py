@@ -18,6 +18,7 @@ import games_routes
 import models
 import notifications_routes
 import profiles_routes
+import rawg_routes
 import search_routes
 
 from database import Base, engine, get_db
@@ -67,19 +68,22 @@ app = FastAPI(
 # CORS
 # =========================================
 
-origens = os.getenv(
+origens_configuradas = os.getenv(
     "CORS_ORIGINS",
     "http://127.0.0.1:5500,http://localhost:5500"
-).split(",")
+)
+origens = [
+    origem.strip().rstrip("/")
+    for origem in origens_configuradas.split(",")
+    if origem.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        origem.strip()
-        for origem in origens
-    ],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origens,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    allow_credentials=True,
 )
 
 
@@ -94,6 +98,7 @@ app.include_router(friends_routes.router)
 app.include_router(notifications_routes.router)
 app.include_router(profiles_routes.router)
 app.include_router(search_routes.router)
+app.include_router(rawg_routes.router)
 
 
 # =========================================

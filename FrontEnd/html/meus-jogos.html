@@ -164,6 +164,11 @@
 
                 </a>
 
+                <a href="catalogo-jogos.html" class="sidebar-link">
+                    <span>🕹️</span>
+                    Catálogo de jogos
+                </a>
+
 
                 <a
     href="amigos.html"
@@ -941,75 +946,37 @@
 
         </div>
 
+        <p class="rawg-modal-attribution">Os nomes e gêneros do catálogo são fornecidos pela <a href="https://rawg.io/" target="_blank" rel="noopener noreferrer">RAWG</a>.</p>
 
         <form id="addGameForm">
 
 
-            <!-- NOME -->
-
-            <div class="form-group">
-
-    <label for="gameName">
-        Jogo
-    </label>
-
-    <select
-        id="gameName"
-        required
-    >
-
-        <option
-            value=""
-            selected
-            disabled
-        >
-            Selecione um jogo...
-        </option>
-
-        <option value="Elden Ring">
-            Elden Ring
-        </option>
-
-        <option value="Hollow Knight">
-            Hollow Knight
-        </option>
-
-        <option value="Minecraft">
-            Minecraft
-        </option>
-
-        <option value="Valorant">
-            Valorant
-        </option>
-
-        <option value="Terraria">
-            Terraria
-        </option>
-
-        <option value="Hades">
-            Hades
-        </option>
-
-        <option value="Sekiro: Shadows Die Twice">
-            Sekiro: Shadows Die Twice
-        </option>
-
-        <option value="Cyberpunk 2077">
-            Cyberpunk 2077
-        </option>
-
-        <option value="Baldur's Gate 3">
-            Baldur's Gate 3
-        </option>
-
-        <option value="The Witcher 3">
-            The Witcher 3
-        </option>
-
-    </select>
-
-</div>
-
+            <!-- BUSCAR JOGO NA RAWG -->
+            <div class="form-group game-search-form-group">
+                <label for="gameSearchInput">Buscar jogo</label>
+                <div class="game-search-wrap">
+                    <input
+                        type="search"
+                        id="gameSearchInput"
+                        placeholder="Digite o nome do jogo..."
+                        autocomplete="off"
+                        maxlength="80"
+                        aria-autocomplete="list"
+                        aria-controls="gameSearchResults"
+                        aria-describedby="gameSearchHint"
+                    >
+                    <div id="gameSearchResults" class="game-search-results" role="listbox" aria-label="Resultados da busca de jogos" hidden></div>
+                </div>
+                <small id="gameSearchHint" class="rating-help">Digite pelo menos 2 caracteres e selecione um resultado da RAWG.</small>
+                <div id="selectedGamePreview" class="selected-game-preview" hidden>
+                    <img id="selectedGameImage" alt="" hidden>
+                    <span id="selectedGameName"></span>
+                    <button id="clearSelectedGame" type="button" aria-label="Remover jogo selecionado" title="Trocar jogo">×</button>
+                </div>
+                <select id="gameName" class="game-name-storage" aria-hidden="true" tabindex="-1">
+                    <option value="" selected>Selecione um jogo</option>
+                </select>
+            </div>
 
             <!-- CATEGORIA -->
 
@@ -1044,6 +1011,10 @@
                     </option>
 
                 </select>
+
+                <small id="gameCategoryHint" class="category-hint" hidden>
+                    Ao alternar entre Jogos Favoritos e Jogos Zerados, o jogo pode ficar nas duas categorias. A classificação atual será mantida.
+                </small>
 
             </div>
 
@@ -1146,6 +1117,39 @@
 
 </div>
 
+
+    <!-- Confirmação de remoção, estilizada no próprio site -->
+    <div
+        class="game-confirm-overlay"
+        id="gameConfirmOverlay"
+        aria-hidden="true"
+    >
+        <section
+            class="game-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="gameConfirmTitle"
+            aria-describedby="gameConfirmMessage"
+        >
+            <button
+                type="button"
+                class="game-confirm-close"
+                id="gameConfirmClose"
+                aria-label="Fechar confirmação"
+            >×</button>
+
+            <div class="game-confirm-icon" aria-hidden="true">🗑️</div>
+            <h2 id="gameConfirmTitle">Remover jogo?</h2>
+            <p id="gameConfirmMessage">Deseja remover este jogo desta categoria?</p>
+
+            <div class="game-confirm-actions">
+                <button type="button" class="modal-cancel" id="gameConfirmCancel">Cancelar</button>
+                <button type="button" class="game-confirm-delete" id="gameConfirmAccept">Remover jogo</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="../js/api-config.js"></script>
 
     <script src="../js/notifications.js"></script>
 

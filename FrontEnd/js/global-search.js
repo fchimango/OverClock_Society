@@ -10,9 +10,7 @@
     if (!input || !searchHost) return;
 
     const API_BASE_URL =
-        ["127.0.0.1", "localhost"].includes(window.location.hostname)
-            ? "http://127.0.0.1:8000"
-            : "https://overclock-api.onrender.com";
+        window.OVERCLOCK_API_BASE_URL;
 
     const params = new URLSearchParams(window.location.search);
     const initialFeedSearch = params.get("search");
@@ -175,13 +173,20 @@
         addSection("Publicações", Array.isArray(data.posts) ? data.posts : [], renderPost);
 
         if (!panel.children.length) {
-            setMessage(`Nenhum resultado encontrado para “${term}”.`);
-            return;
+            const emptyState = document.createElement("div");
+            emptyState.className = "global-search-message";
+            emptyState.textContent = `Nenhum jogador, jogo salvo ou publicação encontrado para “${term}”.`;
+            panel.appendChild(emptyState);
         }
 
         const footer = document.createElement("div");
         footer.className = "global-search-footer";
-        footer.textContent = "Selecione um resultado para abrir o perfil ou conteúdo correspondente.";
+        const helper = document.createElement("span");
+        helper.textContent = "Não encontrou o jogo na comunidade? ";
+        const catalogLink = document.createElement("a");
+        catalogLink.href = `catalogo-jogos.html?q=${encodeURIComponent(term)}`;
+        catalogLink.textContent = "Buscar no catálogo RAWG";
+        footer.append(helper, catalogLink);
         panel.appendChild(footer);
         openPanel();
     }

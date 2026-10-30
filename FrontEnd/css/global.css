@@ -1354,3 +1354,71 @@ footer {
     }
 
 }
+
+/* Campos de filtro locais não usam a busca global do cabeçalho. */
+.page-local-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: min(100%, 420px);
+    margin: 0 0 24px;
+}
+
+.page-local-filter label {
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.page-local-filter input {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 13px;
+    border: 1px solid rgba(148, 163, 184, .20);
+    border-radius: 10px;
+    outline: none;
+    background: rgba(3, 7, 18, .56);
+    color: #f8fafc;
+    font: inherit;
+}
+
+.page-local-filter input:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, .12);
+}
+
+.friends-local-filter {
+    margin-top: -10px;
+}
+
+.public-games-local-filter {
+    margin: 0 0 24px;
+}
+
+.catalog-explore-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.rawg-modal-attribution {
+    margin: -4px 0 18px;
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.rawg-modal-attribution a {
+    color: #a5b4fc;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+@media (max-width: 650px) {
+    .catalog-explore-link {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
