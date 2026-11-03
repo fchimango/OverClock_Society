@@ -33,10 +33,7 @@ if (cdDays) {
 ========================================= */
 
 // Local: usa o backend da sua máquina. Em produção, troque pela URL do Render.
-const API_URL =
-    ["127.0.0.1", "localhost"].includes(window.location.hostname)
-        ? "http://127.0.0.1:8000"
-        : "https://overclock-api.onrender.com";
+const API_URL = window.OVERCLOCK_API_BASE_URL;
 
 const leadForm = document.getElementById("leadForm");
 const leadFeedback = document.getElementById("leadFeedback");

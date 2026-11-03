@@ -1,0 +1,19 @@
+# Segredos e configurações locais
+.env
+BackEnd/.env
+
+# Python
+BackEnd/.venv/
+.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor / sistema operacional
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

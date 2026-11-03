@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil do usuário | Overclock Society</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/perfil.css">
+    <link rel="stylesheet" href="../css/meus-jogos.css">
+    <link rel="stylesheet" href="../css/notifications.css">
+    <link rel="stylesheet" href="../css/perfil-usuario.css">
+    <link rel="stylesheet" href="../css/perfil-usuario-dynamic.css">
+    <link rel="stylesheet" href="../css/global-search.css">
+
+    <script src="../js/global-ui.js"></script>
+</head>
+
+
+<body>
+    <header class="dashboard-header">
+        <a href="dashboard.html" class="logo">
+            <span class="logo-icon">🎮</span>
+            <span>Overclock<span class="logo-highlight"> Society</span></span>
+        </a>
+
+        <div class="header-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Buscar jogadores, jogos e publicações...">
+        </div>
+
+        <div class="header-actions">
+            <button class="icon-button" title="Notificações">🔔</button>
+            <button class="profile-button" id="profileHeaderButton">
+                <div class="avatar">J</div>
+                <div class="profile-name">
+                    <strong>João</strong>
+                    <span>Online</span>
+                </div>
+            </button>
+        </div>
+    </header>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <nav>
+                <span class="sidebar-title">MENU</span>
+                <a href="dashboard.html" class="sidebar-link"><span>🏠</span>Dashboard</a>
+                <a href="perfil.html" class="sidebar-link"><span>👤</span>Meu perfil</a>
+                <a href="meus-jogos.html" class="sidebar-link"><span>🎮</span>Meus jogos</a>
+
+                <a href="catalogo-jogos.html" class="sidebar-link">
+                    <span>🕹️</span>
+                    Catálogo de jogos
+                </a>
+                <a href="amigos.html" class="sidebar-link"><span>👥</span>Amigos</a>
+                <a href="feed.html" class="sidebar-link"><span>📰</span>Feed</a>
+                
+            </nav>
+
+            <div class="sidebar-bottom">
+                <a href="#" class="sidebar-link"><span>⚙️</span>Configurações</a>
+                <a href="index.html" class="sidebar-link logout-link"><span>🚪</span>Sair</a>
+            </div>
+        </aside>
+
+        <main class="dashboard-content profile-page other-profile-page">
+            <nav class="profile-tabs" role="tablist" aria-label="Seções do perfil do usuário">
+                <button type="button" class="profile-tab-button active" data-user-tab="profile" role="tab" aria-selected="true">
+                    👤 Perfil
+                </button>
+                <button type="button" class="profile-tab-button" data-user-tab="games" role="tab" aria-selected="false">
+                    🎮 Jogos
+                </button>
+                <button type="button" class="profile-tab-button" data-user-tab="posts" role="tab" aria-selected="false">
+                    📰 Publicações
+                </button>
+            </nav>
+
+            <div class="profile-tab-panel active" data-user-panel="profile" role="tabpanel">
+                <section class="profile-card">
+                    <div class="profile-cover">
+                        <div class="cover-pattern"></div>
+                    </div>
+
+                    <div class="profile-main">
+                        <div class="profile-avatar-wrapper">
+                            <div class="profile-avatar" id="otherProfileAvatar">?</div>
+                            <span class="profile-online" id="otherProfileOnline"></span>
+                        </div>
+
+                        <div class="profile-identity">
+                            <span class="profile-status" id="otherProfileStatus">CARREGANDO</span>
+                            <h1 id="otherProfileName">Carregando perfil...</h1>
+                            <span class="profile-username" id="otherProfileUsername">@usuario</span>
+                            <p id="otherProfileCourse">Carregando informações do jogador...</p>
+                        </div>
+                    </div>
+                    <div id="otherProfileActions" class="other-profile-actions" aria-live="polite"></div>
+
+                    <div class="profile-bio">
+                        <p id="otherProfileBio"></p>
+                    </div>
+                </section>
+
+                <section class="profile-stats">
+                    <div class="profile-stat">
+                        <span class="profile-stat-icon">🎮</span>
+                        <div>
+                            <strong id="otherProfileGamesCount">0</strong>
+                            <span>Jogos</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-stat">
+                        <span class="profile-stat-icon">👥</span>
+                        <div>
+                            <strong id="otherProfileFriendsCount">0</strong>
+                            <span>Amigos</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="profile-content-grid">
+                    <article class="profile-info-card">
+                        <div class="card-heading">
+                            <div>
+                                <span class="section-label">PERFIL</span>
+                                <h2>Sobre mim</h2>
+                            </div>
+                        </div>
+
+                        <div class="about-list">
+                            <div class="about-item">
+                                <span class="about-icon">🎓</span>
+                                <div><span>Curso</span><strong id="otherAboutCourse"></strong></div>
+                            </div>
+                            <div class="about-item">
+                                <span class="about-icon">📚</span>
+                                <div><span>Período</span><strong id="otherAboutSemester"></strong></div>
+                            </div>
+                            <div class="about-item">
+                                <span class="about-icon">📅</span>
+                                <div><span>Membro desde</span><strong id="otherAboutJoinDate"></strong></div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="profile-info-card">
+                        <div class="card-heading">
+                            <div>
+                                <span class="section-label">PLATAFORMAS</span>
+                                <h2>Onde joga</h2>
+                            </div>
+                        </div>
+                        <div class="platform-list" id="otherPlatforms"></div>
+                    </article>
+
+                    <article class="profile-info-card genres-card">
+                        <div class="card-heading">
+                            <div>
+                                <span class="section-label">PREFERÊNCIAS</span>
+                                <h2>Gêneros favoritos</h2>
+                            </div>
+                        </div>
+                        <div class="genre-tags" id="otherGenres"></div>
+                    </article>
+
+                    
+                </section>
+            </div>
+
+            <div class="profile-tab-panel" data-user-panel="posts" role="tabpanel">
+                <section class="games-section public-profile-posts-section">
+                    <div class="games-section-header">
+                        <div>
+                            <span class="section-label">ATIVIDADE</span>
+                            <h2>Atividade de <span id="postsOwnerName">este jogador</span></h2>
+                            <p>Publicações, respostas e reposts compartilhados com a comunidade.</p>
+                        </div>
+                    </div>
+
+                    <nav class="profile-activity-tabs" role="tablist" aria-label="Atividade do jogador">
+                        <button type="button" class="profile-activity-tab active" data-user-activity-tab="posts" role="tab" aria-selected="true" aria-controls="otherUserPostsPanel">Publicações</button>
+                        <button type="button" class="profile-activity-tab" data-user-activity-tab="replies" role="tab" aria-selected="false" aria-controls="otherUserRepliesPanel">Respostas</button>
+                        <button type="button" class="profile-activity-tab" data-user-activity-tab="reposts" role="tab" aria-selected="false" aria-controls="otherUserRepostsPanel">Reposts</button>
+                    </nav>
+
+                    <div class="profile-activity-panel active" id="otherUserPostsPanel" data-user-activity-panel="posts" role="tabpanel">
+                        <div id="otherUserPosts" class="public-profile-posts" aria-live="polite"></div>
+                    </div>
+                    <div class="profile-activity-panel" id="otherUserRepliesPanel" data-user-activity-panel="replies" role="tabpanel">
+                        <div id="otherUserReplies" class="public-profile-posts" aria-live="polite"></div>
+                    </div>
+                    <div class="profile-activity-panel" id="otherUserRepostsPanel" data-user-activity-panel="reposts" role="tabpanel">
+                        <div id="otherUserReposts" class="public-profile-posts" aria-live="polite"></div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="profile-tab-panel" data-user-panel="games" role="tabpanel">
+                <section class="other-profile-games-heading">
+                    <div>
+                        <span class="section-label">BIBLIOTECA</span>
+                        <h1>Jogos de <span id="gamesOwnerName">jogador</span></h1>
+                        <p>Veja os jogos favoritos, os jogos que gosta e os que já terminou.</p>
+                    </div>
+                </section>
+
+                <section class="games-summary">
+                    <div class="summary-item">
+                        <span class="summary-icon">🏆</span>
+                        <div><strong id="favoriteGamesCount">0</strong><span>favoritos</span></div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-icon">❤️</span>
+                        <div><strong id="likedGamesCount">0</strong><span>jogos que gosta</span></div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-icon">✅</span>
+                        <div><strong id="completedGamesCount">0</strong><span>jogos zerados</span></div>
+                    </div>
+                </section>
+
+                <div class="page-local-filter public-games-local-filter">
+                    <label for="publicGamesFilterInput">Filtrar jogos deste perfil</label>
+                    <input id="publicGamesFilterInput" type="search" placeholder="Buscar na coleção deste jogador..." autocomplete="off">
+                </div>
+
+                <section class="games-section">
+                    <div class="games-section-header">
+                        <div>
+                            <span class="section-label">TOP 3</span>
+                            <h2>Jogos Favoritos</h2>
+                            <p>Os três jogos preferidos deste usuário.</p>
+                        </div>
+                    </div>
+                    <div class="podium" id="otherUserPodium"></div>
+                </section>
+
+                <section class="games-section">
+                    <div class="games-section-header">
+                        <div>
+                            <span class="section-label">COLEÇÃO</span>
+                            <h2>Jogos Que Gosto</h2>
+                            <p>Jogos que fazem parte da coleção deste usuário.</p>
+                        </div>
+                    </div>
+                    <div class="collection-grid" id="otherUserLikedGames"></div>
+                </section>
+
+                <section class="games-section">
+                    <div class="games-section-header">
+                        <div>
+                            <span class="section-label">HISTÓRIA</span>
+                            <h2>Jogos Zerados</h2>
+                            <p>Jogos que este usuário já terminou.</p>
+                        </div>
+                    </div>
+                    <div class="completed-list" id="otherUserCompletedGames"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/api-config.js"></script>
+
+    <script src="../js/notifications.js"></script>
+
+    <script src="../js/perfil-usuario.js"></script>
+    
+    <script src="../js/session.js"></script>
+    <script src="../js/global-search.js"></script>
+</body>
+</html>
