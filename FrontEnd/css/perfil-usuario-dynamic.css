@@ -116,7 +116,7 @@
 
 .friend-profile-link:focus-visible,
 .user-profile-link:focus-visible {
-    outline: 2px solid #a78bfa;
+    outline: 2px solid #E6A0A2;
     outline-offset: 3px;
     border-radius: 4px;
 }

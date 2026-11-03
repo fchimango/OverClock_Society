@@ -51,7 +51,7 @@
 }
 
 .user-profile-link:focus-visible {
-    outline: 2px solid #818cf8;
+    outline: 2px solid #A8323B;
     outline-offset: 3px;
     border-radius: 6px;
 }
@@ -61,7 +61,7 @@
     .friend-card-info .user-profile-link:hover,
     .all-friend-info .user-profile-link:hover,
     .request-info .user-profile-link:hover {
-        color: #a5b4fc;
+        color: #E6A0A2;
     }
 
     .post-avatar.user-profile-link:hover,

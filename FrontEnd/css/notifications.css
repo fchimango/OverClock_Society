@@ -109,7 +109,7 @@
 
     margin-bottom: 3px;
 
-    color: #818cf8;
+    color: #A8323B;
 
     font-size: 9px;
     font-weight: 800;
@@ -130,7 +130,7 @@
     border: none;
     background: transparent;
 
-    color: #818cf8;
+    color: #A8323B;
 
     font-family: inherit;
     font-size: 10px;
@@ -140,7 +140,7 @@
 }
 
 .notification-mark-all:hover {
-    color: #a5b4fc;
+    color: #E6A0A2;
 }
 
 .notification-tabs {
@@ -185,8 +185,8 @@
 }
 
 .notification-tab.active {
-    color: #c7d2fe;
-    background: rgba(99, 102, 241, 0.10);
+    color: #F0C4C6;
+    background: rgba(121, 16, 21, 0.10);
 }
 
 .notification-tab-count {
@@ -209,8 +209,8 @@
 }
 
 .notification-tab.active .notification-tab-count {
-    background: rgba(99, 102, 241, 0.18);
-    color: #c7d2fe;
+    background: rgba(121, 16, 21, 0.18);
+    color: #F0C4C6;
 }
 
 .notification-list {
@@ -256,11 +256,11 @@
 }
 
 .notification-item.unread {
-    background: rgba(99, 102, 241, 0.055);
+    background: rgba(121, 16, 21, 0.055);
 }
 
 .notification-item.unread:hover {
-    background: rgba(99, 102, 241, 0.085);
+    background: rgba(121, 16, 21, 0.085);
 }
 
 .notification-item-icon {
@@ -273,7 +273,7 @@
 
     border-radius: 11px;
 
-    background: rgba(99, 102, 241, 0.09);
+    background: rgba(121, 16, 21, 0.09);
 
     font-size: 17px;
 }
@@ -312,10 +312,10 @@
 
     border-radius: 50%;
 
-    background: #818cf8;
+    background: #A8323B;
 
     box-shadow:
-        0 0 9px rgba(129, 140, 248, 0.65);
+        0 0 9px rgba(168, 50, 59, 0.65);
 }
 
 .notification-item.unread .notification-unread-dot {
@@ -347,11 +347,11 @@
 .notification-prototype-tag {
     padding: 3px 6px;
 
-    border: 1px solid rgba(129, 140, 248, 0.12);
+    border: 1px solid rgba(168, 50, 59, 0.12);
     border-radius: 999px;
 
-    background: rgba(99, 102, 241, 0.07);
-    color: #818cf8;
+    background: rgba(121, 16, 21, 0.07);
+    color: #A8323B;
 }
 
 .notification-friend-actions {
@@ -379,14 +379,14 @@
 }
 
 .notification-friend-action.accept {
-    border: 1px solid rgba(99, 102, 241, 0.22);
+    border: 1px solid rgba(121, 16, 21, 0.22);
 
-    background: rgba(99, 102, 241, 0.13);
-    color: #c7d2fe;
+    background: rgba(121, 16, 21, 0.13);
+    color: #F0C4C6;
 }
 
 .notification-friend-action.accept:hover {
-    background: rgba(99, 102, 241, 0.21);
+    background: rgba(121, 16, 21, 0.21);
 }
 
 .notification-friend-action.decline {
@@ -550,7 +550,7 @@
         linear-gradient(
             135deg,
             #475569,
-            #6366f1
+            #791015
         );
 
     background-size: cover;

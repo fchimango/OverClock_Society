@@ -76,8 +76,8 @@
     background:
         linear-gradient(
             135deg,
-            #6366f1,
-            #8b5cf6
+            #791015,
+            #A8323B
         );
 
     color: white;
@@ -147,7 +147,7 @@
 
 
 .composer-info strong {
-    color: #818cf8;
+    color: #A8323B;
 }
 
 
@@ -168,12 +168,12 @@
     margin-bottom: 15px;
 
     border:
-        1px solid rgba(99, 102, 241, 0.18);
+        1px solid rgba(121, 16, 21, 0.18);
 
     border-radius: 12px;
 
     background:
-        rgba(99, 102, 241, 0.06);
+        rgba(121, 16, 21, 0.06);
 
     color: #94a3b8;
 
@@ -187,7 +187,7 @@
 
 
 .feed-filter strong {
-    color: #818cf8;
+    color: #A8323B;
 }
 
 
@@ -195,7 +195,7 @@
     border: none;
     background: transparent;
 
-    color: #818cf8;
+    color: #A8323B;
 
     font-family: inherit;
     font-size: 11px;
@@ -235,7 +235,7 @@
 
 .post-card:hover {
     border-color:
-        rgba(129, 140, 248, 0.18);
+        rgba(168, 50, 59, 0.18);
 
     background:
         rgba(15, 23, 42, 0.72);
@@ -293,7 +293,7 @@
 
 
 .game-hashtag {
-    color: #818cf8;
+    color: #A8323B;
 
     font-weight: 600;
 
@@ -470,7 +470,7 @@
 
 .comment-form input:focus {
     border-color:
-        rgba(129, 140, 248, 0.35);
+        rgba(168, 50, 59, 0.35);
 }
 
 
@@ -480,7 +480,7 @@
     border: none;
     border-radius: 8px;
 
-    background: #6366f1;
+    background: #791015;
 
     color: white;
 
@@ -562,7 +562,7 @@
 
 
 .trending-game:hover strong {
-    color: #818cf8;
+    color: #A8323B;
 }
 
 
@@ -662,14 +662,14 @@
 
 .post-avatar.user-profile-link:focus-visible,
 .post-user-line .user-profile-link:focus-visible {
-    outline: 2px solid #818cf8;
+    outline: 2px solid #A8323B;
     outline-offset: 3px;
     border-radius: 6px;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .post-user-line .user-profile-link:hover {
-        color: #a5b4fc;
+        color: #E6A0A2;
     }
 
     .post-avatar.user-profile-link:hover {
@@ -747,14 +747,14 @@
 
 .post-user-line .user-profile-link:hover,
 .comment-user.user-profile-link:hover {
-    color: #a5b4fc;
+    color: #E6A0A2;
 }
 
 .post-avatar.user-profile-link:focus-visible,
 .post-user-line .user-profile-link:focus-visible,
 .comment-avatar.user-profile-link:focus-visible,
 .comment-user.user-profile-link:focus-visible {
-    outline: 2px solid #818cf8;
+    outline: 2px solid #A8323B;
     outline-offset: 3px;
     border-radius: 6px;
 }
@@ -767,10 +767,10 @@
     min-height: 44px;
     margin: 22px auto 36px;
     padding: 12px 18px;
-    border: 1px solid rgba(129, 140, 248, .48);
+    border: 1px solid rgba(168, 50, 59, .48);
     border-radius: 12px;
-    background: rgba(99, 102, 241, .12);
-    color: #e0e7ff;
+    background: rgba(121, 16, 21, .12);
+    color: #FCE7E8;
     font: inherit;
     font-weight: 700;
     cursor: pointer;
@@ -778,8 +778,8 @@
 }
 
 .feed-load-more:hover:not(:disabled) {
-    background: rgba(99, 102, 241, .22);
-    border-color: rgba(129, 140, 248, .8);
+    background: rgba(121, 16, 21, .22);
+    border-color: rgba(168, 50, 59, .8);
 }
 
 .feed-load-more:disabled {

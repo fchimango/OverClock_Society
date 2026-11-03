@@ -10,6 +10,12 @@ let currentPublicProfile = null;
 let publicProfileEndpoint = null;
 let profileInitializationStarted = false;
 
+function publicProfileMediaUrl(path) {
+    if (!path) return "";
+    const base = String(PUBLIC_PROFILE_API_BASE_URL || "").replace(/\/+$/, "");
+    return `${base}${path}`;
+}
+
 function getApiMessage(body, fallback) {
     if (typeof body?.detail === "string") return body.detail;
     if (Array.isArray(body?.detail)) {
@@ -416,7 +422,7 @@ async function handleRelationshipAction(action, button) {
                 await window.OverclockNotifications.refreshFromServer();
             }
         } else if (action === "remove") {
-            if (!window.confirm(`Deseja remover ${profile.name} da sua lista de amigos?`)) {
+            if (!(await window.OverclockUI.confirm(`Deseja remover ${profile.name} da sua lista de amigos?`, { title: "Remover amizade", confirmLabel: "Remover", danger: true }))) {
                 button.disabled = false;
                 button.textContent = oldText;
                 return;
@@ -452,7 +458,30 @@ function showProfileMessage(message, type = "info") {
 function renderProfile(profile) {
     document.title = `${profile.name} | Overclock Society`;
     const status = getStatusDisplay(profile.status);
-    setText("otherProfileAvatar", getInitials(profile.name).slice(0, 1));
+    const publicAvatar = document.getElementById("otherProfileAvatar");
+    const avatarUrl = publicProfileMediaUrl(profile.avatar_url);
+    if (publicAvatar) {
+        if (avatarUrl) {
+            publicAvatar.textContent = "";
+            publicAvatar.style.backgroundImage = `url("${avatarUrl}")`;
+            publicAvatar.style.backgroundSize = "cover";
+            publicAvatar.style.backgroundPosition = "center";
+        } else {
+            publicAvatar.style.backgroundImage = "";
+            publicAvatar.textContent = getInitials(profile.name).slice(0, 1);
+        }
+    }
+
+    const publicCover = document.querySelector(".other-profile-page .profile-cover");
+    const coverUrl = publicProfileMediaUrl(profile.cover_url);
+    if (publicCover) {
+        publicCover.style.backgroundImage = coverUrl
+            ? `linear-gradient(rgba(12, 8, 10, .18), rgba(12, 8, 10, .28)), url("${coverUrl}")`
+            : "";
+        publicCover.style.backgroundSize = "cover";
+        publicCover.style.backgroundPosition = "center";
+    }
+
     setText("otherProfileName", profile.name || "Jogador");
     setText("otherProfileUsername", profile.username ? `@${String(profile.username).replace(/^@+/, "")}` : "@usuario");
     setText("otherProfileCourse", `${profile.course || "Curso não informado"} • ${profile.semester || 1}º período`);

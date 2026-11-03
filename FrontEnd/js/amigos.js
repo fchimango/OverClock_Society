@@ -592,8 +592,9 @@ allFriendsList.addEventListener("click", async (event) => {
     );
     if (!friend) return;
 
-    const confirmed = window.confirm(
-        `Deseja remover ${friend.name} da sua lista de amigos?`
+    const confirmed = await window.OverclockUI.confirm(
+        `Deseja remover ${friend.name} da sua lista de amigos?`,
+        { title: "Remover amizade", confirmLabel: "Remover", danger: true }
     );
     if (!confirmed) return;
 

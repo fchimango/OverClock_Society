@@ -103,7 +103,7 @@
         11px;
 
     background:
-        rgba(99, 102, 241, 0.10);
+        rgba(121, 16, 21, 0.10);
 
     font-size:
         20px;
@@ -182,10 +182,10 @@
         20px;
 
     background:
-        rgba(99, 102, 241, 0.10);
+        rgba(121, 16, 21, 0.10);
 
     color:
-        #a5b4fc;
+        #E6A0A2;
 
     font-size:
         11px;
@@ -240,7 +240,7 @@
 .request-card:hover {
 
     border-color:
-        rgba(129, 140, 248, 0.22);
+        rgba(168, 50, 59, 0.22);
 
     background:
         rgba(15, 23, 42, 0.72);
@@ -287,7 +287,7 @@
 
 .friend-avatar.purple {
     background:
-        linear-gradient(135deg, #6366f1, #a855f7);
+        linear-gradient(135deg, #791015, #A8323B);
 }
 
 
@@ -354,7 +354,7 @@
 .request-info small {
 
     color:
-        #818cf8;
+        #A8323B;
 
     font-size:
         10px;
@@ -477,7 +477,7 @@
         translateY(-4px);
 
     border-color:
-        rgba(129, 140, 248, 0.25);
+        rgba(168, 50, 59, 0.25);
 }
 
 
@@ -561,7 +561,7 @@
         6px;
 
     color:
-        #818cf8;
+        #A8323B;
 
     font-size:
         10px;
@@ -615,10 +615,10 @@
         none;
 
     background:
-        rgba(99, 102, 241, 0.15);
+        rgba(121, 16, 21, 0.15);
 
     color:
-        #a5b4fc;
+        #E6A0A2;
 }
 
 
@@ -664,13 +664,13 @@
 .filter-btn.active {
 
     border-color:
-        rgba(129, 140, 248, 0.18);
+        rgba(168, 50, 59, 0.18);
 
     background:
-        rgba(99, 102, 241, 0.10);
+        rgba(121, 16, 21, 0.10);
 
     color:
-        #a5b4fc;
+        #E6A0A2;
 }
 
 
@@ -1019,7 +1019,7 @@
 .friend-card-info .user-profile-link:focus-visible,
 .all-friend-info .user-profile-link:focus-visible,
 .request-info .user-profile-link:focus-visible {
-    outline: 2px solid #818cf8;
+    outline: 2px solid #A8323B;
     outline-offset: 3px;
     border-radius: 6px;
 }
@@ -1029,7 +1029,7 @@
     .all-friend-info .user-profile-link:hover,
     .request-info .user-profile-link:hover,
     .player-search-info .user-profile-link:hover {
-        color: #a5b4fc;
+        color: #E6A0A2;
     }
 
     .friend-avatar.user-profile-link:hover {
@@ -1040,4 +1040,4 @@
 
 /* Links de perfil nos resultados da busca de jogadores */
 .player-search-info .user-profile-link { cursor: pointer; }
-.player-search-info .user-profile-link:focus-visible { outline: 2px solid #818cf8; outline-offset: 3px; border-radius: 6px; }
+.player-search-info .user-profile-link:focus-visible { outline: 2px solid #A8323B; outline-offset: 3px; border-radius: 6px; }

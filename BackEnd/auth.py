@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -14,13 +15,14 @@ from pydantic import (
     field_validator,
 )
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 import models
 
 from database import get_db
+from profile_media import decode_profile_image
 
 from security import (
     create_token,
@@ -392,61 +394,86 @@ class ProfileUpdateData(BaseModel):
         return value
 
 
+class ProfileMediaUpdate(BaseModel):
+    avatar_data_url: str | None = Field(default=None, max_length=800_000)
+    cover_data_url: str | None = Field(default=None, max_length=1_800_000)
+
+
+
 # =========================================
 # DADOS PADRÃO DO PERFIL
 # =========================================
 
 DEFAULT_PROFILE_DATA = {
-    "course": "Engenharia de Software",
-    "semester": 6,
+    "course": "",
+    "semester": 1,
     "join_date": None,
-    "status": "online",
-    "bio": (
-        "Apaixonado por RPGs, jogos de aventura "
-        "e experiências single player. Sempre "
-        "procurando conhecer novos jogos e "
-        "novos jogadores da faculdade."
-    ),
-    "platforms": [
-        "PC",
-        "PlayStation 5"
-    ],
-    "genres": [
-        "RPG",
-        "Ação",
-        "Aventura",
-        "Soulslike",
-        "Sandbox"
-    ],
-    "current_game": "Elden Ring",
+    "status": "offline",
+    "bio": "",
+    "platforms": [],
+    "genres": [],
+    "current_game": "",
     "current_game_status": "available"
 }
 
 
-def build_profile_response(user):
+def build_profile_response(user, db: Session):
     profile = {
         **DEFAULT_PROFILE_DATA,
         "platforms": DEFAULT_PROFILE_DATA["platforms"].copy(),
         "genres": DEFAULT_PROFILE_DATA["genres"].copy()
     }
+    profile.update(user.profile_data or {})
 
-    profile.update(
-        user.profile_data or {}
+    if not profile.get("join_date") and user.created_at:
+        profile["join_date"] = user.created_at.strftime("%Y-%m")
+
+    game_names = db.scalars(
+        select(models.UserGame.name).where(models.UserGame.user_id == user.id)
+    ).all()
+    unique_game_names = {
+        str(name).strip().casefold() for name in game_names if str(name).strip()
+    }
+    friends_count = int(
+        db.scalar(
+            select(func.count()).select_from(models.Friendship).where(
+                or_(
+                    models.Friendship.user_low_id == user.id,
+                    models.Friendship.user_high_id == user.id,
+                )
+            )
+        ) or 0
+    )
+    posts_count = int(
+        db.scalar(
+            select(func.count()).select_from(models.Post).where(
+                models.Post.user_id == user.id
+            )
+        ) or 0
     )
 
-    if (
-        not profile.get("join_date")
-        and user.created_at
-    ):
-        profile["join_date"] = (
-            user.created_at.strftime("%Y-%m")
-        )
+    media = db.get(models.UserProfileMedia, user.id)
+    media_version = (
+        str(int(media.updated_at.timestamp() * 1000))
+        if media and media.updated_at else "1"
+    )
 
     return {
         "id": user.id,
         "name": user.name,
         "email": user.email,
         "username": user.username,
+        "games_count": len(unique_game_names),
+        "friends_count": friends_count,
+        "posts_count": posts_count,
+        "avatar_url": (
+            f"/profiles/id/{user.id}/media/avatar?v={media_version}"
+            if media and media.avatar_data else None
+        ),
+        "cover_url": (
+            f"/profiles/id/{user.id}/media/cover?v={media_version}"
+            if media and media.cover_data else None
+        ),
         **profile
     }
 
@@ -457,11 +484,56 @@ def build_profile_response(user):
 
 @router.get("/profile")
 def get_profile(
-    user: models.User = Depends(
-        get_current_user
-    )
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    return build_profile_response(user)
+    return build_profile_response(user, db)
+
+
+@router.put("/profile/media")
+def update_profile_media(
+    data: ProfileMediaUpdate,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if data.avatar_data_url is None and data.cover_data_url is None:
+        raise HTTPException(
+            status_code=422,
+            detail="Selecione uma foto ou uma imagem de capa para salvar.",
+        )
+
+    media = db.get(models.UserProfileMedia, user.id)
+    if media is None:
+        media = models.UserProfileMedia(user_id=user.id)
+
+    if data.avatar_data_url is not None:
+        media.avatar_data, media.avatar_content_type = decode_profile_image(
+            data.avatar_data_url,
+            max_bytes=550 * 1024,
+        )
+
+    if data.cover_data_url is not None:
+        media.cover_data, media.cover_content_type = decode_profile_image(
+            data.cover_data_url,
+            max_bytes=1_250 * 1024,
+        )
+
+    media.updated_at = datetime.now(timezone.utc)
+    db.add(media)
+    db.commit()
+    db.refresh(media)
+
+    version = str(int(media.updated_at.timestamp() * 1000))
+    return {
+        "avatar_url": (
+            f"/profiles/id/{user.id}/media/avatar?v={version}"
+            if media.avatar_data else None
+        ),
+        "cover_url": (
+            f"/profiles/id/{user.id}/media/cover?v={version}"
+            if media.cover_data else None
+        ),
+    }
 
 
 # =========================================
@@ -517,4 +589,4 @@ def update_profile(
 
     db.refresh(user)
 
-    return build_profile_response(user)
+    return build_profile_response(user, db)

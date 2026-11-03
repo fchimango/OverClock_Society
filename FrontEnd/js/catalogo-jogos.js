@@ -189,7 +189,7 @@
         const params = new URLSearchParams({
             page: String(currentPage),
             page_size: String(PAGE_SIZE),
-            ordering: orderingSelect.value || "-added",
+            ordering: orderingSelect.value || "relevance",
         });
         const term = searchInput.value.trim();
         if (term.length >= 2) params.set("q", term);

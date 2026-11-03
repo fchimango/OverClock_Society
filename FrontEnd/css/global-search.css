@@ -64,8 +64,8 @@
 
 .global-search-result:hover,
 .global-search-result:focus-visible {
-    border-color: rgba(99, 102, 241, 0.32);
-    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(121, 16, 21, 0.32);
+    background: rgba(121, 16, 21, 0.12);
     outline: none;
 }
 
@@ -80,7 +80,7 @@
     border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: 11px;
     background: rgba(148, 163, 184, 0.1);
-    color: #c7d2fe;
+    color: #F0C4C6;
     font-size: 15px;
     font-weight: 800;
 }
@@ -139,8 +139,8 @@
     height: 8px;
     margin-right: 8px;
     border-radius: 50%;
-    background: #818cf8;
-    box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.12);
+    background: #A8323B;
+    box-shadow: 0 0 0 4px rgba(168, 50, 59, 0.12);
     animation: global-search-pulse 1s ease-in-out infinite alternate;
 }
 

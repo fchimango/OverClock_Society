@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, Integer, LargeBinary, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -416,4 +416,44 @@ class UserPresence(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
         index=True,
+    )
+
+
+# =========================================
+# MÍDIA DO PERFIL (PERSISTIDA NO POSTGRESQL)
+# =========================================
+
+class UserProfileMedia(Base):
+    __tablename__ = "user_profile_media"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    avatar_data: Mapped[bytes | None] = mapped_column(
+        LargeBinary,
+        nullable=True,
+    )
+
+    avatar_content_type: Mapped[str | None] = mapped_column(
+        String(40),
+        nullable=True,
+    )
+
+    cover_data: Mapped[bytes | None] = mapped_column(
+        LargeBinary,
+        nullable=True,
+    )
+
+    cover_content_type: Mapped[str | None] = mapped_column(
+        String(40),
+        nullable=True,
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )

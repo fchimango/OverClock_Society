@@ -66,6 +66,7 @@
 
     <link rel="stylesheet" href="../css/global-search.css">
 
+    <script src="../js/global-ui.js"></script>
 </head>
 
 
@@ -501,7 +502,8 @@
 
                         id="coverEditButton"
 
-                        title="Editar capa"
+                        title="Escolher imagem de capa"
+                        aria-label="Escolher imagem de capa"
 
                     >
 
@@ -543,7 +545,8 @@
 
                             id="avatarEditButton"
 
-                            title="Alterar foto"
+                            title="Escolher foto de perfil"
+                            aria-label="Escolher foto de perfil"
 
                         >
 
@@ -565,7 +568,7 @@
 
                         <span class="profile-status">
 
-                            ● ONLINE
+                            ● CARREGANDO
 
                         </span>
 
@@ -573,7 +576,7 @@
 
                         <h1>
 
-                            João Silva
+                            Carregando perfil...
 
                         </h1>
 
@@ -581,7 +584,7 @@
 
                         <span class="profile-username">
 
-                            @joao123
+                            @usuario
 
                         </span>
 
@@ -589,7 +592,7 @@
 
                         <p>
 
-                            Engenharia de Software • 6º período
+                            Dados do curso não informados
 
                         </p>
 
@@ -637,13 +640,7 @@
 
                     <p id="bioText">
 
-                        Apaixonado por RPGs, jogos de
-
-                        aventura e experiências single player.
-
-                        Sempre procurando conhecer novos jogos
-
-                        e novos jogadores da faculdade.
+                        Carregando biografia...
 
                     </p>
 
@@ -677,9 +674,7 @@
 
         <div>
 
-            <strong>
-                24
-            </strong>
+            <strong id="profileGamesCount">0</strong>
 
             <span>
                 Jogos
@@ -698,9 +693,7 @@
 
         <div>
 
-            <strong>
-                24
-            </strong>
+            <strong id="profileFriendsCount">0</strong>
 
             <span>
                 Amigos
@@ -802,7 +795,7 @@
 
                                 <strong>
 
-                                    Engenharia de Software
+                                    Curso não informado
 
                                 </strong>
 
@@ -844,7 +837,7 @@
 
                                 <strong>
 
-                                    6º período
+                                    1º período
 
                                 </strong>
 
@@ -886,7 +879,7 @@
 
                                 <strong>
 
-                                    Setembro de 2026
+                                    Não informado
 
                                 </strong>
 
@@ -1364,7 +1357,6 @@
 
                             id="profileName"
 
-                            value="João Silva"
 
                         >
 
@@ -1394,7 +1386,6 @@
 
                             id="profileUsername"
 
-                            value="joao123"
 
                         >
 
@@ -1426,15 +1417,84 @@
 
 
 
-                        <input
+                        <select id="profileCourse" name="course">
 
-                            type="text"
+                            <option value="">Selecione seu curso</option>
 
-                            id="profileCourse"
+                            <optgroup label="Tecnologia e Computação">
+                                <option value="Análise e Desenvolvimento de Sistemas">Análise e Desenvolvimento de Sistemas</option>
+                                <option value="Banco de Dados">Banco de Dados</option>
+                                <option value="Ciência da Computação">Ciência da Computação</option>
+                                <option value="Ciência de Dados">Ciência de Dados</option>
+                                <option value="Desenvolvimento de Software Multiplataforma">Desenvolvimento de Software Multiplataforma</option>
+                                <option value="Engenharia de Computação">Engenharia de Computação</option>
+                                <option value="Engenharia de Software">Engenharia de Software</option>
+                                <option value="Gestão da Tecnologia da Informação">Gestão da Tecnologia da Informação</option>
+                                <option value="Inteligência Artificial">Inteligência Artificial</option>
+                                <option value="Jogos Digitais">Jogos Digitais</option>
+                                <option value="Redes de Computadores">Redes de Computadores</option>
+                                <option value="Segurança da Informação">Segurança da Informação</option>
+                                <option value="Sistemas de Informação">Sistemas de Informação</option>
+                                <option value="Sistemas para Internet">Sistemas para Internet</option>
+                            </optgroup>
 
-                            value="Engenharia de Software"
+                            <optgroup label="Engenharias e Arquitetura">
+                                <option value="Arquitetura e Urbanismo">Arquitetura e Urbanismo</option>
+                                <option value="Engenharia Ambiental e Sanitária">Engenharia Ambiental e Sanitária</option>
+                                <option value="Engenharia Civil">Engenharia Civil</option>
+                                <option value="Engenharia de Produção">Engenharia de Produção</option>
+                                <option value="Engenharia Elétrica">Engenharia Elétrica</option>
+                                <option value="Engenharia Mecânica">Engenharia Mecânica</option>
+                                <option value="Engenharia Química">Engenharia Química</option>
+                                <option value="Engenharia de Controle e Automação">Engenharia de Controle e Automação</option>
+                            </optgroup>
 
-                        >
+                            <optgroup label="Ciências da Saúde">
+                                <option value="Biomedicina">Biomedicina</option>
+                                <option value="Educação Física">Educação Física</option>
+                                <option value="Enfermagem">Enfermagem</option>
+                                <option value="Farmácia">Farmácia</option>
+                                <option value="Fisioterapia">Fisioterapia</option>
+                                <option value="Medicina">Medicina</option>
+                                <option value="Medicina Veterinária">Medicina Veterinária</option>
+                                <option value="Fonoaudiologia">Fonoaudiologia</option>
+                                <option value="Terapia Ocupacional">Terapia Ocupacional</option>
+                                <option value="Nutrição">Nutrição</option>
+                                <option value="Odontologia">Odontologia</option>
+                                <option value="Psicologia">Psicologia</option>
+                            </optgroup>
+
+                            <optgroup label="Ciências Humanas e Sociais">
+                                <option value="Administração">Administração</option>
+                                <option value="Ciências Contábeis">Ciências Contábeis</option>
+                                <option value="Ciências Econômicas">Ciências Econômicas</option>
+                                <option value="Direito">Direito</option>
+                                <option value="Jornalismo">Jornalismo</option>
+                                <option value="Design">Design</option>
+                                <option value="Design Gráfico">Design Gráfico</option>
+                                <option value="Ciências Sociais">Ciências Sociais</option>
+                                <option value="Geografia">Geografia</option>
+                                <option value="História">História</option>
+                                <option value="Letras">Letras</option>
+                                <option value="Pedagogia">Pedagogia</option>
+                                <option value="Publicidade e Propaganda">Publicidade e Propaganda</option>
+                                <option value="Relações Internacionais">Relações Internacionais</option>
+                                <option value="Serviço Social">Serviço Social</option>
+                            </optgroup>
+
+                            <optgroup label="Ciências Exatas e Agrárias">
+                                <option value="Agronomia">Agronomia</option>
+                                <option value="Estatística">Estatística</option>
+                                <option value="Ciências Biológicas">Ciências Biológicas</option>
+                                <option value="Física">Física</option>
+                                <option value="Matemática">Matemática</option>
+                                <option value="Química">Química</option>
+                            </optgroup>
+
+                            <option value="Outro curso">Outro curso (não listado)</option>
+
+                        </select>
+
 
 
 
@@ -1470,7 +1530,7 @@
 
                             <option value="5">5º período</option>
 
-                            <option value="6" selected>6º período</option>
+                            <option value="6">6º período</option>
 
                             <option value="7">7º período</option>
 
@@ -1518,7 +1578,6 @@
 
                             id="profileJoinDate"
 
-                            value="2026-09"
 
                         >
 
@@ -1546,7 +1605,7 @@
 
 
 
-                            <option value="online" selected>
+                            <option value="online">
 
                                 🟢 Online
 
@@ -1628,7 +1687,8 @@
 
                         rows="4"
 
-                    >Apaixonado por RPGs, jogos de aventura e experiências single player. Sempre procurando conhecer novos jogos e novos jogadores da faculdade.</textarea>
+                        placeholder="Conte um pouco sobre você e seus interesses como jogador..."
+                    ></textarea>
 
 
 
@@ -1686,7 +1746,7 @@
 
                             id="profileAvatar"
 
-                            accept="image/\*"
+                            accept="image/jpeg,image/png,image/webp"
 
                         >
 
@@ -1716,7 +1776,7 @@
 
                             id="profileCover"
 
-                            accept="image/\*"
+                            accept="image/jpeg,image/png,image/webp"
 
                         >
 
@@ -1774,8 +1834,6 @@
 
                             value="PC"
 
-                            checked
-
                         >
 
 
@@ -1805,8 +1863,6 @@
                             name="platform"
 
                             value="PlayStation 5"
-
-                            checked
 
                         >
 
@@ -1932,8 +1988,6 @@
 
                             value="RPG"
 
-                            checked
-
                         >
 
 
@@ -1963,8 +2017,6 @@
                             name="genre"
 
                             value="Ação"
-
-                            checked
 
                         >
 
@@ -1996,8 +2048,6 @@
 
                             value="Aventura"
 
-                            checked
-
                         >
 
 
@@ -2028,8 +2078,6 @@
 
                             value="Soulslike"
 
-                            checked
-
                         >
 
 
@@ -2059,8 +2107,6 @@
                             name="genre"
 
                             value="Sandbox"
-
-                            checked
 
                         >
 

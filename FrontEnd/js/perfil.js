@@ -7,6 +7,8 @@ const modalOverlay = document.getElementById("profileModalOverlay");
 const modalClose = document.getElementById("modalClose");
 const modalCancel = document.getElementById("modalCancel");
 const profileForm = document.getElementById("profileForm");
+const avatarEditButton = document.getElementById("avatarEditButton");
+const coverEditButton = document.getElementById("coverEditButton");
 
 const profileName = document.getElementById("profileName");
 const profileUsername = document.getElementById("profileUsername");
@@ -28,6 +30,8 @@ const profileIdentityCourse = document.querySelector(".profile-identity p");
 const bioText = document.getElementById("bioText");
 const profileStatusText = document.querySelector(".profile-status");
 const profileOnline = document.querySelector(".profile-online");
+const profileAboutCourseText = document.querySelector(".about-item:nth-child(1) strong");
+const profileAboutSemesterText = document.querySelector(".about-item:nth-child(2) strong");
 const profileDateText = document.querySelector(".about-item:nth-child(3) strong");
 const statValues = document.querySelectorAll(".profile-stat strong");
 const platformList = document.querySelector(".platform-list");
@@ -49,6 +53,12 @@ const PROFILE_API_BASE_URL =
     window.OVERCLOCK_API_BASE_URL;
 
 let PROFILE_API_DATA = null;
+const PENDING_PROFILE_MEDIA = { avatar_data_url: null, cover_data_url: null };
+
+function profileApiUrl(path) {
+    const base = String(PROFILE_API_BASE_URL || "").replace(/\/+$/, "");
+    return `${base}${path}`;
+}
 
 function normalizeProfileUsername(value) {
     return String(value || "")
@@ -97,12 +107,38 @@ function openModal() {
 function closeModal() {
     if (!modalOverlay) return;
 
+    const hasPendingMedia = Boolean(
+        PENDING_PROFILE_MEDIA.avatar_data_url ||
+        PENDING_PROFILE_MEDIA.cover_data_url
+    );
+    if (hasPendingMedia) {
+        PENDING_PROFILE_MEDIA.avatar_data_url = null;
+        PENDING_PROFILE_MEDIA.cover_data_url = null;
+        if (profileAvatar) profileAvatar.value = "";
+        if (profileCover) profileCover.value = "";
+        if (PROFILE_API_DATA) applyProfileMedia(PROFILE_API_DATA);
+    }
+
     modalOverlay.classList.remove("active");
     document.body.style.overflow = "";
 }
 
 if (editProfileButton) {
     editProfileButton.addEventListener("click", openModal);
+}
+
+if (avatarEditButton) {
+    avatarEditButton.addEventListener("click", () => {
+        openModal();
+        window.setTimeout(() => profileAvatar?.click(), 0);
+    });
+}
+
+if (coverEditButton) {
+    coverEditButton.addEventListener("click", () => {
+        openModal();
+        window.setTimeout(() => profileCover?.click(), 0);
+    });
 }
 
 if (modalClose) {
@@ -272,13 +308,128 @@ function updateCurrentGame() {
 }
 
 function updateStats() {
-    if (statValues[0] && profileGamesCount) {
-        statValues[0].textContent = profileGamesCount.value || 0;
+    if (profileGamesCount) {
+        profileGamesCount.textContent = String(
+            Number(PROFILE_API_DATA?.games_count || 0)
+        );
     }
 
-    if (statValues[1] && profileFriendsCount) {
-        statValues[1].textContent = profileFriendsCount.value || 0;
+    if (profileFriendsCount) {
+        profileFriendsCount.textContent = String(
+            Number(PROFILE_API_DATA?.friends_count || 0)
+        );
     }
+}
+
+function applyProfileMedia(profile) {
+    const resolveMediaUrl = (value) => {
+        if (!value) return "";
+        return String(value).startsWith("data:") ? String(value) : profileApiUrl(value);
+    };
+    const avatarUrl = resolveMediaUrl(profile?.avatar_url);
+    const coverUrl = resolveMediaUrl(profile?.cover_url);
+
+    const avatarElements = [
+        document.querySelector(".profile-avatar"),
+        ...document.querySelectorAll(".profile-button .avatar")
+    ].filter(Boolean);
+
+    avatarElements.forEach((element) => {
+        if (avatarUrl) {
+            element.style.backgroundImage = `url("${avatarUrl}")`;
+            element.style.backgroundSize = "cover";
+            element.style.backgroundPosition = "center";
+            element.style.backgroundRepeat = "no-repeat";
+            element.textContent = "";
+        } else {
+            element.style.backgroundImage = "";
+            element.textContent = String(profile?.name || "?").trim().charAt(0).toUpperCase() || "?";
+        }
+    });
+
+    const cover = document.querySelector(".profile-cover");
+    if (cover) {
+        if (coverUrl) {
+            cover.style.backgroundImage =
+                `linear-gradient(rgba(12, 8, 10, .18), rgba(12, 8, 10, .28)), url("${coverUrl}")`;
+            cover.style.backgroundSize = "cover";
+            cover.style.backgroundPosition = "center";
+            cover.style.backgroundRepeat = "no-repeat";
+        } else {
+            cover.style.backgroundImage = "";
+        }
+    }
+}
+
+function readBlobAsDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Não foi possível processar a imagem."));
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function prepareProfileImage(file, kind) {
+    if (!file || !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        throw new Error("Escolha uma imagem JPG, PNG ou WebP.");
+    }
+    if (file.size > 12 * 1024 * 1024) {
+        throw new Error("A imagem original deve ter no máximo 12 MB.");
+    }
+    if (typeof createImageBitmap !== "function") {
+        throw new Error("Seu navegador não oferece suporte ao processamento de imagens. Atualize o navegador e tente novamente.");
+    }
+
+    const limits = kind === "avatar"
+        ? { width: 600, height: 600, bytes: 550 * 1024 }
+        : { width: 1800, height: 800, bytes: 1250 * 1024 };
+
+    const bitmap = await createImageBitmap(file);
+    try {
+        const scale = Math.min(1, limits.width / bitmap.width, limits.height / bitmap.height);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Não foi possível preparar a imagem.");
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+        for (const quality of [0.86, 0.78, 0.70, 0.62]) {
+            const blob = await new Promise((resolve) =>
+                canvas.toBlob(resolve, "image/jpeg", quality)
+            );
+            if (blob && blob.size <= limits.bytes) {
+                return await readBlobAsDataUrl(blob);
+            }
+        }
+        throw new Error("A imagem ainda ficou muito grande após a compactação. Escolha outra imagem.");
+    } finally {
+        bitmap.close?.();
+    }
+}
+
+
+/* =========================================
+   OPÇÕES DE CURSO E COMPATIBILIDADE
+========================================= */
+
+function ensureProfileCourseOption(course) {
+    if (!profileCourse || !course) return;
+
+    const existingOption = Array.from(profileCourse.options).find(
+        (option) => option.value === course
+    );
+
+    if (existingOption) return;
+
+    // Mantém visíveis cursos já salvos que não estejam na lista atual.
+    // Assim, perfis antigos não perdem o valor ao abrir ou salvar a edição.
+    const legacyOption = document.createElement("option");
+    legacyOption.value = course;
+    legacyOption.textContent = `${course} (curso cadastrado)`;
+    legacyOption.dataset.legacyCourse = "true";
+    profileCourse.appendChild(legacyOption);
 }
 
 
@@ -315,7 +466,11 @@ function applyProfileData(profile) {
         platforms: Array.isArray(profile.platforms) ? profile.platforms : [],
         genres: Array.isArray(profile.genres) ? profile.genres : [],
         current_game: profile.current_game || "",
-        current_game_status: profile.current_game_status || "available"
+        current_game_status: profile.current_game_status || "available",
+        games_count: Number(profile.games_count || 0),
+        friends_count: Number(profile.friends_count || 0),
+        avatar_url: profile.avatar_url || null,
+        cover_url: profile.cover_url || null
     };
 
     PROFILE_API_DATA = data;
@@ -334,7 +489,10 @@ function applyProfileData(profile) {
     // Preenche os campos do formulário.
     if (profileName) profileName.value = data.name;
     if (profileUsername) profileUsername.value = data.username;
-    if (profileCourse) profileCourse.value = data.course;
+    if (profileCourse) {
+        ensureProfileCourseOption(data.course);
+        profileCourse.value = data.course;
+    }
     if (profileSemester) profileSemester.value = String(data.semester);
     if (profileJoinDate) profileJoinDate.value = data.join_date;
     if (profileStatus) profileStatus.value = data.status;
@@ -358,12 +516,21 @@ function applyProfileData(profile) {
     }
 
     if (profileIdentityCourse) {
-        profileIdentityCourse.textContent =
-            `${data.course} • ${data.semester}º período`;
+        profileIdentityCourse.textContent = data.course
+            ? `${data.course} • ${data.semester}º período`
+            : "Curso não informado";
     }
 
     if (bioText) {
         bioText.textContent = data.bio || "Nenhuma biografia adicionada.";
+    }
+
+    if (profileAboutCourseText) {
+        profileAboutCourseText.textContent = data.course || "Curso não informado";
+    }
+
+    if (profileAboutSemesterText) {
+        profileAboutSemesterText.textContent = `${data.semester}º período`;
     }
 
     if (profileDateText) {
@@ -385,6 +552,7 @@ function applyProfileData(profile) {
         ownAvatar.textContent = data.name.charAt(0).toUpperCase() || "?";
     }
 
+    applyProfileMedia(data);
     updateProfileStatus(data.status);
     updatePlatforms();
     updateGenres();
@@ -399,7 +567,7 @@ async function loadProfileFromApi() {
 
     try {
         const response = await fetch(
-            `${PROFILE_API_BASE_URL}/auth/profile`,
+            profileApiUrl("/auth/profile"),
             {
                 method: "GET",
                 headers: {
@@ -441,11 +609,10 @@ if (profileForm) {
 
         if (
             !name ||
-            !course ||
             !/^[a-z0-9._]{3,32}$/.test(username)
         ) {
             alert(
-                "Informe um nome, um curso e um nome de usuário válido. " +
+                "Informe um nome e um nome de usuário válido. " +
                 "O nome de usuário deve ter de 3 a 32 caracteres " +
                 "e pode conter letras, números, ponto e sublinhado."
             );
@@ -497,7 +664,7 @@ if (profileForm) {
 
         try {
             const response = await fetch(
-                `${PROFILE_API_BASE_URL}/auth/profile`,
+                profileApiUrl("/auth/profile"),
                 {
                     method: "PUT",
                     headers: {
@@ -513,6 +680,39 @@ if (profileForm) {
             }
 
             const savedProfile = await response.json();
+
+            const mediaPayload = {};
+            if (PENDING_PROFILE_MEDIA.avatar_data_url) {
+                mediaPayload.avatar_data_url = PENDING_PROFILE_MEDIA.avatar_data_url;
+            }
+            if (PENDING_PROFILE_MEDIA.cover_data_url) {
+                mediaPayload.cover_data_url = PENDING_PROFILE_MEDIA.cover_data_url;
+            }
+
+            if (Object.keys(mediaPayload).length) {
+                const mediaResponse = await fetch(
+                    profileApiUrl("/auth/profile/media"),
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`
+                        },
+                        body: JSON.stringify(mediaPayload)
+                    }
+                );
+                if (!mediaResponse.ok) {
+                    throw new Error(
+                        "Os dados do perfil foram salvos, mas a foto ou a capa não foi salva: " +
+                        await getProfileApiErrorMessage(mediaResponse)
+                    );
+                }
+                Object.assign(savedProfile, await mediaResponse.json());
+                PENDING_PROFILE_MEDIA.avatar_data_url = null;
+                PENDING_PROFILE_MEDIA.cover_data_url = null;
+                if (profileAvatar) profileAvatar.value = "";
+                if (profileCover) profileCover.value = "";
+            }
 
             applyProfileData(savedProfile);
             closeModal();
@@ -539,53 +739,46 @@ if (profileForm) {
 
 
 /* =========================================
-   PRÉVIA DO AVATAR E DA CAPA
-
-   Observação: estes arquivos ainda são apenas
-   pré-visualizados; não são enviados ao servidor.
+   PRÉVIA E PREPARAÇÃO DO AVATAR E DA CAPA
 ========================================= */
 
 if (profileAvatar) {
-    profileAvatar.addEventListener("change", () => {
-        const file = profileAvatar.files[0];
+    profileAvatar.addEventListener("change", async () => {
+        const file = profileAvatar.files?.[0];
         if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onload = (event) => {
-            const avatar = document.querySelector(".profile-avatar");
-            if (!avatar) return;
-
-            avatar.style.backgroundImage = `url(${event.target.result})`;
-            avatar.style.backgroundSize = "cover";
-            avatar.style.backgroundPosition = "center";
-            avatar.style.fontSize = "0";
-        };
-
-        reader.readAsDataURL(file);
+        try {
+            const dataUrl = await prepareProfileImage(file, "avatar");
+            PENDING_PROFILE_MEDIA.avatar_data_url = dataUrl;
+            applyProfileMedia({
+                name: PROFILE_API_DATA?.name || profileName?.value || "Usuário",
+                avatar_url: dataUrl,
+                cover_url: PENDING_PROFILE_MEDIA.cover_data_url || PROFILE_API_DATA?.cover_url
+            });
+        } catch (error) {
+            profileAvatar.value = "";
+            alert(error.message);
+        }
     });
 }
 
 if (profileCover) {
-    profileCover.addEventListener("change", () => {
-        const file = profileCover.files[0];
+    profileCover.addEventListener("change", async () => {
+        const file = profileCover.files?.[0];
         if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onload = (event) => {
-            const cover = document.querySelector(".profile-cover");
-            if (!cover) return;
-
-            cover.style.backgroundImage = `url(${event.target.result})`;
-            cover.style.backgroundSize = "cover";
-            cover.style.backgroundPosition = "center";
-        };
-
-        reader.readAsDataURL(file);
+        try {
+            const dataUrl = await prepareProfileImage(file, "cover");
+            PENDING_PROFILE_MEDIA.cover_data_url = dataUrl;
+            applyProfileMedia({
+                name: PROFILE_API_DATA?.name || profileName?.value || "Usuário",
+                avatar_url: PENDING_PROFILE_MEDIA.avatar_data_url || PROFILE_API_DATA?.avatar_url,
+                cover_url: dataUrl
+            });
+        } catch (error) {
+            profileCover.value = "";
+            alert(error.message);
+        }
     });
 }
-
 
 /* =========================================
    ABAS DO PERFIL
@@ -670,7 +863,7 @@ async function profileActivityApiRequest(path, options = {}) {
         ...(options.headers || {})
     };
 
-    const response = await fetch(`${PROFILE_API_BASE_URL}${path}`, {
+    const response = await fetch(profileApiUrl(path), {
         method: options.method || "GET",
         headers,
         ...(options.body ? { body: JSON.stringify(options.body) } : {})
@@ -783,7 +976,7 @@ function createProfileActivityComment(comment, postId) {
         remove.className = "comment-delete-button";
         remove.textContent = "🗑 Excluir";
         remove.addEventListener("click", async () => {
-            if (!window.confirm("Deseja excluir este comentário?")) return;
+            if (!(await window.OverclockUI.confirm("Deseja excluir este comentário?", { title: "Excluir comentário", confirmLabel: "Excluir", danger: true }))) return;
             try {
                 await profileActivityApiRequest(`/feed/posts/${postId}/comments/${comment.id}`, { method: "DELETE" });
                 await loadProfileActivity(true);
@@ -931,7 +1124,7 @@ function createProfileActivityPostCard(post, activityNote = "") {
         deleteButton.className = "post-action post-delete-button";
         deleteButton.textContent = "🗑 Excluir";
         deleteButton.addEventListener("click", async () => {
-            if (!window.confirm("Deseja realmente excluir esta publicação?")) return;
+            if (!(await window.OverclockUI.confirm("Deseja realmente excluir esta publicação?", { title: "Excluir publicação", confirmLabel: "Excluir", danger: true }))) return;
             await runProfilePostAction(`/feed/posts/${post.id}`, "DELETE", "Não foi possível excluir a publicação");
         });
         actions.appendChild(deleteButton);

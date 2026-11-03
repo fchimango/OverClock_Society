@@ -1,626 +1,157 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Seu painel pessoal na comunidade gamer Overclock Society.">
     <title>Dashboard | Overclock Society</title>
-
-    <link
-        rel="stylesheet"
-        href="../css/global.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="../css/dashboard.css"
-    >
-
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/notifications.css">
-
     <link rel="stylesheet" href="../css/global-search.css">
-
+    <script src="../js/global-ui.js"></script>
 </head>
-
-
 <body>
-
-    <!-- ==========================
-         HEADER
-    =========================== -->
-
     <header class="dashboard-header">
-
-        <a
-            href="dashboard.html"
-            class="logo"
-        >
-
+        <a href="dashboard.html" class="logo" aria-label="Overclock Society - Dashboard">
             <span class="logo-icon">🎮</span>
-
-            <span>
-                Overclock<span class="logo-highlight">Society</span>
-            </span>
-
+            <span>Overclock<span class="logo-highlight">Society</span></span>
         </a>
 
-
         <div class="header-search">
-
-            <span class="search-icon">
-                🔍
-            </span>
-
-            <input
-                type="text"
-                placeholder="Buscar jogadores, jogos e publicações..."
-                id="searchInput"
-            >
-
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="text" placeholder="Buscar jogadores, jogos e publicações..." id="searchInput" aria-label="Buscar jogadores, jogos e publicações" autocomplete="off">
         </div>
-
 
         <div class="header-actions">
-
-            <button
-                class="icon-button"
-                title="Notificações"
-            >
-                🔔
-            </button>
-
-
-            <button
-                class="profile-button"
-                id="profileButton"
-            >
-
-                <div class="avatar">
-                    J
-                </div>
-
+            <button class="icon-button" type="button" title="Notificações" aria-label="Notificações">🔔</button>
+            <button class="profile-button" id="profileButton" type="button" aria-label="Abrir meu perfil">
+                <div class="avatar">?</div>
                 <div class="profile-name">
-
-                    <strong>
-                        João
-                    </strong>
-
-                    <span>
-                        Online
-                    </span>
-
+                    <strong>Carregando...</strong>
+                    <span>Online</span>
                 </div>
-
             </button>
-
         </div>
-
     </header>
 
-
-    <!-- ==========================
-         LAYOUT
-    =========================== -->
-
     <div class="dashboard-layout">
-
-
-        <!-- ==========================
-             SIDEBAR
-        =========================== -->
-
         <aside class="sidebar">
-
-            <nav>
-
-                <span class="sidebar-title">
-                    MENU
-                </span>
-
-
-                <a
-                    href="#"
-                    class="sidebar-link active"
-                >
-
-                    <span>🏠</span>
-
-                    Dashboard
-
-                </a>
-
-
-                <a
-                    href="perfil.html"
-                    class="sidebar-link"
-                >
-
-                    <span>👤</span>
-
-                    Meu perfil
-
-                </a>
-
-
-                <a
-    href="meus-jogos.html"
-    class="sidebar-link"
->
-    <span>🎮</span>
-    Meus jogos
-                </a>
-
-                <a href="catalogo-jogos.html" class="sidebar-link">
-                    <span>🕹️</span>
-                    Catálogo de jogos
-                </a>
-
-
-                <a
-    href="amigos.html"
-    class="sidebar-link"
->
-    <span>👥</span>
-    Amigos
-</a>
-
-
-                <a
-                    href="feed.html"
-                    class="sidebar-link"
-                >
-
-                    <span>📰</span>
-
-                    Feed
-
-                </a>
-
-
-                
-
+            <nav aria-label="Menu principal">
+                <span class="sidebar-title">MENU</span>
+                <a href="dashboard.html" class="sidebar-link active" aria-current="page"><span>🏠</span>Dashboard</a>
+                <a href="perfil.html" class="sidebar-link"><span>👤</span>Meu perfil</a>
+                <a href="meus-jogos.html" class="sidebar-link"><span>🎮</span>Meus jogos</a>
+                <a href="catalogo-jogos.html" class="sidebar-link"><span>🕹️</span>Catálogo de jogos</a>
+                <a href="amigos.html" class="sidebar-link"><span>👥</span>Amigos</a>
+                <a href="feed.html" class="sidebar-link"><span>📰</span>Feed</a>
             </nav>
-
-
             <div class="sidebar-bottom">
-
-                <a
-                    href="#"
-                    class="sidebar-link"
-                >
-
-                    <span>⚙️</span>
-
-                    Configurações
-
-                </a>
-
-
-                <a
-                    href="index.html"
-                    class="sidebar-link logout-link"
-                >
-
-                    <span>🚪</span>
-
-                    Sair
-
-                </a>
-
+                <a href="perfil.html#configuracoes" class="sidebar-link"><span>⚙️</span>Configurações</a>
+                <a href="index.html" class="sidebar-link logout-link"><span>🚪</span>Sair</a>
             </div>
-
         </aside>
 
-
-        <!-- ==========================
-             CONTEÚDO
-        =========================== -->
-
-        <main class="dashboard-content">
-
-
-            <!-- BOAS-VINDAS -->
-
-            <section class="welcome-section">
-
-                <div>
-
-                    <span class="welcome-label">
-                        DASHBOARD
-                    </span>
-
-                    <h1>
-                        Boa noite, João! 👋
-                    </h1>
-
-                    <p>
-                        O que vamos jogar hoje?
-                    </p>
-
+        <main class="dashboard-content dashboard-home">
+            <section class="dashboard-hero">
+                <div class="dashboard-hero-copy">
+                    <span class="welcome-label">SEU ESPAÇO NA COMUNIDADE</span>
+                    <h1 id="dashboardGreeting">Olá, jogador! 👋</h1>
+                    <p id="dashboardSubtitle">Sua próxima partida pode começar com uma boa conexão.</p>
                 </div>
-
-
-                <button
-                    class="btn btn-primary"
-                    id="findPlayersButton"
-                >
-
-                    Encontrar jogadores
-
-                    <span>
-                        →
-                    </span>
-
-                </button>
-
+                <div class="dashboard-hero-mark" aria-hidden="true">
+                    <span>OS</span>
+                    <small>PLAY<br>TOGETHER</small>
+                </div>
             </section>
 
-
-            <!-- ==========================
-                 ESTATÍSTICAS
-            =========================== -->
-
-            <section class="stats-grid">
-
-
-                <div class="dashboard-stat-card">
-
-                    <div class="stat-card-icon">
-                        🎮
-                    </div>
-
+            <section class="dashboard-stats-section" aria-label="Resumo da sua conta">
+                <div class="dashboard-section-heading compact-heading">
                     <div>
-
-                        <span>
-                            Jogos Que Gosto
-                        </span>
-
-                        <strong>
-                            12
-                        </strong>
-
+                        <span class="section-label">VISÃO GERAL</span>
+                        <h2>Seu resumo</h2>
                     </div>
-
+                    <span class="dashboard-live-note"><i></i> Dados da sua conta</span>
                 </div>
-
-
-                <div class="dashboard-stat-card">
-
-                    <div class="stat-card-icon">
-                        👥
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Amigos
-                        </span>
-
-                        <strong>
-                            8
-                        </strong>
-
-                    </div>
-
+                <div class="stats-grid">
+                    <article class="dashboard-stat-card stat-games">
+                        <div class="stat-card-icon" aria-hidden="true">🎮</div>
+                        <div><span>Jogos na coleção</span><strong id="statGames">—</strong><small>Seus títulos salvos</small></div>
+                    </article>
+                    <article class="dashboard-stat-card stat-friends">
+                        <div class="stat-card-icon" aria-hidden="true">👥</div>
+                        <div><span>Amigos</span><strong id="statFriends">—</strong><small>Sua rede gamer</small></div>
+                    </article>
+                    <article class="dashboard-stat-card stat-completed">
+                        <div class="stat-card-icon" aria-hidden="true">🏆</div>
+                        <div><span>Jogos zerados</span><strong id="statCompleted">—</strong><small>Conquistas pessoais</small></div>
+                    </article>
+                    <article class="dashboard-stat-card stat-notifications">
+                        <div class="stat-card-icon" aria-hidden="true">🔔</div>
+                        <div><span>Não lidas</span><strong id="statNotifications">—</strong><small>Notificações pendentes</small></div>
+                    </article>
                 </div>
-
-
-                <div class="dashboard-stat-card">
-
-                    <div class="stat-card-icon">
-                        📝
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Publicações
-                        </span>
-
-                        <strong>
-                            5
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="dashboard-stat-card">
-
-                    <div class="stat-card-icon">
-                        🏆
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Conquistas
-                        </span>
-
-                        <strong>
-                            14
-                        </strong>
-
-                    </div>
-
-                </div>
-
             </section>
 
+            <div class="dashboard-content-grid">
+                <div class="dashboard-primary-column">
+                    <section class="dashboard-panel dashboard-collection-panel">
+                        <div class="dashboard-section-heading">
+                            <div>
+                                <span class="section-label">SEUS JOGOS</span>
+                                <h2>Da sua coleção</h2>
+                                <p>Seus favoritos e jogos salvos em um só lugar.</p>
+                            </div>
+                            <a class="text-button" id="seeGamesButton" href="meus-jogos.html">Ver coleção <span aria-hidden="true">→</span></a>
+                        </div>
+                        <div class="dashboard-game-grid" id="dashboardGames" aria-live="polite">
+                            <p class="dashboard-state-message">Carregando sua coleção...</p>
+                        </div>
+                    </section>
 
-            <!-- ==========================
-                 JOGOS
-            =========================== -->
-
-            <section class="dashboard-section">
-
-                <div class="section-header">
-
-                    <div>
-
-                        <span class="section-label">
-                            SEUS JOGOS
-                        </span>
-
-                        <h2>
-                            Recentemente jogados
-                        </h2>
-
-                    </div>
-
-
-                    <button
-                        class="text-button"
-                        id="seeGamesButton"
-                    >
-                        Ver todos →
-                    </button>
-
+                    <section class="dashboard-panel dashboard-feed-panel">
+                        <div class="dashboard-section-heading">
+                            <div>
+                                <span class="section-label">DA COMUNIDADE</span>
+                                <h2>Conversas recentes</h2>
+                                <p>Veja o que outros jogadores estão compartilhando.</p>
+                            </div>
+                            <a class="text-button" href="feed.html">Abrir feed <span aria-hidden="true">→</span></a>
+                        </div>
+                        <div class="dashboard-feed-list" id="dashboardFeedList" aria-live="polite">
+                            <p class="dashboard-state-message">Carregando publicações...</p>
+                        </div>
+                    </section>
                 </div>
 
-
-                <div class="game-grid">
-
-
-                    <article class="game-card">
-
-                        <div class="game-image elden-ring">
-                            ER
+                <aside class="dashboard-sidebar-column">
+                    <section class="dashboard-panel dashboard-online-panel">
+                        <div class="dashboard-section-heading">
+                            <div>
+                                <span class="section-label">CONECTADOS</span>
+                                <h2>Amigos online</h2>
+                            </div>
+                            <a class="text-button" id="seePlayersButton" href="amigos.html">Ver todos</a>
                         </div>
-
-                        <div class="game-info">
-
-                            <h3>
-                                Elden Ring
-                            </h3>
-
-                            <span>
-                                RPG / Ação
-                            </span>
-
+                        <div class="dashboard-online-list" id="dashboardPlayersList" aria-live="polite">
+                            <p class="dashboard-state-message">Carregando amigos...</p>
                         </div>
-
-                        <div class="game-rating">
-                            ⭐ 5.0
-                        </div>
-
-                    </article>
-
-
-                    <article class="game-card">
-
-                        <div class="game-image valorant">
-                            V
-                        </div>
-
-                        <div class="game-info">
-
-                            <h3>
-                                Valorant
-                            </h3>
-
-                            <span>
-                                FPS / Competitivo
-                            </span>
-
-                        </div>
-
-                        <div class="game-rating">
-                            ⭐ 4.5
-                        </div>
-
-                    </article>
-
-
-                    <article class="game-card">
-
-                        <div class="game-image minecraft">
-                            MC
-                        </div>
-
-                        <div class="game-info">
-
-                            <h3>
-                                Minecraft
-                            </h3>
-
-                            <span>
-                                Sandbox
-                            </span>
-
-                        </div>
-
-                        <div class="game-rating">
-                            ⭐ 4.8
-                        </div>
-
-                    </article>
-
-
-                    <article class="game-card">
-
-                        <div class="game-image terraria">
-                            T
-                        </div>
-
-                        <div class="game-info">
-
-                            <h3>
-                                Terraria
-                            </h3>
-
-                            <span>
-                                Aventura / Sandbox
-                            </span>
-
-                        </div>
-
-                        <div class="game-rating">
-                            ⭐ 4.7
-                        </div>
-
-                    </article>
-
-
-                </div>
-
-            </section>
-
-
-            <!-- ==========================
-                 JOGADORES ONLINE
-            =========================== -->
-
-            <section class="dashboard-section">
-
-                <div class="section-header">
-
-                    <div>
-
-                        <span class="section-label">
-                            COMUNIDADE
-                        </span>
-
-                        <h2>
-                            Jogadores online
-                        </h2>
-
-                    </div>
-
-                    <button
-                        class="text-button"
-                        id="seePlayersButton"
-                    >
-                        Ver todos →
-                    </button>
-
-                </div>
-
-
-                <div class="players-list">
-
-
-                    <div class="player-card">
-
-                        <div class="player-avatar">
-                            M
-                        </div>
-
-                        <div class="player-info">
-
-                            <strong>
-                                Maria
-                            </strong>
-
-                            <span>
-                                🎮 Valorant
-                            </span>
-
-                        </div>
-
-                        <span class="online-status">
-                            ● Online
-                        </span>
-
-                    </div>
-
-
-                    <div class="player-card">
-
-                        <div class="player-avatar">
-                            P
-                        </div>
-
-                        <div class="player-info">
-
-                            <strong>
-                                Pedro
-                            </strong>
-
-                            <span>
-                                🎮 Minecraft
-                            </span>
-
-                        </div>
-
-                        <span class="online-status">
-                            ● Online
-                        </span>
-
-                    </div>
-
-
-                    <div class="player-card">
-
-                        <div class="player-avatar">
-                            L
-                        </div>
-
-                        <div class="player-info">
-
-                            <strong>
-                                Lucas
-                            </strong>
-
-                            <span>
-                                🎮 Elden Ring
-                            </span>
-
-                        </div>
-
-                        <span class="online-status">
-                            ● Online
-                        </span>
-
-                    </div>
-
-
-                </div>
-
-            </section>
-
-
+                    </section>
+
+
+                    <section class="dashboard-community-note">
+                        <span aria-hidden="true">⚡</span>
+                        <div><strong>Jogue junto. Conecte-se.</strong><p>A Overclock Society é feita por jogadores e para jogadores.</p></div>
+                    </section>
+                </aside>
+            </div>
         </main>
-
     </div>
 
-
     <script src="../js/api-config.js"></script>
-
     <script src="../js/notifications.js"></script>
-
     <script src="../js/dashboard.js"></script>
-
     <script src="../js/session.js"></script>
     <script src="../js/global-search.js"></script>
-
 </body>
-
 </html>

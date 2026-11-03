@@ -26,8 +26,8 @@ from database import Base, engine, get_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Cria tabelas que ainda não existem, incluindo
-    # posts, comentários, curtidas, repostagens, jogos, amizades e notificações.
+    # Cria tabelas que ainda não existem, incluindo posts, jogos, amizades,
+    # notificações e mídia de perfil (avatar/capa persistidos no PostgreSQL).
     Base.metadata.create_all(bind=engine)
 
     # Atualiza a tabela users existente.

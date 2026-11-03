@@ -102,7 +102,7 @@
     border-radius: 10px;
 
     background:
-        rgba(99, 102, 241, 0.10);
+        rgba(121, 16, 21, 0.10);
 
     font-size: 20px;
 }
@@ -488,7 +488,7 @@
         translateY(-5px);
 
     border-color:
-        rgba(129, 140, 248, 0.3);
+        rgba(168, 50, 59, 0.3);
 }
 
 
@@ -690,7 +690,7 @@
         rgba(15, 23, 42, 0.8);
 
     border-color:
-        rgba(129, 140, 248, 0.2);
+        rgba(168, 50, 59, 0.2);
 }
 
 
@@ -1225,7 +1225,7 @@
         11px;
 
     background:
-        rgba(99, 102, 241, 0.10);
+        rgba(121, 16, 21, 0.10);
 
     font-size:
         21px;
@@ -1322,7 +1322,7 @@
 .add-game-modal select:focus {
 
     border-color:
-        rgba(129, 140, 248, 0.45);
+        rgba(168, 50, 59, 0.45);
 
     background:
         #172033;
@@ -1371,8 +1371,8 @@
     background:
         linear-gradient(
             135deg,
-            #312e81,
-            #6366f1
+            #4F0704,
+            #791015
         );
 
     color:
@@ -1432,10 +1432,10 @@
 
 .game-options-button:hover {
 
-    background: rgba(99, 102, 241, 0.30);
+    background: rgba(121, 16, 21, 0.30);
 
     border-color:
-        rgba(129, 140, 248, 0.30);
+        rgba(168, 50, 59, 0.30);
 }
 
 
@@ -1706,8 +1706,8 @@
 
 .game-search-result:hover,
 .game-search-result:focus-visible {
-    border-color: rgba(129, 140, 248, .38);
-    background: rgba(99, 102, 241, .13);
+    border-color: rgba(168, 50, 59, .38);
+    background: rgba(121, 16, 21, .13);
     outline: none;
 }
 
@@ -1724,7 +1724,7 @@
 .game-search-result-fallback {
     display: grid;
     place-items: center;
-    color: #a5b4fc;
+    color: #E6A0A2;
 }
 
 .game-search-result-copy {
@@ -1767,9 +1767,9 @@
     gap: 10px;
     margin-top: 10px;
     padding: 8px 10px;
-    border: 1px solid rgba(129, 140, 248, .3);
+    border: 1px solid rgba(168, 50, 59, .3);
     border-radius: 10px;
-    background: rgba(99, 102, 241, .1);
+    background: rgba(121, 16, 21, .1);
 }
 
 .selected-game-preview img {
@@ -1924,7 +1924,7 @@
 }
 
 .game-confirm-dialog button:focus-visible {
-    outline: 2px solid #a5b4fc;
+    outline: 2px solid #E6A0A2;
     outline-offset: 3px;
 }
 

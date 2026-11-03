@@ -50,11 +50,15 @@ body {
 
     --text-secondary: #94a3b8;
 
-    --primary: #6366f1;
+    --primary: #791015;
 
-    --primary-light: #818cf8;
+    --primary-light: #D06A70;
 
-    --primary-dark: #4f46e5;
+    --primary-dark: #4F0704;
+
+    --primary-soft: rgba(121, 16, 21, 0.16);
+
+    --primary-border: rgba(168, 50, 59, 0.30);
 
 }
 
@@ -251,7 +255,7 @@ body {
         );
 
     box-shadow:
-        0 8px 25px rgba(79, 70, 229, 0.22);
+        0 8px 25px rgba(79, 7, 4, 0.22);
 }
 
 
@@ -259,7 +263,7 @@ body {
 .btn-primary:hover {
 
     box-shadow:
-        0 12px 35px rgba(79, 70, 229, 0.35);
+        0 12px 35px rgba(79, 7, 4, 0.35);
 }
 
 
@@ -365,7 +369,7 @@ body {
 
         radial-gradient(
             circle at 50% 20%,
-            rgba(99, 102, 241, 0.20),
+            rgba(121, 16, 21, 0.20),
             transparent 38%
         ),
 
@@ -377,7 +381,7 @@ body {
 
         radial-gradient(
             circle at 80% 70%,
-            rgba(139, 92, 246, 0.08),
+            rgba(168, 50, 59, 0.08),
             transparent 30%
         );
 }
@@ -403,10 +407,10 @@ body {
     border-radius: 50%;
 
     border:
-        1px solid rgba(129, 140, 248, 0.08);
+        1px solid rgba(168, 50, 59, 0.08);
 
     box-shadow:
-        0 0 120px rgba(99, 102, 241, 0.08);
+        0 0 120px rgba(121, 16, 21, 0.08);
 }
 
 
@@ -435,15 +439,15 @@ body {
         8px 15px;
 
     border:
-        1px solid rgba(129, 140, 248, 0.18);
+        1px solid rgba(168, 50, 59, 0.18);
 
     border-radius: 30px;
 
     background:
-        rgba(99, 102, 241, 0.08);
+        rgba(121, 16, 21, 0.08);
 
     color:
-        #a5b4fc;
+        #E6A0A2;
 
     font-size: 13px;
 
@@ -497,8 +501,8 @@ body {
     background:
         linear-gradient(
             135deg,
-            #818cf8,
-            #c084fc
+            #A8323B,
+            #E6A0A2
         );
 
     -webkit-background-clip: text;
@@ -714,7 +718,7 @@ body {
     border-radius: 50%;
 
     background:
-        rgba(99, 102, 241, 0.08);
+        rgba(121, 16, 21, 0.08);
 
     transition:
         transform 0.4s ease;
@@ -727,7 +731,7 @@ body {
         translateY(-8px);
 
     border-color:
-        rgba(129, 140, 248, 0.25);
+        rgba(168, 50, 59, 0.25);
 
     box-shadow:
         0 20px 50px rgba(0, 0, 0, 0.20);
@@ -762,7 +766,7 @@ body {
     border-radius: 14px;
 
     background:
-        rgba(99, 102, 241, 0.11);
+        rgba(121, 16, 21, 0.11);
 
     font-size: 26px;
 }
@@ -841,7 +845,7 @@ body {
 
         radial-gradient(
             circle at 50% 20%,
-            rgba(99, 102, 241, 0.18),
+            rgba(121, 16, 21, 0.18),
             transparent 50%
         ),
 
@@ -1383,8 +1387,8 @@ footer {
 }
 
 .page-local-filter input:focus {
-    border-color: #818cf8;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, .12);
+    border-color: #A8323B;
+    box-shadow: 0 0 0 3px rgba(121, 16, 21, .12);
 }
 
 .friends-local-filter {
@@ -1411,7 +1415,7 @@ footer {
 }
 
 .rawg-modal-attribution a {
-    color: #a5b4fc;
+    color: #E6A0A2;
     text-decoration: underline;
     text-underline-offset: 3px;
 }
@@ -1421,4 +1425,165 @@ footer {
         width: 100%;
         margin-bottom: 8px;
     }
+}
+
+
+/* =========================================
+   AVISOS E CONFIRMAÇÕES PERSONALIZADOS
+   Substituem caixas nativas do navegador.
+========================================= */
+.oc-toast-region {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 10050;
+    display: grid;
+    gap: 10px;
+    width: min(410px, calc(100vw - 36px));
+    pointer-events: none;
+}
+
+.oc-toast {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 28px;
+    align-items: start;
+    gap: 11px;
+    padding: 14px 13px;
+    border: 1px solid rgba(168, 50, 59, .30);
+    border-radius: 14px;
+    background: rgba(13, 18, 31, .97);
+    color: #f8fafc;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .38);
+    pointer-events: auto;
+    animation: oc-toast-in .22s ease-out both;
+    backdrop-filter: blur(14px);
+}
+
+.oc-toast--success { border-color: rgba(52, 168, 112, .42); }
+.oc-toast--error { border-color: rgba(190, 60, 68, .58); }
+.oc-toast__icon {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(121, 16, 21, .22);
+    color: #f0b7ba;
+    font-size: 16px;
+    font-weight: 800;
+}
+.oc-toast--success .oc-toast__icon { background: rgba(35, 125, 82, .18); color: #8de0b4; }
+.oc-toast--error .oc-toast__icon { background: rgba(150, 30, 38, .22); color: #ff9da3; }
+.oc-toast__message {
+    padding-top: 2px;
+    color: #e7eaf0;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.oc-toast__close {
+    display: grid;
+    width: 27px;
+    height: 27px;
+    place-items: center;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #9da8b8;
+    cursor: pointer;
+    font-size: 18px;
+}
+.oc-toast__close:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+
+.oc-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10060;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(1, 4, 11, .76);
+    backdrop-filter: blur(7px);
+    animation: oc-fade-in .16s ease-out both;
+}
+.oc-confirm-dialog {
+    width: min(440px, 100%);
+    padding: 24px;
+    border: 1px solid rgba(168, 50, 59, .38);
+    border-radius: 20px;
+    background: linear-gradient(145deg, #151923, #0c111d 72%);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, .54);
+    color: #f8fafc;
+    animation: oc-dialog-in .2s ease-out both;
+}
+.oc-confirm-dialog__eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: #d47c82;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+.oc-confirm-dialog h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 20px;
+    line-height: 1.3;
+}
+.oc-confirm-dialog p {
+    margin: 10px 0 22px;
+    color: #b5bdca;
+    font-size: 14px;
+    line-height: 1.6;
+}
+.oc-confirm-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.oc-confirm-button {
+    min-height: 40px;
+    padding: 9px 16px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .055);
+    color: #e5e7eb;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.oc-confirm-button:hover { background: rgba(255, 255, 255, .10); }
+.oc-confirm-button:focus-visible,
+.oc-toast__close:focus-visible { outline: 2px solid #d47c82; outline-offset: 2px; }
+.oc-confirm-button--primary {
+    border-color: #791015;
+    background: linear-gradient(135deg, #8c171e, #4f0704);
+    color: #fff;
+}
+.oc-confirm-button--primary:hover { background: linear-gradient(135deg, #a5222b, #68100e); }
+.oc-confirm-button--danger {
+    border-color: #7c1720;
+    background: linear-gradient(135deg, #a11e29, #5b0a0d);
+    color: #fff;
+}
+.oc-confirm-button--danger:hover { background: linear-gradient(135deg, #b72b37, #741016); }
+
+@keyframes oc-toast-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes oc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes oc-dialog-in { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+@media (max-width: 520px) {
+    .oc-toast-region { top: 10px; right: 10px; width: calc(100vw - 20px); }
+    .oc-confirm-dialog { padding: 20px; }
+    .oc-confirm-dialog__actions { flex-direction: column-reverse; }
+    .oc-confirm-button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .oc-toast, .oc-confirm-backdrop, .oc-confirm-dialog { animation: none; }
 }

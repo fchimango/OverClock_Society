@@ -1,6 +1,7 @@
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
@@ -20,7 +21,7 @@ def _public_user_payload(
     db: Session,
 ) -> dict[str, Any]:
     """Build a public profile without exposing email, password hash or tokens."""
-    profile = auth.build_profile_response(profile_user)
+    profile = auth.build_profile_response(profile_user, db)
 
     game_rows = db.scalars(
         select(models.UserGame)
@@ -142,6 +143,8 @@ def _public_user_payload(
         "genres": genres,
         "friends_count": friendship_count,
         "games_count": len(unique_games),
+        "avatar_url": profile.get("avatar_url"),
+        "cover_url": profile.get("cover_url"),
         "games": games,
         "relationship": relationship,
         "request_id": request_id,
@@ -166,6 +169,36 @@ def _get_user_by_username(username: str, db: Session) -> models.User:
     if user is None:
         raise HTTPException(status_code=404, detail="Jogador não encontrado.")
     return user
+
+
+@router.get("/id/{user_id}/media/{kind}", response_class=Response)
+def get_profile_media(
+    user_id: int,
+    kind: Literal["avatar", "cover"],
+    db: Session = Depends(get_db),
+):
+    """Serve public profile images stored in PostgreSQL."""
+    _get_user_by_id(user_id, db)
+    media = db.get(models.UserProfileMedia, user_id)
+    if media is None:
+        raise HTTPException(status_code=404, detail="Imagem de perfil não encontrada.")
+
+    image_data = media.avatar_data if kind == "avatar" else media.cover_data
+    content_type = (
+        media.avatar_content_type if kind == "avatar" else media.cover_content_type
+    )
+    if not image_data or not content_type:
+        raise HTTPException(status_code=404, detail="Imagem de perfil não encontrada.")
+
+    return Response(
+        content=image_data,
+        media_type=content_type,
+        headers={
+            "Cache-Control": "public, max-age=300",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Disposition": "inline",
+        },
+    )
 
 
 @router.get("/id/{user_id}")

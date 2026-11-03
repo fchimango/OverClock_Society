@@ -7,6 +7,7 @@ Os resultados são armazenados em cache por alguns minutos para reduzir chamadas
 from __future__ import annotations
 
 import json
+from difflib import SequenceMatcher
 from html.parser import HTMLParser
 import os
 import re
@@ -14,6 +15,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import unicodedata
 from threading import Lock
 from typing import Any
 
@@ -208,12 +210,85 @@ def _map_game(game: dict[str, Any], *, detail: bool = False) -> dict[str, Any]:
     return result
 
 
+def _normalize_search_text(value: str) -> str:
+    """Normaliza nomes para comparação sem diferenciar caixa ou acentos."""
+    normalized = unicodedata.normalize("NFKD", value.casefold())
+    without_accents = "".join(
+        char for char in normalized
+        if not unicodedata.combining(char)
+    )
+    return " ".join(re.findall(r"[^\W_]+", without_accents, flags=re.UNICODE))
+
+
+def _token_aligned_similarity(query_tokens: list[str], name_tokens: list[str]) -> float | None:
+    """Compara os primeiros tokens do título, aceitando prefixos e pequenos erros."""
+    if not query_tokens or len(query_tokens) > len(name_tokens):
+        return None
+
+    scores: list[float] = []
+    for query_token, name_token in zip(query_tokens, name_tokens):
+        similarity = SequenceMatcher(None, query_token, name_token).ratio()
+        if name_token.startswith(query_token):
+            similarity = 1.0
+        if similarity < 0.72:
+            return None
+        scores.append(similarity)
+
+    return sum(scores) / len(scores)
+
+
+def _game_search_relevance_key(game: dict[str, Any], term: str) -> tuple[Any, ...]:
+    """Ordena primeiro títulos exatos, prefixos, nomes semelhantes e extensões."""
+    query = _normalize_search_text(term)
+    name = _normalize_search_text(str(game.get("name") or ""))
+
+    if not query or not name:
+        return (5, 0.0, 0, len(name), 0.0, name)
+
+    if name == query:
+        return (0, 0.0, 0, len(name), 0.0, name)
+
+    if name.startswith(query):
+        return (1, 0.0, len(name) - len(query), len(name), 0.0, name)
+
+    if query in name:
+        return (2, 0.0, len(name) - len(query), len(name), 0.0, name)
+
+    query_tokens = query.split()
+    name_tokens = name.split()
+    token_similarity = _token_aligned_similarity(query_tokens, name_tokens)
+    overall_similarity = SequenceMatcher(None, query, name).ratio()
+
+    if token_similarity is not None:
+        # O número de palavras extras desempata o jogo original e suas continuações.
+        extra_tokens = len(name_tokens) - len(query_tokens)
+        return (
+            3,
+            -token_similarity,
+            extra_tokens,
+            len(name),
+            -overall_similarity,
+            name,
+        )
+
+    # Fallback para erros de digitação em consultas de uma palavra ou formatos diferentes.
+    minimum_similarity = 0.72 if len(query) >= 7 else 0.80
+    if overall_similarity >= minimum_similarity:
+        return (4, -overall_similarity, abs(len(name) - len(query)), len(name), 0.0, name)
+
+    # Chaves iguais preservam a ordem original da RAWG (sort é estável).
+    return (5, 0.0, 0, 0, 0.0, "")
+
+
 @router.get("/games")
 def list_catalog_games(
     q: str | None = Query(default=None, max_length=80),
     genre: str | None = Query(default=None, max_length=80),
     platforms: str | None = Query(default=None, max_length=80),
-    ordering: str = Query(default="-added", pattern=r"^(|-added|-rating|-metacritic|name|released)$"),
+    ordering: str = Query(
+        default="relevance",
+        pattern=r"^(|relevance|-added|-rating|-metacritic|name|released)$",
+    ),
     page: int = Query(default=1, ge=1, le=1000),
     page_size: int = Query(default=24, ge=1, le=40),
 ) -> dict[str, Any]:
@@ -230,17 +305,29 @@ def list_catalog_games(
         if not re.fullmatch(r"\d+(,\d+){0,9}", platform_ids):
             raise HTTPException(status_code=422, detail="A plataforma selecionada é inválida.")
 
+    selected_ordering = ordering or "relevance"
     rawg_params: dict[str, Any] = {
         "page": page,
         "page_size": page_size,
-        "ordering": ordering or "-added",
     }
+
     if term:
         rawg_params["search"] = term
+        # False mantém a busca fuzzy da RAWG habilitada, permitindo erros pequenos de digitação.
+        rawg_params["search_precise"] = False
+
     if genre_slug:
         rawg_params["genres"] = genre_slug
     if platform_ids:
         rawg_params["platforms"] = platform_ids
+
+    if selected_ordering == "relevance":
+        # Sem pesquisa, mantém a listagem mais recente. Com pesquisa, não força
+        # -added/-rating: a RAWG retorna candidatos de busca e nós os reordenamos.
+        if not term:
+            rawg_params["ordering"] = "-added"
+    else:
+        rawg_params["ordering"] = selected_ordering
 
     payload = _request_rawg("games", rawg_params)
     games = [
@@ -248,6 +335,11 @@ def list_catalog_games(
         for item in (payload.get("results") or [])
         if isinstance(item, dict)
     ]
+
+    if term and selected_ordering == "relevance":
+        # A ordenação é aplicada aos resultados da página atual, sem alterar a paginação RAWG.
+        games.sort(key=lambda game: _game_search_relevance_key(game, term))
+
     return {
         "count": int(payload.get("count") or 0),
         "page": page,

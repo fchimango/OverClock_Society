@@ -1041,9 +1041,10 @@ async function deletePost(postId) {
     }
 
     if (
-        !window.confirm(
-            "Deseja realmente excluir esta publicação?"
-        )
+        !(await window.OverclockUI.confirm(
+            "Deseja realmente excluir esta publicação?",
+            { title: "Excluir publicação", confirmLabel: "Excluir", danger: true }
+        ))
     ) {
         return;
     }
@@ -1099,9 +1100,10 @@ async function deleteComment(postId, commentId) {
     }
 
     if (
-        !window.confirm(
-            "Deseja realmente excluir este comentário?"
-        )
+        !(await window.OverclockUI.confirm(
+            "Deseja realmente excluir este comentário?",
+            { title: "Excluir comentário", confirmLabel: "Excluir", danger: true }
+        ))
     ) {
         return;
     }
