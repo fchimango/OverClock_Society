@@ -4,7 +4,7 @@
 (() => {
     const hostname = window.location.hostname;
     const isLocal = ["127.0.0.1", "localhost"].includes(hostname);
-    const PRODUCTION_API_BASE_URL = ""; // preencher depois de criar o serviço da Overclock Society no Render
+    const PRODUCTION_API_BASE_URL = "https://overclock-api.onrender.com"; // preencher depois de criar o serviço da Overclock Society no Render
 
     window.OVERCLOCK_API_BASE_URL = (isLocal
         ? "http://127.0.0.1:8000"
