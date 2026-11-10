@@ -656,10 +656,15 @@
 
 
     /* =========================================
-       ACEITAR / RECUSAR AMIZADE
+       SINCRONIZAR STATUS DA SOLICITAÇÃO
+
+       A API de amizades é acionada exclusivamente
+       pela página amigos.html. Aqui apenas atualizamos
+       a representação visual da notificação depois
+       que o backend confirma a ação.
     ========================================= */
 
-    function resolveFriendRequest(friendName, status) {
+    function syncFriendRequestStatus(friendName, status) {
         if (status !== "accepted" && status !== "declined") return false;
 
         const notification = getFriendRequestNotification(friendName);
@@ -676,16 +681,6 @@
 
         render();
         void persistNotificationRead(notification.id);
-
-        // amigos.js resolve a solicitação no endpoint /friends/requests/{id}/...
-        window.dispatchEvent(new CustomEvent("overclock:friend-request-resolved", {
-            detail: {
-                friendName: notification.friendName,
-                status,
-                requestId: notification.requestId || null
-            }
-        }));
-
         return true;
     }
 
@@ -1478,25 +1473,6 @@
         }
 
 
-        /* =================================
-           PEDIDO DE AMIZADE
-        ================================= */
-
-        if (
-            notification.category ===
-                "friends" &&
-
-            notification.kind ===
-                "friend-request"
-        ) {
-
-            appendFriendRequestActions(
-                content,
-                notification
-            );
-        }
-
-
         item.append(
             icon,
             content
@@ -1508,254 +1484,36 @@
         ================================= */
 
         const openTarget = async () => {
-
             /* Sempre marca como lida antes de sair da página. */
             await markAsRead(notification.id);
 
+            // Pedidos recebidos sempre abrem a área de solicitações em Amigos.
+            // Esta regra também corrige notificações antigas sem o hash.
+            const target =
+                notification.category === "friends" &&
+                notification.kind === "friend-request"
+                    ? "amigos.html#solicitacoes"
+                    : notification.target;
 
-            /*
-             * PROMOÇÃO:
-             *
-             * target === null
-             *
-             * Portanto não acontece
-             * nenhum redirecionamento.
-             */
-
-            if (
-                notification.target
-            ) {
-
-                window.location.href =
-                    notification.target;
+            if (target) {
+                window.location.href = target;
             }
         };
 
 
-        item.addEventListener(
-            "click",
-            (event) => {
+        item.addEventListener("click", () => {
+            void openTarget();
+        });
 
-                /*
-                 * Não executar o clique
-                 * da notificação ao usar
-                 * Aceitar / Recusar.
-                 */
-
-                if (
-                    event.target.closest(
-                        ".notification-friend-action"
-                    )
-                ) {
-
-                    return;
-                }
-
-
-                openTarget();
-
+        item.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                void openTarget();
             }
-        );
-
-
-        /*
-         * ACESSIBILIDADE:
-         * Enter / Espaço
-         */
-
-        item.addEventListener(
-            "keydown",
-            (event) => {
-
-                if (
-                    event.key ===
-                        "Enter" ||
-
-                    event.key ===
-                        " "
-                ) {
-
-                    if (
-                        document.activeElement
-                            ?.classList
-                            ?.contains(
-                                "notification-friend-action"
-                            )
-                    ) {
-
-                        return;
-                    }
-
-
-                    event.preventDefault();
-
-                    openTarget();
-
-                }
-
-            }
-        );
+        });
 
 
         return item;
-    }
-
-
-    /* =========================================
-       AÇÕES DO PEDIDO DE AMIZADE
-    ========================================= */
-
-    function appendFriendRequestActions(
-        content,
-        notification
-    ) {
-
-        const status =
-            notification.status ||
-            "pending";
-
-
-        /*
-         * PEDIDO JÁ RESOLVIDO
-         */
-
-        if (
-            status ===
-                "accepted" ||
-
-            status ===
-                "declined"
-        ) {
-
-            const resolution =
-                document.createElement(
-                    "span"
-                );
-
-
-            resolution.className =
-                `notification-resolution ${
-                    status === "declined"
-                        ? "declined"
-                        : ""
-                }`;
-
-
-            resolution.textContent =
-
-                status === "accepted"
-
-                    ? "✓ Solicitação aceita"
-
-                    : "✕ Solicitação recusada";
-
-
-            content.appendChild(
-                resolution
-            );
-
-
-            return;
-        }
-
-
-        /* =================================
-           BOTÕES
-        ================================= */
-
-        const actions =
-            document.createElement(
-                "div"
-            );
-
-
-        actions.className =
-            "notification-friend-actions";
-
-
-        const accept =
-            document.createElement(
-                "button"
-            );
-
-
-        accept.type =
-            "button";
-
-
-        accept.className =
-            "notification-friend-action accept";
-
-
-        accept.textContent =
-            "✓ Aceitar";
-
-
-        const decline =
-            document.createElement(
-                "button"
-            );
-
-
-        decline.type =
-            "button";
-
-
-        decline.className =
-            "notification-friend-action decline";
-
-
-        decline.textContent =
-            "✕ Recusar";
-
-
-        accept.addEventListener(
-            "click",
-            (event) => {
-
-                event.stopPropagation();
-
-
-                resolveFriendRequest(
-
-                    notification.friendName,
-
-                    "accepted"
-
-                );
-
-            }
-        );
-
-
-        decline.addEventListener(
-            "click",
-            (event) => {
-
-                event.stopPropagation();
-
-
-                resolveFriendRequest(
-
-                    notification.friendName,
-
-                    "declined"
-
-                );
-
-            }
-        );
-
-
-        actions.append(
-            accept,
-            decline
-        );
-
-
-        content.appendChild(
-            actions
-        );
     }
 
 
@@ -2148,7 +1906,7 @@
         getFriendRequestStatus,
 
 
-        resolveFriendRequest,
+        syncFriendRequestStatus,
 
 
         notifyFeedAction,

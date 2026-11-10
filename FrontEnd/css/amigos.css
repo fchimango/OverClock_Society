@@ -284,6 +284,30 @@
         800;
 }
 
+.friend-avatar {
+    overflow: hidden;
+}
+
+.friend-avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.friend-avatar {
+    overflow: hidden;
+}
+
+.friend-avatar-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
 
 .friend-avatar.purple {
     background:
@@ -1041,3 +1065,49 @@
 /* Links de perfil nos resultados da busca de jogadores */
 .player-search-info .user-profile-link { cursor: pointer; }
 .player-search-info .user-profile-link:focus-visible { outline: 2px solid #A8323B; outline-offset: 3px; border-radius: 6px; }
+
+
+/* Recorte consistente das fotos nas solicitações, lista de amigos e busca. */
+.friend-avatar,
+.player-search-avatar {
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden !important;
+    box-sizing: border-box;
+    aspect-ratio: 1 / 1;
+}
+
+.friend-avatar {
+    flex-basis: 48px;
+    width: 48px !important;
+    min-width: 48px;
+    max-width: 48px;
+    height: 48px !important;
+    min-height: 48px;
+    max-height: 48px;
+}
+
+.player-search-avatar {
+    flex-basis: 42px;
+    width: 42px !important;
+    min-width: 42px;
+    max-width: 42px;
+    height: 42px !important;
+    min-height: 42px;
+    max-height: 42px;
+}
+
+.friend-avatar-image {
+    position: absolute !important;
+    inset: 0;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center;
+    border-radius: inherit;
+}

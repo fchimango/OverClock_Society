@@ -48,8 +48,23 @@ def get_effective_user_status(user: models.User, db: Session) -> str:
 
 
 def serialize_public_user(user: models.User, db: Session) -> dict[str, Any]:
-    """Expose only the public information needed by the friends screen."""
+    """Expose the public information needed by the friends screen."""
     profile = user.profile_data or {}
+
+    # The avatar is stored in PostgreSQL and served by the public profile-media
+    # endpoint. Include its version so browsers refresh it after an image change.
+    media = db.get(models.UserProfileMedia, user.id)
+    avatar_version = (
+        str(int(media.updated_at.timestamp() * 1000))
+        if media and media.updated_at
+        else "1"
+    )
+    avatar_url = (
+        f"/profiles/id/{user.id}/media/avatar?v={avatar_version}"
+        if media and media.avatar_data
+        else None
+    )
+
     return {
         "id": user.id,
         "name": user.name,
@@ -57,6 +72,7 @@ def serialize_public_user(user: models.User, db: Session) -> dict[str, Any]:
         "course": profile.get("course") or "Curso não informado",
         "semester": profile.get("semester"),
         "status": get_effective_user_status(user, db),
+        "avatar_url": avatar_url,
     }
 
 
@@ -442,7 +458,7 @@ def send_friend_request(
                     "friend_name": user.name,
                     "friend_id": user.id,
                     "status": "pending",
-                    "target": "amigos.html",
+                    "target": "amigos.html#solicitacoes",
                 },
                 is_read=False,
                 created_at=datetime.now(timezone.utc),

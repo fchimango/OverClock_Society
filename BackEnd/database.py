@@ -1,22 +1,58 @@
+
 import os
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 load_dotenv()
 
-url = os.getenv("DATABASE_URL")
-if url is None:
-    raise RuntimeError("DATABASE_URL não encontrada. Confira o arquivo .env")
+database_url = os.getenv("DATABASE_URL")
 
-# Força o driver psycopg2 (o mesmo ajuste que fizemos no teste)
-if url.startswith("postgres://"):
-    url = url.replace("postgres://", "postgresql+psycopg2://", 1)
-elif url.startswith("postgresql://"):
-    url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+if not database_url:
+    raise RuntimeError(
+        "DATABASE_URL não encontrada. Confira o arquivo .env"
+    )
 
-engine = create_engine(url, pool_pre_ping=True)
+url = make_url(database_url)
+connect_args = {}
+
+# Configuração para PostgreSQL utilizando pg8000
+if url.drivername in {
+    "postgres",
+    "postgresql",
+    "postgresql+psycopg2",
+}:
+    query = dict(url.query)
+
+    # Parâmetros específicos do driver anterior
+    sslmode = query.pop("sslmode", None)
+    query.pop("channel_binding", None)
+
+    url = url.set(
+        drivername="postgresql+pg8000",
+        query=query,
+    )
+
+    # Mantém o SSL obrigatório quando configurado na URL original
+    if sslmode == "require":
+        connect_args["ssl_context"] = True
+    elif sslmode not in (None, "disable"):
+        raise RuntimeError(
+            f"Modo SSL '{sslmode}' precisa de configuração específica "
+            "para o pg8000."
+        )
+
+    elif sslmode == "disable":
+        connect_args["ssl_context"] = False
+
+engine = create_engine(
+    url,
+    pool_pre_ping=True,
+    connect_args=connect_args,
+)
+
 SessionLocal = sessionmaker(bind=engine)
 
 

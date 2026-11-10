@@ -275,9 +275,35 @@ def format_relative_time(value: datetime | None) -> str:
     ).strftime("%d/%m/%Y")
 
 
+def build_avatar_url(
+    user_id: int,
+    media_by_user: dict[int, models.UserProfileMedia],
+) -> str | None:
+    """Return the public, cache-busted URL for a user's saved avatar."""
+    media = media_by_user.get(user_id)
+    if media is None or not media.avatar_data:
+        return None
+
+    version = (
+        str(int(media.updated_at.timestamp() * 1000))
+        if media.updated_at
+        else "1"
+    )
+    return f"/profiles/id/{user_id}/media/avatar?v={version}"
+
+
+
+def get_avatar_url(user_id: int, db: Session) -> str | None:
+    """Load one avatar URL for single-item create responses."""
+    media = db.get(models.UserProfileMedia, user_id)
+    return build_avatar_url(user_id, {user_id: media} if media else {})
+
+
+
 def serialize_comment(
     comment: models.Comment,
-    author: models.User
+    author: models.User,
+    avatar_url: str | None = None,
 ) -> dict:
     return {
         "id": comment.id,
@@ -285,6 +311,7 @@ def serialize_comment(
         "userId": comment.user_id,
         "author": author.name,
         "avatar": get_avatar(author.name),
+        "avatar_url": avatar_url,
         "text": comment.content,
         "createdAt": format_relative_time(
             comment.created_at
@@ -343,10 +370,20 @@ def serialize_post(
         )
     ).all()
 
+    avatar_user_ids = {author.id}
+    avatar_user_ids.update(comment_author.id for _, comment_author in comment_rows)
+    media_rows = db.scalars(
+        select(models.UserProfileMedia).where(
+            models.UserProfileMedia.user_id.in_(avatar_user_ids)
+        )
+    ).all()
+    media_by_user = {media.user_id: media for media in media_rows}
+
     comments = [
         serialize_comment(
             comment,
-            comment_author
+            comment_author,
+            build_avatar_url(comment_author.id, media_by_user),
         )
         for comment, comment_author in comment_rows
     ]
@@ -375,6 +412,7 @@ def serialize_post(
             f"@{author.username or fallback_username(author.name)}"
         ),
         "avatar": get_avatar(author.name),
+        "avatar_url": build_avatar_url(author.id, media_by_user),
         "content": post.content,
         "createdAt": format_relative_time(
             post.created_at
@@ -431,9 +469,22 @@ def serialize_posts_batch(
         .where(models.Comment.post_id.in_(post_ids))
         .order_by(models.Comment.created_at.asc(), models.Comment.id.asc())
     ).all()
+    avatar_user_ids = set(user_ids)
+    avatar_user_ids.update(author.id for _, author in comment_rows)
+    media_rows = db.scalars(
+        select(models.UserProfileMedia).where(
+            models.UserProfileMedia.user_id.in_(avatar_user_ids)
+        )
+    ).all()
+    media_by_user = {media.user_id: media for media in media_rows}
+
     for comment, author in comment_rows:
         comments_by_post.setdefault(comment.post_id, []).append(
-            serialize_comment(comment, author)
+            serialize_comment(
+                comment,
+                author,
+                build_avatar_url(author.id, media_by_user),
+            )
         )
 
     likes_by_post = {
@@ -484,6 +535,7 @@ def serialize_posts_batch(
             "author": author.name,
             "username": f"@{author.username or fallback_username(author.name)}",
             "avatar": get_avatar(author.name),
+            "avatar_url": build_avatar_url(author.id, media_by_user),
             "content": post.content,
             "createdAt": format_relative_time(post.created_at),
             "createdAtISO": post.created_at.isoformat() if post.created_at else None,
@@ -660,7 +712,8 @@ def create_comment(
 
     return serialize_comment(
         comment,
-        current_user
+        current_user,
+        get_avatar_url(current_user.id, db),
     )
 
 
