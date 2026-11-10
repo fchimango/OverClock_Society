@@ -256,15 +256,27 @@ def login(
 
 @router.get("/me")
 def me(
-    user: models.User = Depends(
-        get_current_user
-    )
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
+    # Expose only the public URL of the saved avatar, never the image bytes.
+    # The version query parameter ensures pages pick up a newly uploaded photo.
+    media = db.get(models.UserProfileMedia, user.id)
+    media_version = (
+        str(int(media.updated_at.timestamp() * 1000))
+        if media and media.updated_at else "1"
+    )
+    avatar_url = (
+        f"/profiles/id/{user.id}/media/avatar?v={media_version}"
+        if media and media.avatar_data else None
+    )
+
     return {
         "id": user.id,
         "name": user.name,
         "email": user.email,
-        "username": user.username
+        "username": user.username,
+        "avatar_url": avatar_url,
     }
 
 

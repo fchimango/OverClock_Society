@@ -71,6 +71,7 @@ function clearSession() {
     localStorage.removeItem("userId");
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
+    localStorage.removeItem("userAvatarUrl");
 }
 
 
@@ -141,32 +142,42 @@ function updateHeaderUser(user) {
         return;
     }
 
-    const nameElements =
-        document.querySelectorAll(
-            ".profile-name strong"
-        );
+    const nameElements = document.querySelectorAll(".profile-name strong");
+    nameElements.forEach((element) => {
+        element.textContent = user.name;
+    });
 
-    nameElements.forEach(
-        (element) => {
-            element.textContent =
-                user.name;
+    const avatarElements = document.querySelectorAll(".profile-button .avatar");
+    const initial = getInitial(user.name);
+    const avatarPath = String(user.avatar_url || "").trim();
+
+    avatarElements.forEach((element) => {
+        // Always clear the previous content first, so a changed/removed photo is reflected.
+        element.replaceChildren();
+        element.textContent = initial;
+        element.setAttribute("aria-hidden", "true");
+
+        if (!avatarPath || !SESSION_API_URL) return;
+
+        try {
+            const image = document.createElement("img");
+            image.className = "profile-header-avatar-image";
+            image.alt = "";
+            image.decoding = "async";
+            image.loading = "eager";
+            image.addEventListener("error", () => {
+                image.remove();
+                element.textContent = initial;
+            }, { once: true });
+
+            element.textContent = "";
+            element.appendChild(image);
+            image.src = new URL(avatarPath, SESSION_API_URL).toString();
+        } catch (error) {
+            element.textContent = initial;
+            console.warn("Não foi possível carregar a foto do cabeçalho.", error);
         }
-    );
-
-
-    const avatarElements =
-        document.querySelectorAll(
-            ".profile-button .avatar"
-        );
-
-    avatarElements.forEach(
-        (element) => {
-            element.textContent =
-                getInitial(
-                    user.name
-                );
-        }
-    );
+    });
 }
 
 
@@ -295,7 +306,8 @@ async function validateSession() {
 
     if (cachedName) {
         applyUserToPage({
-            name: cachedName
+            name: cachedName,
+            avatar_url: localStorage.getItem("userAvatarUrl") || null
         });
     }
 
@@ -341,6 +353,11 @@ async function validateSession() {
             user.email
         );
 
+        if (user.avatar_url) {
+            localStorage.setItem("userAvatarUrl", user.avatar_url);
+        } else {
+            localStorage.removeItem("userAvatarUrl");
+        }
 
         applyUserToPage(user);
         startPresenceHeartbeat();
@@ -357,7 +374,10 @@ window.dispatchEvent(
                     user.name,
 
                 email:
-                    user.email
+                    user.email,
+
+                avatar_url:
+                    user.avatar_url || null
             }
         }
     )

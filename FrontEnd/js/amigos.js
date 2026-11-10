@@ -158,9 +158,65 @@ function showEmptyState(container, message) {
 
 function createAvatar(user, className = "friend-avatar") {
     const avatar = document.createElement("div");
+    const initial = getInitial(user?.name);
+    const isSearchAvatar = className.includes("player-search-avatar");
+    const size = isSearchAvatar ? 42 : 48;
+
     avatar.className = `${className} ${getAvatarClass(user)}`;
-    avatar.textContent = getInitial(user?.name);
+    avatar.textContent = initial;
     avatar.setAttribute("aria-hidden", "true");
+
+    // Apply fixed bounds inline as a safeguard against broad/global img styles.
+    Object.assign(avatar.style, {
+        position: "relative",
+        display: "flex",
+        flex: `0 0 ${size}px`,
+        width: `${size}px`,
+        height: `${size}px`,
+        minWidth: `${size}px`,
+        minHeight: `${size}px`,
+        maxWidth: `${size}px`,
+        maxHeight: `${size}px`,
+        overflow: "hidden",
+        boxSizing: "border-box",
+        borderRadius: "12px"
+    });
+
+    const avatarPath = String(user?.avatar_url || "").trim();
+    if (avatarPath && FRIENDS_API_BASE_URL) {
+        try {
+            const image = document.createElement("img");
+            image.className = "friend-avatar-image";
+            image.alt = "";
+            image.loading = "lazy";
+            image.decoding = "async";
+            Object.assign(image.style, {
+                position: "absolute",
+                inset: "0",
+                display: "block",
+                width: "100%",
+                height: "100%",
+                maxWidth: "none",
+                maxHeight: "none",
+                objectFit: "cover",
+                objectPosition: "center",
+                borderRadius: "inherit"
+            });
+            image.addEventListener("error", () => {
+                image.remove();
+                avatar.textContent = initial;
+            }, { once: true });
+
+            avatar.textContent = "";
+            avatar.appendChild(image);
+            image.src = new URL(avatarPath, FRIENDS_API_BASE_URL).toString();
+        } catch (error) {
+            // Keep the initial as a safe fallback if the URL is invalid.
+            avatar.textContent = initial;
+            console.warn("Não foi possível carregar o endereço da foto do jogador.", error);
+        }
+    }
+
     return avatar;
 }
 
@@ -491,9 +547,9 @@ function syncFriendRequestNotification(friendName, status) {
     if (
         friendName &&
         window.OverclockNotifications &&
-        typeof window.OverclockNotifications.resolveFriendRequest === "function"
+        typeof window.OverclockNotifications.syncFriendRequestStatus === "function"
     ) {
-        window.OverclockNotifications.resolveFriendRequest(friendName, status);
+        window.OverclockNotifications.syncFriendRequestStatus(friendName, status);
     }
 }
 
@@ -538,29 +594,6 @@ async function resolveFriendRequest(requestId, action, button) {
         }
     }
 }
-
-window.addEventListener("overclock:friend-request-resolved", async (event) => {
-    const friendName = normalizeSearch(event.detail?.friendName);
-    const status = event.detail?.status;
-
-    if (!friendName || !["accepted", "declined"].includes(status)) return;
-
-    const request = currentRequests.find(
-        (item) => normalizeSearch(item.user?.name) === friendName
-    );
-
-    if (!request) {
-        // A central de notificações ainda pode conter cartões de demonstração;
-        // eles não devem criar amizades inexistentes no banco de dados.
-        return;
-    }
-
-    await resolveFriendRequest(
-        request.id,
-        status === "accepted" ? "accept" : "decline",
-        null
-    );
-});
 
 requestsList.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-request-action]");
@@ -864,6 +897,15 @@ async function initializeFriendsPage() {
     updateFriendsSummary();
 
     await refreshFriendsData();
+
+    // A notificação abre esta página diretamente na área de solicitações.
+    // Espera a lista da API ser renderizada antes de posicionar a tela.
+    if (window.location.hash === "#solicitacoes") {
+        document.getElementById("solicitacoes")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
 
     console.log("👥 Página Amigos conectada à API.");
 }

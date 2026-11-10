@@ -984,3 +984,30 @@
     .dashboard-game-grid { grid-template-columns: 1fr; }
     .dashboard-live-note { display: none; }
 }
+
+
+/* Foto de perfil no cabeçalho compartilhado entre as páginas autenticadas. */
+.profile-button .avatar {
+    position: relative;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.profile-header-avatar-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
+}

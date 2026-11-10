@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gerencie sua conta e as opções de segurança da Overclock Society.">
+    <title>Configurações | Overclock Society</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/notifications.css">
+    <link rel="stylesheet" href="../css/global-search.css">
+    <link rel="stylesheet" href="../css/configuracoes.css">
+    <script src="../js/global-ui.js"></script>
+</head>
+<body>
+    <header class="dashboard-header">
+        <a href="dashboard.html" class="logo" aria-label="Overclock Society - Dashboard">
+            <span class="logo-icon">🎮</span>
+            <span>Overclock<span class="logo-highlight">Society</span></span>
+        </a>
+
+        <div class="header-search">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="text" placeholder="Buscar jogadores, jogos e publicações..." id="searchInput" aria-label="Buscar jogadores, jogos e publicações" autocomplete="off">
+        </div>
+
+        <div class="header-actions">
+            <button class="icon-button" type="button" title="Notificações" aria-label="Notificações">🔔</button>
+            <a class="profile-button settings-profile-button" id="profileButton" href="perfil.html" aria-label="Abrir meu perfil">
+                <div class="avatar">?</div>
+                <div class="profile-name">
+                    <strong>Carregando...</strong>
+                    <span>Online</span>
+                </div>
+            </a>
+        </div>
+    </header>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <nav aria-label="Menu principal">
+                <span class="sidebar-title">MENU</span>
+                <a href="dashboard.html" class="sidebar-link"><span>🏠</span>Dashboard</a>
+                <a href="perfil.html" class="sidebar-link"><span>👤</span>Meu perfil</a>
+                <a href="meus-jogos.html" class="sidebar-link"><span>🎮</span>Meus jogos</a>
+                <a href="catalogo-jogos.html" class="sidebar-link"><span>🕹️</span>Catálogo de jogos</a>
+                <a href="amigos.html" class="sidebar-link"><span>👥</span>Amigos</a>
+                <a href="feed.html" class="sidebar-link"><span>📰</span>Feed</a>
+            </nav>
+            <div class="sidebar-bottom">
+                <a href="./configuracoes.html" class="sidebar-link active" aria-current="page"><span>⚙️</span>Configurações</a>
+                <a href="index.html" class="sidebar-link logout-link"><span>🚪</span>Sair</a>
+            </div>
+        </aside>
+
+        <main class="dashboard-content settings-content">
+            <section class="settings-heading">
+                <div>
+                    <span class="settings-eyebrow">CONTA E SEGURANÇA</span>
+                    <h1>Configurações</h1>
+                    <p>Consulte os dados da sua conta e gerencie sua senha.</p>
+                </div>
+                <div class="settings-heading-mark" aria-hidden="true">⚙️</div>
+            </section>
+
+            <div class="settings-sections">
+                <section class="settings-card" aria-labelledby="accountSectionTitle">
+                    <div class="settings-card-heading">
+                        <div class="settings-card-icon" aria-hidden="true">👤</div>
+                        <div>
+                            <h2 id="accountSectionTitle">Informações da conta</h2>
+                            <p>Dados associados ao seu acesso na Overclock Society.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-account-grid">
+                        <div class="settings-readonly-field">
+                            <span class="settings-field-label">Nome</span>
+                            <strong id="settingsAccountName">Carregando...</strong>
+                        </div>
+                        <div class="settings-readonly-field settings-email-field">
+                            <span class="settings-field-label">E-mail cadastrado</span>
+                            <strong id="settingsAccountEmail" class="settings-email-value">Carregando e-mail...</strong>
+                            <small>Esse é o e-mail associado à sua conta e utilizado para entrar na plataforma.</small>
+                        </div>
+                    </div>
+                    <p class="settings-info-note"><span aria-hidden="true">ℹ️</span> A alteração do e-mail não está disponível nesta versão.</p>
+                </section>
+
+                <section class="settings-card" aria-labelledby="securitySectionTitle">
+                    <div class="settings-card-heading">
+                        <div class="settings-card-icon" aria-hidden="true">🔐</div>
+                        <div>
+                            <h2 id="securitySectionTitle">Segurança e senha</h2>
+                            <p>Atualize sua senha para manter sua conta protegida.</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-security-note">
+                        <span aria-hidden="true">🛡️</span>
+                        <p>Sua senha atual não pode ser exibida. Por segurança, o sistema armazena apenas uma versão protegida dela. Para trocar a senha, informe a atual e escolha uma nova.</p>
+                    </div>
+
+                    <form id="changePasswordForm" class="settings-password-form" novalidate>
+                        <label class="settings-input-label" for="currentPassword">Senha atual</label>
+                        <div class="settings-password-wrap">
+                            <input id="currentPassword" name="current_password" type="password" autocomplete="current-password" placeholder="Digite sua senha atual" required maxlength="50">
+                            <button type="button" class="password-visibility-toggle" data-password-target="currentPassword" aria-label="Mostrar senha digitada" aria-pressed="false">Mostrar</button>
+                        </div>
+
+                        <label class="settings-input-label" for="newPassword">Nova senha</label>
+                        <div class="settings-password-wrap">
+                            <input id="newPassword" name="new_password" type="password" autocomplete="new-password" placeholder="Crie uma nova senha" required minlength="8" maxlength="50">
+                            <button type="button" class="password-visibility-toggle" data-password-target="newPassword" aria-label="Mostrar senha digitada" aria-pressed="false">Mostrar</button>
+                        </div>
+                        <small class="settings-input-hint">Use de 8 a 50 caracteres.</small>
+
+                        <label class="settings-input-label" for="confirmNewPassword">Confirme a nova senha</label>
+                        <div class="settings-password-wrap">
+                            <input id="confirmNewPassword" name="confirm_new_password" type="password" autocomplete="new-password" placeholder="Digite novamente a nova senha" required minlength="8" maxlength="50">
+                            <button type="button" class="password-visibility-toggle" data-password-target="confirmNewPassword" aria-label="Mostrar senha digitada" aria-pressed="false">Mostrar</button>
+                        </div>
+
+                        <p id="passwordFeedback" class="settings-feedback" role="status" aria-live="polite"></p>
+                        <div class="settings-form-actions">
+                            <button class="settings-submit-button" id="changePasswordSubmit" type="submit">Atualizar senha</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="settings-card settings-session-card" aria-labelledby="sessionSectionTitle">
+                    <div class="settings-card-heading">
+                        <div class="settings-card-icon" aria-hidden="true">💻</div>
+                        <div>
+                            <h2 id="sessionSectionTitle">Sua sessão</h2>
+                            <p>Quando terminar de usar a plataforma, encerre sua sessão pelo botão “Sair” no menu lateral.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/api-config.js"></script>
+    <script src="../js/notifications.js"></script>
+    <script src="../js/configuracoes.js"></script>
+    <script src="../js/session.js"></script>
+    <script src="../js/global-search.js"></script>
+</body>
+</html>

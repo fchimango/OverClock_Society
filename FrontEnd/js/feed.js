@@ -101,16 +101,49 @@ function getAvatarLetter(name) {
 }
 
 
+function setFeedAvatar(element, name, avatarUrl) {
+    if (!element) return;
+
+    const fallback = getAvatarLetter(name);
+    element.replaceChildren();
+    element.classList.remove("has-avatar-image");
+    element.textContent = fallback;
+
+    const source = String(avatarUrl || "").trim();
+    if (!source || !FEED_API_BASE_URL) return;
+
+    try {
+        const image = document.createElement("img");
+        image.className = "feed-avatar-image";
+        image.alt = "";
+        image.decoding = "async";
+        image.loading = "lazy";
+        image.addEventListener("error", () => {
+            image.remove();
+            element.classList.remove("has-avatar-image");
+            element.textContent = fallback;
+        }, { once: true });
+
+        element.textContent = "";
+        element.classList.add("has-avatar-image");
+        element.appendChild(image);
+        image.src = new URL(source, FEED_API_BASE_URL).toString();
+    } catch (error) {
+        element.classList.remove("has-avatar-image");
+        element.textContent = fallback;
+        console.warn("Não foi possível carregar o avatar do Feed.", error);
+    }
+}
+
+
 function updateComposerIdentity(
-    name = getCurrentUserName()
+    name = getCurrentUserName(),
+    avatarUrl = localStorage.getItem("userAvatarUrl")
 ) {
     const composerAvatar =
         document.querySelector(".composer-avatar");
 
-    if (composerAvatar) {
-        composerAvatar.textContent =
-            getAvatarLetter(name);
-    }
+    setFeedAvatar(composerAvatar, name, avatarUrl);
 }
 
 
@@ -674,7 +707,7 @@ function createPostCard(post) {
     // consegue navegar mesmo sem depender de listeners JavaScript no elemento.
     const avatar = document.createElement(profileUrl ? "a" : "div");
     avatar.className = "post-avatar";
-    avatar.textContent = post.avatar || getAvatarLetter(authorName);
+    setFeedAvatar(avatar, authorName, post.avatar_url || post.user?.avatar_url);
     configureProfileAnchor(avatar, profileUrl, authorName);
 
     const user = document.createElement("div");
@@ -958,7 +991,7 @@ function createComment(comment, postId) {
 
     const avatar = document.createElement(commentProfileUrl ? "a" : "div");
     avatar.className = "comment-avatar";
-    avatar.textContent = comment.avatar || getAvatarLetter(commentAuthorName);
+    setFeedAvatar(avatar, commentAuthorName, comment.avatar_url || comment.user?.avatar_url);
     configureProfileAnchor(avatar, commentProfileUrl, commentAuthorName);
 
     const body = document.createElement("div");
@@ -1566,7 +1599,8 @@ window.addEventListener(
         }
 
         updateComposerIdentity(
-            user.name || getCurrentUserName()
+            user.name || getCurrentUserName(),
+            user.avatar_url || localStorage.getItem("userAvatarUrl")
         );
 
         loadPosts();
@@ -1576,7 +1610,12 @@ window.addEventListener(
 
 window.addEventListener(
     "overclock:profile-updated",
-    () => {
+    (event) => {
+        const user = event.detail || {};
+        updateComposerIdentity(
+            user.name || getCurrentUserName(),
+            user.avatar_url || localStorage.getItem("userAvatarUrl")
+        );
         loadPosts();
     }
 );
