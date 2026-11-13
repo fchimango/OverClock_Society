@@ -33,7 +33,10 @@ const modalMessage =
    MENU MOBILE
 ========================================= */
 
+// Quando Vue está ativo, ele controla o estado do menu mobile.
+// Este bloco mantém o comportamento original como fallback sem Vue.
 if (
+    !window.__OCS_VUE_NAVBAR_ACTIVE__ &&
     menuToggle &&
     navLinks
 ) {
@@ -97,54 +100,46 @@ function openModal(
     title,
     message
 ) {
-
+    // Quando Vue está ativo, ele é a única fonte de estado do modal.
     if (
-        !modalOverlay ||
-        !modalTitle ||
-        !modalMessage
+        window.__OCS_VUE_MODAL_ACTIVE__ &&
+        window.OverclockHomeModal?.open
     ) {
-
+        window.OverclockHomeModal.open({ title, message });
         return;
     }
 
+    // Fallback para navegadores sem Vue/CDN.
+    if (!modalOverlay || !modalTitle || !modalMessage) return;
 
-    modalTitle.textContent =
-        title;
-
-
-    modalMessage.textContent =
-        message;
-
-
-    modalOverlay.classList.add(
-        "active"
-    );
-
-
-    document.body.style.overflow =
-        "hidden";
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modalOverlay.classList.add("active");
+    modalOverlay.setAttribute("aria-hidden", "false");
+    modalOverlay.removeAttribute("inert");
+    document.body.style.overflow = "hidden";
+    modalClose?.focus();
 }
 
 
 function closeModal() {
-
+    // Quando Vue está ativo, ele é a única fonte de estado do modal.
     if (
-        !modalOverlay
+        window.__OCS_VUE_MODAL_ACTIVE__ &&
+        window.OverclockHomeModal?.close
     ) {
-
+        window.OverclockHomeModal.close();
         return;
     }
 
+    // Fallback para navegadores sem Vue/CDN.
+    if (!modalOverlay) return;
 
-    modalOverlay.classList.remove(
-        "active"
-    );
-
-
-    document.body.style.overflow =
-        "";
+    modalOverlay.classList.remove("active");
+    modalOverlay.setAttribute("aria-hidden", "true");
+    modalOverlay.setAttribute("inert", "");
+    document.body.style.overflow = "";
 }
-
 
 /* =========================================
    BOTÕES
@@ -209,59 +204,23 @@ ctaButton?.addEventListener(
 
 
 /* =========================================
-   FECHAR MODAL
+   EVENTOS DE FECHAMENTO DO MODAL
 ========================================= */
 
-modalClose?.addEventListener(
-    "click",
-    closeModal
-);
+// Os eventos são registrados pelo Vue quando ele está ativo.
+// Este bloco preserva o comportamento original caso o CDN não carregue.
+if (!window.__OCS_VUE_MODAL_ACTIVE__) {
+    modalClose?.addEventListener("click", closeModal);
+    modalButton?.addEventListener("click", closeModal);
 
+    modalOverlay?.addEventListener("click", (event) => {
+        if (event.target === modalOverlay) closeModal();
+    });
 
-modalButton?.addEventListener(
-    "click",
-    closeModal
-);
-
-
-/* =========================================
-   CLICAR FORA DO MODAL
-========================================= */
-
-modalOverlay?.addEventListener(
-    "click",
-    (event) => {
-
-        if (
-            event.target ===
-            modalOverlay
-        ) {
-
-            closeModal();
-        }
-
-    }
-);
-
-
-/* =========================================
-   TECLA ESC
-========================================= */
-
-document.addEventListener(
-    "keydown",
-    (event) => {
-
-        if (
-            event.key ===
-            "Escape"
-        ) {
-
-            closeModal();
-        }
-
-    }
-);
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeModal();
+    });
+}
 
 
 /* =========================================
