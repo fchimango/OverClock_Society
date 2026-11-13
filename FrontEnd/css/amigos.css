@@ -1111,3 +1111,27 @@
     object-position: center;
     border-radius: inherit;
 }
+
+/* Cartões de amigos online: avatar e informações alinhados lado a lado, sem selo de presença. */
+.friend-card-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.friend-card-horizontal .friend-card-top {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    margin: 0;
+}
+
+.friend-card-horizontal .friend-card-info {
+    min-width: 0;
+}
+
+.friend-card-horizontal .friend-card-info h3,
+.friend-card-horizontal .friend-card-info span {
+    overflow-wrap: anywhere;
+}
+

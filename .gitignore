@@ -20,3 +20,9 @@ Thumbs.db
 
 # Backup local do banco de dados
 BackEnd/database.py.bak
+
+# Dependências do frontend
+/FrontEnd/node_modules/
+
+# Arquivos gerados pelo Vite
+/FrontEnd/dist/

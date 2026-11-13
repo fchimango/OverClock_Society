@@ -1,86 +1,111 @@
-/* =========================================
-   COUNTDOWN
-   Lançamento: 03/11/2026 às 00:00 (Brasília)
-========================================= */
+/* Fallback da página inicial: contador e envio de leads sem Vue.
+ * Quando o formulário Vue estiver ativo, somente o contador roda neste arquivo.
+ */
+(() => {
+    "use strict";
 
-const LAUNCH_DATE = new Date("2026-11-03T00:00:00-03:00");
+    // Fallback do contador: só executa quando o componente Vue não foi montado.
+    // A data é lida do HTML (data-target), evitando duplicar a configuração.
+    if (!window.__OCS_VUE_COUNTDOWN_ACTIVE__) {
+        const countdown = document.getElementById("countdown");
+        const targetTimestamp = countdown
+            ? new Date(countdown.dataset.target || "").getTime()
+            : NaN;
+        const values = countdown ? countdown.querySelectorAll(".countdown-item strong") : [];
+        const pad = (value) => String(value).padStart(2, "0");
 
-const cdDays = document.getElementById("cdDays");
-const cdHours = document.getElementById("cdHours");
-const cdMinutes = document.getElementById("cdMinutes");
-const cdSeconds = document.getElementById("cdSeconds");
+        function updateCountdown() {
+            if (values.length !== 4) return;
 
-function pad(n) {
-    return String(n).padStart(2, "0");
-}
+            const validTarget = Number.isFinite(targetTimestamp);
+            const diff = validTarget ? Math.max(0, targetTimestamp - Date.now()) : 0;
+            const total = Math.floor(diff / 1000);
+            const parts = [
+                pad(Math.floor(total / 86400)),
+                pad(Math.floor((total % 86400) / 3600)),
+                pad(Math.floor((total % 3600) / 60)),
+                pad(total % 60)
+            ];
 
-function updateCountdown() {
-    const diff = Math.max(0, LAUNCH_DATE - new Date());
-    const total = Math.floor(diff / 1000);
+            values.forEach((element, index) => {
+                element.textContent = parts[index];
+            });
+        }
 
-    cdDays.textContent = pad(Math.floor(total / 86400));
-    cdHours.textContent = pad(Math.floor((total % 86400) / 3600));
-    cdMinutes.textContent = pad(Math.floor((total % 3600) / 60));
-    cdSeconds.textContent = pad(total % 60);
-}
+        if (countdown && values.length === 4) {
+            updateCountdown();
+            window.setInterval(updateCountdown, 1000);
+        }
+    }
 
-if (cdDays) {
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-}
-/* =========================================
-   FORMULÁRIO DE LEADS
-========================================= */
+    // Evita que Vue e o fallback enviem o mesmo formulário.
+    if (window.__OCS_VUE_LEAD_ACTIVE__) return;
 
-// Local: usa o backend da sua máquina. Em produção, troque pela URL do Render.
-const API_URL = window.OVERCLOCK_API_BASE_URL;
+    const form = document.getElementById("leadForm");
+    const feedback = document.getElementById("leadFeedback");
+    const submit = document.getElementById("leadSubmit");
+    const apiBase = String(window.OVERCLOCK_API_BASE_URL || "").replace(/\/$/, "");
 
-const leadForm = document.getElementById("leadForm");
-const leadFeedback = document.getElementById("leadFeedback");
-const leadSubmit = document.getElementById("leadSubmit");
+    function showFeedback(message, type) {
+        if (!feedback) return;
+        feedback.textContent = message;
+        feedback.className = `lead-feedback ${type}`;
+    }
 
-function showFeedback(message, type) {
-    leadFeedback.textContent = message;
-    leadFeedback.className = `lead-feedback ${type}`;
-}
+    if (!form || !submit) return;
 
-if (leadForm) {
-    leadForm.addEventListener("submit", async (event) => {
-        event.preventDefault(); // impede a página de recarregar
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (submit.disabled) return;
 
-        const data = new FormData(leadForm);
+        const data = new FormData(form);
         const payload = {
-            name: (data.get("name") || "").trim(),
-            email: (data.get("email") || "").trim(),
-            contact: (data.get("contact") || "").trim() || null,
-            website: data.get("website") || null,
+            name: String(data.get("name") || "").trim(),
+            email: String(data.get("email") || "").trim(),
+            contact: String(data.get("contact") || "").trim() || null,
+            website: String(data.get("website") || "").trim() || null
         };
 
-        leadSubmit.disabled = true;
+        if (payload.name.length < 2) {
+            showFeedback("Informe seu nome com pelo menos 2 caracteres.", "error");
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
+            showFeedback("Informe um e-mail válido.", "error");
+            return;
+        }
+        if (!apiBase) {
+            showFeedback("A URL da API não está configurada.", "error");
+            return;
+        }
+
+        submit.disabled = true;
         showFeedback("Enviando...", "info");
 
         try {
-            const response = await fetch(`${API_URL}/leads`, {
+            const response = await fetch(`${apiBase}/leads`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(payload)
             });
             const body = await response.json().catch(() => ({}));
 
             if (response.ok) {
-                leadForm.reset();
-                showFeedback(body.message, "success");
+                form.reset();
+                showFeedback(body.message || "Cadastro realizado!", "success");
             } else if (response.status === 409) {
-                showFeedback(body.detail, "info");
+                showFeedback(body.detail || "Este e-mail já está cadastrado.", "info");
             } else if (response.status === 422) {
-                showFeedback(body.detail[0], "error");
+                const detail = Array.isArray(body.detail) ? body.detail[0] : body.detail;
+                showFeedback(detail || "Confira os dados informados.", "error");
             } else {
                 showFeedback("Algo deu errado. Tente novamente.", "error");
             }
-        } catch {
+        } catch (error) {
+            console.error("Falha ao enviar cadastro de interesse:", error);
             showFeedback("Não foi possível conectar ao servidor.", "error");
         } finally {
-            leadSubmit.disabled = false;
+            submit.disabled = false;
         }
     });
-}
+})();

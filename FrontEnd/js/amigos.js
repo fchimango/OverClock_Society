@@ -408,8 +408,10 @@ function createAllFriendCard(friend) {
 
 function createOnlineFriendCard(friend) {
     const card = document.createElement("article");
-    card.className = "friend-card";
+    card.className = "friend-card friend-card-horizontal";
     card.dataset.friendId = String(friend.id);
+    // Mantemos o status nos dados para que busca, filtros e ordenação continuem funcionando.
+    // A indicação visual de presença foi removida deste cartão a pedido do usuário.
     card.dataset.name = friend.name || "";
     card.dataset.status = friend.status === "online" ? "online" : "offline";
 
@@ -418,13 +420,6 @@ function createOnlineFriendCard(friend) {
     const avatar = createAvatar(friend);
     makeFriendProfileLink(avatar, friend);
     top.appendChild(avatar);
-
-    if (friend.status === "online") {
-        const dot = document.createElement("span");
-        dot.className = "online-dot";
-        dot.setAttribute("aria-label", "Online");
-        top.appendChild(dot);
-    }
 
     const info = document.createElement("div");
     info.className = "friend-card-info";
@@ -437,10 +432,6 @@ function createOnlineFriendCard(friend) {
     const course = document.createElement("span");
     course.textContent = friend.course || "Curso não informado";
     info.appendChild(course);
-
-    const presence = document.createElement("small");
-    presence.textContent = `${statusIcon(friend.status)} ${statusLabel(friend.status)}`;
-    info.appendChild(presence);
 
     card.append(top, info);
     return card;
