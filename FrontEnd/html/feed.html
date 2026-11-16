@@ -216,177 +216,7 @@
 
         <main class="dashboard-content feed-page">
 
-            <div class="feed-layout">
-
-                <!-- ==========================
-                     FEED PRINCIPAL
-                =========================== -->
-
-                <section class="feed-main">
-
-                    <div class="feed-header">
-
-                        <div>
-
-                            <span class="welcome-label">
-                                COMUNIDADE
-                            </span>
-
-                            <h1>
-                                Feed
-                            </h1>
-
-                            <p>
-                                Compartilhe momentos, opiniões e jogos
-                                com a comunidade.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ==========================
-                         CRIAR POST
-                    =========================== -->
-
-                    <section class="post-composer">
-
-                        <div class="composer-avatar">
-                            J
-                        </div>
-
-
-                        <div class="composer-content">
-
-                            <textarea
-                                id="postInput"
-                                maxlength="280"
-                                placeholder="O que está jogando hoje?"
-                            ></textarea>
-
-
-                            <div class="composer-footer">
-
-                                <div class="composer-info">
-
-                                    <span>
-                                        🎮 Use hashtags como
-                                        <strong>#eldenring</strong>
-                                    </span>
-
-                                    <span id="characterCounter">
-                                        0 / 280
-                                    </span>
-
-                                </div>
-
-
-                                <button
-                                    type="button"
-                                    class="btn btn-primary"
-                                    id="publishPostButton"
-                                >
-                                    Publicar
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    </section>
-
-
-                    <!-- ==========================
-                         FILTRO
-                    =========================== -->
-
-                    <div
-                        class="feed-filter"
-                        id="feedFilter"
-                    >
-
-                        <span>
-                            Exibindo posts sobre
-                            <strong id="activeHashtag"></strong>
-                        </span>
-
-
-                        <button
-                            type="button"
-                            id="clearFilterButton"
-                        >
-                            Limpar filtro
-                        </button>
-
-                    </div>
-
-
-                    <!-- ==========================
-                         POSTS
-                    =========================== -->
-
-                    <section
-                        class="posts-list"
-                        id="postsList"
-                    >
-                    </section>
-
-                    <button
-                        id="loadMorePostsButton"
-                        class="feed-load-more"
-                        type="button"
-                        hidden
-                    >
-                        Carregar mais publicações
-                    </button>
-
-                </section>
-
-
-                <!-- ==========================
-                     LATERAL
-                =========================== -->
-
-                <aside class="feed-right">
-
-                    <section class="feed-side-card">
-
-                        <span class="section-label">
-                            HASHTAGS
-                        </span>
-
-                        <h2>
-                            Jogos em destaque
-                        </h2>
-
-
-                        <div
-                            class="trending-games"
-                            id="trendingGames"
-                        >
-                        </div>
-
-                    </section>
-
-
-                    <section class="feed-side-card">
-
-                        <span class="section-label">
-                            SOBRE O FEED
-                        </span>
-
-                        <p class="feed-description">
-                            Hashtags reconhecidas pelo sistema representam
-                            jogos da plataforma. Clique em uma para visualizar
-                            publicações relacionadas.
-                        </p>
-
-                    </section>
-
-                </aside>
-
-            </div>
+            <div id="feed-app"></div>
 
         </main>
 
@@ -397,10 +227,11 @@
 
     <script src="../js/notifications.js"></script>
 
-    <script src="../js/feed.js"></script>
 
     <script src="../js/session.js"></script>
     <script src="../js/global-search.js"></script>
+
+    <script type="module" src="../src/feed/main.js"></script>
 
 </body>
 

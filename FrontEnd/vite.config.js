@@ -9,7 +9,7 @@ const outputDirectory = resolve(frontendRoot, "dist");
 
 /**
  * Copia as páginas e os arquivos do frontend legado para o build.
- * Somente html/index.html será compilado pelo Vite nesta etapa.
+ * html/index.html, html/amigos.html, html/meus-jogos.html e html/feed.html são entradas Vue/Vite.
  * As demais páginas continuam usando seus HTML/CSS/JS atuais.
  */
 function copyLegacyFrontend() {
@@ -27,7 +27,10 @@ function copyLegacyFrontend() {
                         filter: (entry) => {
                             const normalized = entry.replaceAll("\\", "/");
                             return !normalized.endsWith("/index-vue.js")
-                                && !normalized.endsWith("/index-components.js");
+                                && !normalized.endsWith("/index-components.js")
+                                && !normalized.endsWith("/amigos.js")
+                                && !normalized.endsWith("/meus-jogos.js")
+                                && !normalized.endsWith("/feed.js");
                         }
                     });
                 }
@@ -37,7 +40,13 @@ function copyLegacyFrontend() {
             if (existsSync(htmlSource)) {
                 cpSync(htmlSource, resolve(outputDirectory, "html"), {
                     recursive: true,
-                    filter: (entry) => resolve(entry) !== resolve(htmlSource, "index.html")
+                    filter: (entry) => {
+                        const resolved = resolve(entry);
+                        return resolved !== resolve(htmlSource, "index.html")
+                            && resolved !== resolve(htmlSource, "amigos.html")
+                            && resolved !== resolve(htmlSource, "meus-jogos.html")
+                            && resolved !== resolve(htmlSource, "feed.html");
+                    }
                 });
             }
 
@@ -72,7 +81,12 @@ export default defineConfig({
         outDir: outputDirectory,
         emptyOutDir: true,
         rolldownOptions: {
-            input: resolve(frontendRoot, "html/index.html")
+            input: {
+                home: resolve(frontendRoot, "html/index.html"),
+                friends: resolve(frontendRoot, "html/amigos.html"),
+                games: resolve(frontendRoot, "html/meus-jogos.html"),
+                feed: resolve(frontendRoot, "html/feed.html")
+            }
         }
     }
 });

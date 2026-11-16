@@ -304,12 +304,13 @@
 
 
 .game-hashtag {
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: #A8323B;
-
+    font: inherit;
     font-weight: 600;
-
     cursor: pointer;
-
     text-decoration: none;
 }
 
@@ -800,4 +801,44 @@
 
 .feed-load-more[hidden] {
     display: none;
+}
+
+
+/* Ajustes para os controles reativos da versão Vue do Feed. */
+.trending-game {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: transparent;
+    text-align: left;
+    font: inherit;
+}
+
+.trending-game-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.trending-game:focus-visible,
+.feed-retry-button:focus-visible {
+    outline: 2px solid #A8323B;
+    outline-offset: 3px;
+}
+
+.feed-retry-button {
+    display: block;
+    margin: 12px auto 0;
+    padding: 8px 14px;
+    border: 1px solid rgba(168, 50, 59, .48);
+    border-radius: 8px;
+    background: rgba(121, 16, 21, .12);
+    color: #FCE7E8;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.feed-retry-button:hover {
+    background: rgba(121, 16, 21, .22);
 }
