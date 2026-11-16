@@ -11,28 +11,6 @@ const apiBaseUrl = String(window.OVERCLOCK_API_BASE_URL || "").replace(/\/$/, ""
 const currentYear = new Date().getFullYear();
 const coverCachePrefix = "overclockSocietyRawgCovers_";
 
-const seedFavorites = [
-    { name: "Hollow Knight", genre: "Metroidvania • Aventura", rating: 4.9, position: 2, fallbackClass: "hollow-knight", initials: "HK" },
-    { name: "Elden Ring", genre: "RPG • Ação", rating: 5.0, position: 1, fallbackClass: "elden-ring-large", initials: "ER" },
-    { name: "Minecraft", genre: "Sandbox • Aventura", rating: 4.8, position: 3, fallbackClass: "minecraft-large", initials: "MC" }
-];
-
-const seedLiked = [
-    { name: "Valorant", genre: "FPS • Competitivo", rating: 4.5, fallbackClass: "valorant-game", initials: "V" },
-    { name: "Terraria", genre: "Sandbox • Aventura", rating: 4.7, fallbackClass: "terraria-game", initials: "T" },
-    { name: "Zelda", genre: "Aventura • RPG", rating: 4.8, fallbackClass: "zelda-game", initials: "Z" },
-    { name: "God of War", genre: "Ação • Aventura", rating: 4.7, fallbackClass: "god-war-game", initials: "GW" },
-    { name: "Stardew Valley", genre: "Simulação • RPG", rating: 4.6, fallbackClass: "stardew-game", initials: "SV" },
-    { name: "Resident Evil 4", genre: "Terror • Ação", rating: 4.8, fallbackClass: "resident-game", initials: "RE" }
-];
-
-const seedCompleted = [
-    { name: "God of War Ragnarök", genre: "Ação • Aventura", rating: 5, year: 2026, fallbackClass: "god-war-game", initials: "GW" },
-    { name: "Resident Evil 4", genre: "Terror • Ação", rating: 5, year: 2025, fallbackClass: "resident-game", initials: "RE" },
-    { name: "Celeste", genre: "Plataforma • Indie", rating: 5, year: 2025, fallbackClass: "celeste-game", initials: "C" },
-    { name: "Spider-Man", genre: "Ação • Aventura", rating: 5, year: 2024, fallbackClass: "spider-game", initials: "SM" }
-];
-
 const favorites = ref([]);
 const liked = ref([]);
 const completed = ref([]);
@@ -212,17 +190,6 @@ function cloneState(data) {
     favorites.value.sort((a, b) => Number(a.position) - Number(b.position));
 }
 
-function seedState() {
-    const likedNames = new Set(seedLiked.map((game) => normalizeName(game.name)));
-    const completeLiked = [...seedLiked];
-    seedFavorites.forEach((game) => {
-        if (!likedNames.has(normalizeName(game.name))) {
-            completeLiked.push({ name: game.name, genre: game.genre, rating: game.rating, fallbackClass: game.fallbackClass, initials: game.initials });
-        }
-    });
-    cloneState({ favorites: seedFavorites, liked: completeLiked, completed: seedCompleted });
-}
-
 function hasCategory(name, category, excludeName = "") {
     const collection = category === "favorite" ? favorites.value : category === "completed" ? completed.value : liked.value;
     const normalized = normalizeName(name);
@@ -334,7 +301,6 @@ function syncFavoritesWithLiked() {
 
 async function loadGames() {
     isLoading.value = true;
-    seedState();
     try {
         const data = await apiRequest("/games");
         if (!Array.isArray(data.favorites) || !Array.isArray(data.liked) || !Array.isArray(data.completed)) {
@@ -351,9 +317,13 @@ async function loadGames() {
             if (userId && total > 0) localStorage.setItem(`overclockSocietyGamesMigrated_${userId}`, "true");
         } else {
             const legacyState = getLegacyState();
-            if (legacyState) cloneState(legacyState);
-            else seedState();
-            shouldSave = true;
+            if (legacyState) {
+                cloneState(legacyState);
+                shouldSave = true;
+            } else {
+                // Conta nova: começa com a coleção vazia, sem jogos de demonstração.
+                cloneState({ favorites: [], liked: [], completed: [] });
+            }
         }
 
         if (syncFavoritesWithLiked()) shouldSave = true;
