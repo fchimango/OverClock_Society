@@ -170,3 +170,26 @@
         display: none;
     }
 }
+
+
+/* Telas largas: logo | links | ações em 3 colunas, com os links no centro exato da tela. */
+@media (min-width: 1100px) {
+    #navbarApp {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        column-gap: 24px;
+        align-items: center;
+    }
+
+    #navbarApp .logo {
+        justify-self: start;
+    }
+
+    #navbarApp .nav-links {
+        justify-self: center;
+    }
+
+    #navbarApp .nav-right {
+        justify-self: end;
+    }
+}
