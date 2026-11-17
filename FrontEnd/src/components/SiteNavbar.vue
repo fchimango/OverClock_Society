@@ -1,7 +1,28 @@
 <script setup>
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 
 const menuOpen = ref(false);
+const colorblind = ref(Boolean(window.OverclockAccessibility?.isEnabled()));
+const colorblindEvent = window.OverclockAccessibility?.EVENT_NAME || "overclock:colorblind-change";
+
+function syncColorblind(event) {
+    colorblind.value = event?.detail
+        ? Boolean(event.detail.enabled)
+        : Boolean(window.OverclockAccessibility?.isEnabled());
+}
+
+function toggleColorblind() {
+    colorblind.value = Boolean(window.OverclockAccessibility?.toggle());
+}
+
+onMounted(() => {
+    syncColorblind();
+    window.addEventListener(colorblindEvent, syncColorblind);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener(colorblindEvent, syncColorblind);
+});
 const navItems = [
     { label: "Início", href: "#inicio" },
     { label: "Comunidade", href: "#comunidade" }
@@ -39,6 +60,23 @@ function navigateTo(page) {
                 {{ item.label }}
             </a>
         </nav>
+
+        <button
+            class="a11y-toggle"
+            :class="{ 'is-active': colorblind }"
+            id="colorblindToggle"
+            type="button"
+            data-colorblind-toggle
+            data-colorblind-manual
+            :aria-pressed="String(colorblind)"
+            :aria-label="colorblind ? 'Desativar modo daltônico' : 'Ativar modo daltônico'"
+            :title="colorblind ? 'Modo daltônico ativado. Clique para voltar às cores originais.' : 'Ativar modo daltônico: troca as cores do sistema por uma paleta segura para daltonismo.'"
+            @click="toggleColorblind"
+        >
+            <span class="a11y-toggle-icon" aria-hidden="true">👁️</span>
+            <span class="a11y-toggle-label">Modo daltônico</span>
+            <span class="a11y-toggle-state" aria-hidden="true">{{ colorblind ? "✓ Ativo" : "Off" }}</span>
+        </button>
 
         <div class="nav-buttons">
             <button

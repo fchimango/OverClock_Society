@@ -202,3 +202,139 @@
 
     window.OverclockTheme = Object.freeze({ applyProfileTheme, applyAvatarHue });
 })();
+
+
+/* =========================================
+   MODO DALTÔNICO (todas as páginas)
+   Troca a paleta do sistema inteiro por uma versão segura para daltonismo:
+   vermelhos viram azuis e verdes viram laranja/amarelo (eixo azul-amarelo),
+   com a luminosidade preservada. A escolha fica salva no navegador.
+========================================= */
+(() => {
+    "use strict";
+
+    if (window.OverclockAccessibility) return;
+
+    const STORAGE_KEY = "overclockColorblind";
+    const FILTER_ID = "ocs-colorblind-filter";
+    const STYLE_ID = "ocs-colorblind-style";
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    const EVENT_NAME = "overclock:colorblind-change";
+
+    // Cada linha soma 1: cinzas e branco continuam neutros, só a cor muda.
+    const MATRIX = [
+        "0    0.75 0.25 0 0",
+        "0.35 0.5  0.15 0 0",
+        "0.75 0    0.25 0 0",
+        "0    0    0    1 0"
+    ].join("  ");
+
+    function readStored() {
+        try {
+            return window.localStorage.getItem(STORAGE_KEY) === "on";
+        } catch {
+            return false;
+        }
+    }
+
+    function writeStored(enabled) {
+        try {
+            if (enabled) window.localStorage.setItem(STORAGE_KEY, "on");
+            else window.localStorage.removeItem(STORAGE_KEY);
+        } catch {
+            // Sem armazenamento disponível: o modo vale só para esta página.
+        }
+    }
+
+    function ensureAssets() {
+        const root = document.documentElement;
+
+        if (!document.getElementById(STYLE_ID)) {
+            const style = document.createElement("style");
+            style.id = STYLE_ID;
+            style.textContent =
+                `html[data-colorblind="on"] { filter: url(#${FILTER_ID}); }`;
+            (document.head || root).appendChild(style);
+        }
+
+        if (!document.getElementById(FILTER_ID)) {
+            const svg = document.createElementNS(SVG_NS, "svg");
+            svg.setAttribute("aria-hidden", "true");
+            svg.setAttribute("focusable", "false");
+            svg.setAttribute("width", "0");
+            svg.setAttribute("height", "0");
+            svg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;";
+
+            const filter = document.createElementNS(SVG_NS, "filter");
+            filter.id = FILTER_ID;
+            filter.setAttribute("color-interpolation-filters", "sRGB");
+
+            const matrix = document.createElementNS(SVG_NS, "feColorMatrix");
+            matrix.setAttribute("type", "matrix");
+            matrix.setAttribute("values", MATRIX);
+
+            filter.appendChild(matrix);
+            svg.appendChild(filter);
+            root.appendChild(svg);
+        }
+    }
+
+    function syncButtons(enabled) {
+        document.querySelectorAll("[data-colorblind-toggle]").forEach((button) => {
+            button.setAttribute("aria-pressed", String(enabled));
+            button.classList.toggle("is-active", enabled);
+        });
+    }
+
+    function isEnabled() {
+        return document.documentElement.getAttribute("data-colorblind") === "on";
+    }
+
+    function apply(enabled) {
+        ensureAssets();
+        if (enabled) document.documentElement.setAttribute("data-colorblind", "on");
+        else document.documentElement.removeAttribute("data-colorblind");
+        syncButtons(enabled);
+    }
+
+    function setEnabled(enabled) {
+        const value = Boolean(enabled);
+        writeStored(value);
+        apply(value);
+        window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: { enabled: value } }));
+        return value;
+    }
+
+    function toggle() {
+        return setEnabled(!isEnabled());
+    }
+
+    apply(readStored());
+
+    // Mantém várias abas abertas sincronizadas.
+    window.addEventListener("storage", (event) => {
+        if (event.key !== STORAGE_KEY) return;
+        const enabled = event.newValue === "on";
+        apply(enabled);
+        window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: { enabled } }));
+    });
+
+    // Botões fora do Vue podem usar o atributo data-colorblind-toggle.
+    document.addEventListener("click", (event) => {
+        const button = event.target instanceof Element
+            ? event.target.closest("[data-colorblind-toggle]")
+            : null;
+        if (button && !button.hasAttribute("data-colorblind-manual")) toggle();
+    });
+    document.addEventListener("DOMContentLoaded", () => {
+        ensureAssets();
+        syncButtons(isEnabled());
+    });
+
+    window.OverclockAccessibility = Object.freeze({
+        EVENT_NAME,
+        isEnabled,
+        setEnabled,
+        toggle
+    });
+})();
