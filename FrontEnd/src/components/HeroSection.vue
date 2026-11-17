@@ -4,7 +4,7 @@ import StatItem from "./StatItem.vue";
 
 const actions = [
     {
-        href: "dashboard.html",
+        href: "#entrar",
         label: "Começar agora",
         variant: "btn-primary",
         showArrow: true
