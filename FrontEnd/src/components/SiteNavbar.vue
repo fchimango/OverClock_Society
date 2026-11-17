@@ -61,40 +61,42 @@ function navigateTo(page) {
             </a>
         </nav>
 
-        <button
-            class="a11y-toggle"
-            :class="{ 'is-active': colorblind }"
-            id="colorblindToggle"
-            type="button"
-            data-colorblind-toggle
-            data-colorblind-manual
-            :aria-pressed="String(colorblind)"
-            :aria-label="colorblind ? 'Desativar modo daltônico' : 'Ativar modo daltônico'"
-            :title="colorblind ? 'Modo daltônico ativado. Clique para voltar às cores originais.' : 'Ativar modo daltônico: troca as cores do sistema por uma paleta segura para daltonismo.'"
-            @click="toggleColorblind"
-        >
-            <span class="a11y-toggle-icon" aria-hidden="true">👁️</span>
-            <span class="a11y-toggle-label">Modo daltônico</span>
-            <span class="a11y-toggle-state" aria-hidden="true">{{ colorblind ? "✓ Ativo" : "Off" }}</span>
-        </button>
+        <div class="nav-right">
+            <button
+                class="a11y-toggle"
+                :class="{ 'is-active': colorblind }"
+                id="colorblindToggle"
+                type="button"
+                data-colorblind-toggle
+                data-colorblind-manual
+                :aria-pressed="String(colorblind)"
+                :aria-label="colorblind ? 'Desativar modo daltônico' : 'Ativar modo daltônico'"
+                :title="colorblind ? 'Modo daltônico ativado. Clique para voltar às cores originais.' : 'Ativar modo daltônico: troca as cores do sistema por uma paleta segura para daltonismo.'"
+                @click="toggleColorblind"
+            >
+                <span class="a11y-toggle-icon" aria-hidden="true">👁️</span>
+                <span class="a11y-toggle-label">Modo daltônico</span>
+                <span class="a11y-toggle-state" aria-hidden="true">{{ colorblind ? "✓ Ativo" : "Off" }}</span>
+            </button>
 
-        <div class="nav-buttons">
-            <button
-                class="btn btn-login"
-                id="loginButton"
-                type="button"
-                @click="navigateTo('login.html')"
-            >
-                Entrar
-            </button>
-            <button
-                class="btn btn-register"
-                id="registerButton"
-                type="button"
-                @click="navigateTo('cadastro.html')"
-            >
-                Criar conta
-            </button>
+            <div class="nav-buttons">
+                <button
+                    class="btn btn-login"
+                    id="loginButton"
+                    type="button"
+                    @click="navigateTo('login.html')"
+                >
+                    Entrar
+                </button>
+                <button
+                    class="btn btn-register"
+                    id="registerButton"
+                    type="button"
+                    @click="navigateTo('cadastro.html')"
+                >
+                    Criar conta
+                </button>
+            </div>
         </div>
 
         <button
