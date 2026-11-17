@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 
 // Mantém a data já existente na página. Atualize quando houver uma nova data oficial.
-const targetDate = new Date("2026-11-03T00:00:00-03:00").getTime();
+const targetDate = new Date("2026-11-30T00:00:00-03:00").getTime();
 const now = ref(Date.now());
 let timerId = null;
 
