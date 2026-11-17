@@ -145,6 +145,7 @@ def _public_user_payload(
         "games_count": len(unique_games),
         "avatar_url": profile.get("avatar_url"),
         "cover_url": profile.get("cover_url"),
+        "theme_hue": profile.get("theme_hue"),
         "games": games,
         "relationship": relationship,
         "request_id": request_id,

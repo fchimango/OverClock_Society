@@ -456,6 +456,7 @@ function showProfileMessage(message, type = "info") {
 }
 
 function renderProfile(profile) {
+    window.OverclockTheme?.applyProfileTheme(profile.theme_hue);
     document.title = `${profile.name} | Overclock Society`;
     const status = getStatusDisplay(profile.status);
     const publicAvatar = document.getElementById("otherProfileAvatar");

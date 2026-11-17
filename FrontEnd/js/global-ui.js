@@ -173,3 +173,18 @@
     // confirm() passa a abrir um diálogo HTML personalizado. Chamadas devem usar await.
     window.confirm = (message) => confirm(message);
 })();
+
+(() => {
+    "use strict";
+
+    // Aplica o matiz de cor da conta (avatar e capa do perfil).
+    function applyProfileTheme(hue) {
+        const value = Number(hue);
+        if (hue === null || hue === undefined || !Number.isFinite(value)) return;
+        const root = document.documentElement;
+        root.style.setProperty("--theme-hue", String(Math.round(((value % 360) + 360) % 360)));
+        root.setAttribute("data-profile-theme", "custom");
+    }
+
+    window.OverclockTheme = Object.freeze({ applyProfileTheme });
+})();

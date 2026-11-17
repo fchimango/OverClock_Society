@@ -322,6 +322,7 @@ function updateStats() {
 }
 
 function applyProfileMedia(profile) {
+    window.OverclockTheme?.applyProfileTheme(profile?.theme_hue);
     const resolveMediaUrl = (value) => {
         if (!value) return "";
         return String(value).startsWith("data:") ? String(value) : profileApiUrl(value);

@@ -1,4 +1,5 @@
 import re
+import secrets
 from datetime import datetime, timezone
 from typing import Literal
 
@@ -187,7 +188,9 @@ def register(
         email=email,
         password_hash=hash_password(
             data.password
-        )
+        ),
+        # Cor própria de avatar e capa, sorteada no cadastro.
+        profile_data={"theme_hue": secrets.randbelow(360)}
     )
 
     db.add(novo)
@@ -576,6 +579,8 @@ def update_profile(
     user.name = data.name
     user.username = data.username
 
+    theme_hue = (user.profile_data or {}).get("theme_hue")
+
     user.profile_data = {
         "course": data.course,
         "semester": data.semester,
@@ -587,6 +592,8 @@ def update_profile(
         "current_game": data.current_game,
         "current_game_status": data.current_game_status
     }
+    if theme_hue is not None:
+        user.profile_data["theme_hue"] = theme_hue
 
     try:
         db.commit()
