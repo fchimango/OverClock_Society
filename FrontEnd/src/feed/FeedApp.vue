@@ -36,6 +36,7 @@ const currentUser = ref({
     id: localStorage.getItem("userId"),
     name: localStorage.getItem("userName") || "Usuário",
     avatarUrl: localStorage.getItem("userAvatarUrl") || "",
+    themeHue: localStorage.getItem("userThemeHue"),
 });
 const currentPage = ref(1);
 const hasMorePosts = ref(false);
@@ -488,6 +489,9 @@ function applySessionUser(user = {}) {
     if (user.username && user.id != null) {
         localStorage.setItem(`overclockSocietyUsername_${user.id}`, String(user.username).replace(/^@+/, ""));
     }
+    if (Object.prototype.hasOwnProperty.call(user, "theme_hue")) {
+        currentUser.value.themeHue = user.theme_hue ?? null;
+    }
     if (Object.prototype.hasOwnProperty.call(user, "avatar_url")) {
         currentUser.value.avatarUrl = user.avatar_url || "";
         if (user.avatar_url) localStorage.setItem("userAvatarUrl", user.avatar_url);
@@ -543,6 +547,7 @@ onBeforeUnmount(() => {
                 v-model="composerText"
                 :user-name="currentUser.name"
                 :avatar-source="getAvatarSource(currentUser.avatarUrl)"
+                :avatar-hue="currentUser.themeHue"
                 :publishing="isPublishing"
                 @publish="publishPost"
             />

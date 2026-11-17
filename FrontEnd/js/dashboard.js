@@ -147,6 +147,7 @@
             const row = makeElement("article", "dashboard-online-friend");
             const avatar = makeElement("span", "dashboard-friend-avatar", String(friend.name || "?").trim().charAt(0).toUpperCase());
             avatar.setAttribute("aria-hidden", "true");
+            window.OverclockTheme?.applyAvatarHue(avatar, friend.theme_hue);
             const info = makeElement("div", "dashboard-friend-info");
             info.appendChild(makeElement("strong", "", friend.name || "Jogador"));
             info.appendChild(makeElement("span", "", friend.username ? `@${String(friend.username).replace(/^@/, "")}` : "Membro da comunidade"));
@@ -168,6 +169,7 @@
             const top = makeElement("div", "dashboard-feed-author-row");
             const avatar = makeElement("span", "dashboard-feed-avatar", String(post.author || "J").trim().charAt(0).toUpperCase());
             avatar.setAttribute("aria-hidden", "true");
+            window.OverclockTheme?.applyAvatarHue(avatar, post.theme_hue);
             const meta = makeElement("div", "dashboard-feed-author");
             meta.appendChild(makeElement("strong", "", post.author || "Jogador"));
             meta.appendChild(makeElement("span", "", `${post.username || "@membro"} · ${post.createdAt || "Agora"}`));

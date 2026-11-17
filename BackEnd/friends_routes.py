@@ -73,6 +73,7 @@ def serialize_public_user(user: models.User, db: Session) -> dict[str, Any]:
         "semester": profile.get("semester"),
         "status": get_effective_user_status(user, db),
         "avatar_url": avatar_url,
+        "theme_hue": profile.get("theme_hue"),
     }
 
 

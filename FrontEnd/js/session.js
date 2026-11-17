@@ -72,6 +72,7 @@ function clearSession() {
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userAvatarUrl");
+    localStorage.removeItem("userThemeHue");
 }
 
 
@@ -152,6 +153,7 @@ function updateHeaderUser(user) {
     const avatarPath = String(user.avatar_url || "").trim();
 
     avatarElements.forEach((element) => {
+        window.OverclockTheme?.applyAvatarHue(element, user.theme_hue);
         // Always clear the previous content first, so a changed/removed photo is reflected.
         element.replaceChildren();
         element.textContent = initial;
@@ -307,7 +309,8 @@ async function validateSession() {
     if (cachedName) {
         applyUserToPage({
             name: cachedName,
-            avatar_url: localStorage.getItem("userAvatarUrl") || null
+            avatar_url: localStorage.getItem("userAvatarUrl") || null,
+            theme_hue: localStorage.getItem("userThemeHue")
         });
     }
 
@@ -359,6 +362,12 @@ async function validateSession() {
             localStorage.removeItem("userAvatarUrl");
         }
 
+        if (user.theme_hue === null || user.theme_hue === undefined) {
+            localStorage.removeItem("userThemeHue");
+        } else {
+            localStorage.setItem("userThemeHue", String(user.theme_hue));
+        }
+
         applyUserToPage(user);
         startPresenceHeartbeat();
 
@@ -377,7 +386,10 @@ window.dispatchEvent(
                     user.email,
 
                 avatar_url:
-                    user.avatar_url || null
+                    user.avatar_url || null,
+
+                theme_hue:
+                    user.theme_hue ?? null
             }
         }
     )

@@ -268,6 +268,7 @@ def list_user_replies(
                 "author": author.name,
                 "username": f"@{username}",
                 "avatar": feed_routes.get_avatar(author.name),
+                "theme_hue": feed_routes.get_theme_hue(author),
                 "text": comment.content,
                 "createdAt": feed_routes.format_relative_time(comment.created_at),
                 "post": feed_routes.serialize_post(post, db, current_user),

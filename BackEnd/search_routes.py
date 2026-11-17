@@ -57,6 +57,7 @@ def global_search(
                 "name": user.name,
                 "username": user.username or "",
                 "course": profile.get("course") or "Curso não informado",
+                "theme_hue": profile.get("theme_hue"),
                 "is_self": user.id == current_user.id,
             }
         )
@@ -114,6 +115,7 @@ def global_search(
                 "author": author.name,
                 "username": f"@{username}",
                 "avatar": feed_routes.get_avatar(author.name),
+                "theme_hue": feed_routes.get_theme_hue(author),
                 "created_at": feed_routes.format_relative_time(post.created_at),
             }
         )

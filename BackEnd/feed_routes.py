@@ -67,6 +67,12 @@ def get_post_or_404(post_id: int, db: Session):
     return post
 
 
+def get_theme_hue(user: models.User | None) -> int | None:
+    """Matiz de cor do avatar sorteado no cadastro (None = visual padrão)."""
+    hue = ((user.profile_data if user else None) or {}).get("theme_hue")
+    return hue if isinstance(hue, int) and not isinstance(hue, bool) else None
+
+
 def get_avatar(name: str | None) -> str:
     if not name or not name.strip():
         return "?"
@@ -312,6 +318,7 @@ def serialize_comment(
         "author": author.name,
         "avatar": get_avatar(author.name),
         "avatar_url": avatar_url,
+        "theme_hue": get_theme_hue(author),
         "text": comment.content,
         "createdAt": format_relative_time(
             comment.created_at
@@ -413,6 +420,7 @@ def serialize_post(
         ),
         "avatar": get_avatar(author.name),
         "avatar_url": build_avatar_url(author.id, media_by_user),
+        "theme_hue": get_theme_hue(author),
         "content": post.content,
         "createdAt": format_relative_time(
             post.created_at
@@ -536,6 +544,7 @@ def serialize_posts_batch(
             "username": f"@{author.username or fallback_username(author.name)}",
             "avatar": get_avatar(author.name),
             "avatar_url": build_avatar_url(author.id, media_by_user),
+        "theme_hue": get_theme_hue(author),
             "content": post.content,
             "createdAt": format_relative_time(post.created_at),
             "createdAtISO": post.created_at.isoformat() if post.created_at else None,

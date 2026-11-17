@@ -21,6 +21,7 @@ const emit = defineEmits(["delete"]);
             avatar-class="comment-avatar"
             :name="comment.author || 'Usuário'"
             :source="getAvatarSource(comment.avatar_url || comment.user?.avatar_url)"
+            :hue="comment.theme_hue ?? comment.user?.theme_hue"
             :href="getProfileUrl({
                 id: comment.userId ?? comment.user_id ?? comment.authorId ?? comment.author_id,
                 username: comment.username ?? comment.authorUsername,

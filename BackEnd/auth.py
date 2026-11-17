@@ -280,6 +280,7 @@ def me(
         "email": user.email,
         "username": user.username,
         "avatar_url": avatar_url,
+        "theme_hue": (user.profile_data or {}).get("theme_hue"),
     }
 
 

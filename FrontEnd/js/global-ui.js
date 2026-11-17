@@ -186,5 +186,19 @@
         root.setAttribute("data-profile-theme", "custom");
     }
 
-    window.OverclockTheme = Object.freeze({ applyProfileTheme });
+    // Cor própria de um avatar (círculo/quadrado com a inicial).
+    // Sem matiz válido, mantém o visual padrão do elemento.
+    function applyAvatarHue(element, hue) {
+        if (!element) return;
+        const value = Number(hue);
+        if (hue === null || hue === undefined || hue === "" || !Number.isFinite(value)) {
+            element.removeAttribute("data-avatar-hue");
+            element.style.removeProperty("--avatar-hue");
+            return;
+        }
+        element.style.setProperty("--avatar-hue", String(Math.round(((value % 360) + 360) % 360)));
+        element.setAttribute("data-avatar-hue", "");
+    }
+
+    window.OverclockTheme = Object.freeze({ applyProfileTheme, applyAvatarHue });
 })();

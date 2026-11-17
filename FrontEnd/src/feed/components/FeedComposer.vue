@@ -6,6 +6,7 @@ const props = defineProps({
     modelValue: { type: String, default: "" },
     userName: { type: String, default: "Usuário" },
     avatarSource: { type: String, default: "" },
+    avatarHue: { type: [Number, String], default: null },
     publishing: { type: Boolean, default: false },
 });
 
@@ -19,6 +20,7 @@ const characterCount = computed(() => props.modelValue.length);
             avatar-class="composer-avatar"
             :name="userName"
             :source="avatarSource"
+            :hue="avatarHue"
         />
 
         <div class="composer-content">

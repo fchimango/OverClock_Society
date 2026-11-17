@@ -49,6 +49,7 @@ async function submitComment() {
                 avatar-class="post-avatar"
                 :name="authorName"
                 :source="getAvatarSource(post.avatar_url || post.user?.avatar_url)"
+                :hue="post.theme_hue ?? post.user?.theme_hue"
                 :href="authorProfileUrl || ''"
             />
 

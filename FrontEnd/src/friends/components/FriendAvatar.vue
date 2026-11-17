@@ -10,7 +10,14 @@ const props = defineProps({
 
 const imageFailed = ref(false);
 const initial = computed(() => getInitial(props.user?.name));
-const colorClass = computed(() => getAvatarColor(props.user));
+const hasHue = computed(() => {
+    const hue = props.user?.theme_hue;
+    return hue !== null && hue !== undefined && hue !== "" && Number.isFinite(Number(hue));
+});
+const hueStyle = computed(() => hasHue.value
+    ? { "--avatar-hue": String(((Number(props.user.theme_hue) % 360) + 360) % 360) }
+    : undefined);
+const colorClass = computed(() => hasHue.value ? "" : getAvatarColor(props.user));
 const profileUrl = computed(() => props.linked ? getFriendProfileUrl(props.user) : null);
 const avatarUrl = computed(() => {
     const path = String(props.user?.avatar_url || "").trim();
@@ -33,6 +40,8 @@ watch(() => props.user?.avatar_url, () => {
         :is="profileUrl ? 'a' : 'div'"
         class="friend-avatar"
         :class="[colorClass, profileUrl ? 'user-profile-link' : '', variant === 'search' ? 'player-search-avatar' : '']"
+        :style="hueStyle"
+        :data-avatar-hue="hasHue ? '' : undefined"
         :href="profileUrl || undefined"
         :aria-label="profileUrl ? `Abrir perfil de ${user.name || 'Jogador'}` : undefined"
         :aria-hidden="profileUrl ? undefined : 'true'"
