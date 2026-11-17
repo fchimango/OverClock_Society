@@ -54,14 +54,26 @@ function normalizeHashtag(value) {
     return String(value || "").toLowerCase().replace(/^#/, "").trim();
 }
 
+// Qualquer #hashtag (letras, números e _) conta, em qualquer posição do texto.
 function isValidHashtag(value) {
-    const normalized = normalizeHashtag(value);
-    return games.some((game) => game.hashtag === normalized);
+    return /^[\p{L}\p{N}_]+$/u.test(normalizeHashtag(value));
+}
+
+function extractHashtags(content) {
+    const tags = new Set();
+    for (const match of String(content || "").matchAll(/#([\p{L}\p{N}_]+)/gu)) {
+        tags.add(normalizeHashtag(match[1]));
+    }
+    return tags;
+}
+
+function postHasHashtag(post, hashtag) {
+    return extractHashtags(post.content).has(hashtag);
 }
 
 function getTextSegments(content) {
     return String(content || "")
-        .split(/(#[a-zA-ZÀ-ÿ0-9_-]+)/g)
+        .split(/(#[\p{L}\p{N}_]+)/gu)
         .map((part, index) => {
             const isHashtag = part.startsWith("#") && isValidHashtag(part);
             return {
@@ -170,8 +182,7 @@ const visiblePosts = computed(() => {
     let result = posts.value;
 
     if (activeHashtag.value) {
-        const regex = new RegExp(`#${activeHashtag.value}(?![a-z0-9_])`, "i");
-        result = result.filter((post) => regex.test(post.content || ""));
+        result = result.filter((post) => postHasHashtag(post, activeHashtag.value));
     }
 
     if (requestedSearch) {
@@ -195,17 +206,20 @@ const visiblePosts = computed(() => {
     return result;
 });
 
-const trendingGames = computed(() => games
-    .map((game) => {
-        const regex = new RegExp(`#${game.hashtag}(?![a-z0-9_])`, "i");
-        return {
-            ...game,
-            postsCount: posts.value.filter((post) => regex.test(post.content || "")).length,
-        };
-    })
-    .filter((game) => game.postsCount > 0)
-    .sort((a, b) => b.postsCount - a.postsCount)
-    .slice(0, 5));
+const knownGameNames = new Map(games.map((game) => [game.hashtag, game.name]));
+
+const trendingGames = computed(() => {
+    const counts = new Map();
+    for (const post of posts.value) {
+        for (const tag of extractHashtags(post.content)) {
+            counts.set(tag, (counts.get(tag) || 0) + 1);
+        }
+    }
+    return [...counts.entries()]
+        .map(([hashtag, postsCount]) => ({ hashtag, name: knownGameNames.get(hashtag) || "", postsCount }))
+        .sort((a, b) => b.postsCount - a.postsCount || a.hashtag.localeCompare(b.hashtag))
+        .slice(0, 5);
+});
 
 function isBusy(action, postId) {
     return busyActions.value.has(`${action}:${postId}`);
@@ -598,7 +612,7 @@ onBeforeUnmount(() => {
             <section class="feed-side-card">
                 <span class="section-label">SOBRE O FEED</span>
                 <p class="feed-description">
-                    Hashtags reconhecidas pelo sistema representam jogos da plataforma. Clique em uma para visualizar publicações relacionadas.
+                    Qualquer #hashtag usada nas publicações, em qualquer parte do texto, entra nos destaques. Clique em uma para visualizar publicações relacionadas.
                 </p>
             </section>
         </aside>

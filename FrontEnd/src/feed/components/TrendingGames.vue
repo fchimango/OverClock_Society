@@ -22,7 +22,7 @@ const emit = defineEmits(["filter"]);
         >
             <span class="trending-game-info">
                 <strong>#{{ game.hashtag }}</strong>
-                <span>{{ game.name }}</span>
+                <span v-if="game.name">{{ game.name }}</span>
             </span>
             <span>{{ game.postsCount }} {{ game.postsCount === 1 ? "post" : "posts" }}</span>
         </button>
