@@ -111,3 +111,130 @@
 .auth-switch a:hover {
     text-decoration: underline;
 }
+
+/* Confirmação de e-mail */
+.auth-card [hidden] {
+    display: none !important;
+}
+
+.verification-panel,
+.verification-recovery {
+    margin-top: 18px;
+}
+
+.verification-panel h2,
+.verification-recovery h2 {
+    text-align: center;
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+}
+
+#verificationCode {
+    text-align: center;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.45rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.auth-secondary-button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font: inherit;
+    cursor: pointer;
+}
+
+.auth-secondary-button:hover {
+    border-color: var(--primary);
+    color: var(--text);
+}
+
+.auth-secondary-button:disabled,
+.verification-recovery .btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.auth-recovery-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.auth-recovery-label input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font: inherit;
+}
+
+.verification-recovery .btn {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Campo de senha com controle mostrar/ocultar */
+.password-field {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.password-field input {
+    width: 100%;
+    padding-right: 3.25rem;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.password-toggle:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.password-toggle svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.password-toggle [hidden] {
+    display: none !important;
+}

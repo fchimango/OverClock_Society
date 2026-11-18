@@ -56,6 +56,41 @@ async def lifespan(app: FastAPI):
             """)
         )
 
+        # Usuários que já existiam antes da confirmação por e-mail continuam
+        # podendo entrar. Novos cadastros serão criados com email_verified=FALSE.
+        connection.execute(
+            text("""
+                ALTER TABLE users
+                ADD COLUMN IF NOT EXISTS email_verified BOOLEAN
+                NOT NULL DEFAULT TRUE
+            """)
+        )
+        connection.execute(
+            text("""
+                ALTER TABLE users
+                ADD COLUMN IF NOT EXISTS email_verification_code_hash VARCHAR(64)
+            """)
+        )
+        connection.execute(
+            text("""
+                ALTER TABLE users
+                ADD COLUMN IF NOT EXISTS email_verification_expires_at TIMESTAMPTZ
+            """)
+        )
+        connection.execute(
+            text("""
+                ALTER TABLE users
+                ADD COLUMN IF NOT EXISTS email_verification_sent_at TIMESTAMPTZ
+            """)
+        )
+        connection.execute(
+            text("""
+                ALTER TABLE users
+                ADD COLUMN IF NOT EXISTS email_verification_attempts INTEGER
+                NOT NULL DEFAULT 0
+            """)
+        )
+
     yield
 
 
@@ -115,6 +150,7 @@ async def erro_de_validacao(
         "name": "Informe seu nome (mínimo de 2 caracteres).",
         "username": "Informe um nome de usuário válido.",
         "password": "A senha precisa ter no mínimo 8 caracteres.",
+        "code": "Informe o código de confirmação de 6 dígitos.",
         "contact": "O contato deve ter no máximo 60 caracteres.",
         "content": (
             "O texto é obrigatório e deve respeitar "

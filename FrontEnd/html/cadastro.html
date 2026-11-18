@@ -102,29 +102,75 @@
             <label>
                 Senha
 
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Mínimo de 8 caracteres"
-                    autocomplete="new-password"
-                    required
-                    minlength="8"
-                    maxlength="50"
-                >
+                <div class="password-field">
+                    <input
+                        type="password"
+                        id="registerPassword"
+                        name="password"
+                        placeholder="Mínimo de 8 caracteres"
+                        autocomplete="new-password"
+                        required
+                        minlength="8"
+                        maxlength="50"
+                    >
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-password-toggle="registerPassword"
+                        aria-label="Mostrar senha"
+                        aria-controls="registerPassword"
+                        aria-pressed="false"
+                        title="Mostrar senha"
+                    >
+                        <svg data-icon-show viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg data-icon-hide viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden>
+                            <path d="m3 3 18 18"/>
+                            <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
+                            <path d="M9.9 5.2A11.4 11.4 0 0 1 12 5c6.4 0 10 7 10 7a14.7 14.7 0 0 1-3.1 3.8"/>
+                            <path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10.8 10.8 0 0 0 4-.8"/>
+                        </svg>
+                    </button>
+                </div>
             </label>
 
             <label>
                 Confirmar senha
 
-                <input
-                    type="password"
-                    name="confirm"
-                    placeholder="Repita a senha"
-                    autocomplete="new-password"
-                    required
-                    minlength="8"
-                    maxlength="50"
-                >
+                <div class="password-field">
+                    <input
+                        type="password"
+                        id="registerConfirmPassword"
+                        name="confirm"
+                        placeholder="Repita a senha"
+                        autocomplete="new-password"
+                        required
+                        minlength="8"
+                        maxlength="50"
+                    >
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        data-password-toggle="registerConfirmPassword"
+                        aria-label="Mostrar senha"
+                        aria-controls="registerConfirmPassword"
+                        aria-pressed="false"
+                        title="Mostrar senha"
+                    >
+                        <svg data-icon-show viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg data-icon-hide viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden>
+                            <path d="m3 3 18 18"/>
+                            <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
+                            <path d="M9.9 5.2A11.4 11.4 0 0 1 12 5c6.4 0 10 7 10 7a14.7 14.7 0 0 1-3.1 3.8"/>
+                            <path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7a10.8 10.8 0 0 0 4-.8"/>
+                        </svg>
+                    </button>
+                </div>
             </label>
 
             <button
@@ -143,6 +189,64 @@
             ></p>
 
         </form>
+
+        <section
+            class="verification-panel"
+            id="verificationPanel"
+            hidden
+            aria-labelledby="verificationTitle"
+        >
+            <h2 id="verificationTitle">Confirme seu e-mail</h2>
+            <p class="auth-subtitle" id="verificationDescription">
+                Enviaremos um código de confirmação para o seu e-mail.
+            </p>
+
+            <form class="auth-form" id="verificationForm" novalidate>
+                <input type="hidden" id="verificationEmail" name="email">
+
+                <label>
+                    Código de confirmação
+                    <input
+                        type="text"
+                        id="verificationCode"
+                        name="code"
+                        placeholder="000000"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        pattern="[0-9]{6}"
+                        minlength="6"
+                        maxlength="6"
+                        required
+                    >
+                </label>
+
+                <button type="submit" class="btn btn-primary" id="verifyEmailSubmit">
+                    Confirmar e-mail
+                </button>
+
+                <p
+                    class="auth-feedback"
+                    id="verificationFeedback"
+                    role="status"
+                    aria-live="polite"
+                ></p>
+            </form>
+
+            <button
+                type="button"
+                class="auth-secondary-button"
+                id="resendVerificationButton"
+            >
+                Reenviar código
+            </button>
+
+            <p
+                class="auth-feedback"
+                id="resendVerificationFeedback"
+                role="status"
+                aria-live="polite"
+            ></p>
+        </section>
 
         <p class="auth-switch">
             Já tem conta?
