@@ -1,9 +1,10 @@
 import re
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.security import (
     HTTPAuthorizationCredentials,
     HTTPBearer,
@@ -23,9 +24,17 @@ from sqlalchemy.orm import Session
 import models
 
 from database import get_db
+from email_service import (
+    EmailDeliveryError,
+    generate_verification_code,
+    hash_verification_code,
+    send_verification_email,
+    verification_code_matches,
+)
 from profile_media import decode_profile_image
 
 from security import (
+    SECRET_KEY,
     create_token,
     decode_token,
     hash_password,
@@ -114,6 +123,15 @@ class LoginData(BaseModel):
     )
 
 
+class EmailVerificationData(BaseModel):
+    email: EmailStr
+    code: str = Field(pattern=r"^\d{6}$")
+
+
+class ResendVerificationData(BaseModel):
+    email: EmailStr
+
+
 # =========================================
 # USUÁRIO ATUAL
 # =========================================
@@ -141,7 +159,55 @@ def get_current_user(
             detail="Sessão inválida. Faça login novamente."
         )
 
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=403,
+            detail="Confirme seu e-mail antes de utilizar sua conta."
+        )
+
     return user
+
+
+VERIFICATION_CODE_TTL_MINUTES = 10
+VERIFICATION_RESEND_COOLDOWN_SECONDS = 60
+VERIFICATION_MAX_ATTEMPTS = 5
+
+
+def _utc_datetime(value: datetime) -> datetime:
+    """Normalize database datetimes to UTC-aware values."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _prepare_verification(user: models.User, db: Session) -> str:
+    """Persist a new one-time code before attempting SMTP delivery."""
+    now = datetime.now(timezone.utc)
+    code = generate_verification_code()
+    user.email_verified = False
+    user.email_verification_code_hash = hash_verification_code(
+        user.email,
+        code,
+        SECRET_KEY,
+    )
+    user.email_verification_expires_at = now + timedelta(
+        minutes=VERIFICATION_CODE_TTL_MINUTES
+    )
+    user.email_verification_sent_at = now
+    user.email_verification_attempts = 0
+    db.commit()
+    db.refresh(user)
+    return code
+
+
+def _deliver_verification(user: models.User, db: Session, code: str) -> None:
+    try:
+        send_verification_email(user.email, code)
+    except EmailDeliveryError:
+        # Permite solicitar novo envio imediatamente quando o SMTP falhar.
+        user.email_verification_sent_at = None
+        db.commit()
+        raise
 
 
 # =========================================
@@ -156,7 +222,7 @@ def register(
     data: RegisterData,
     db: Session = Depends(get_db)
 ):
-    email = data.email.lower()
+    email = str(data.email).strip().lower()
 
     existing_email = db.scalar(
         select(models.User).where(
@@ -165,6 +231,17 @@ def register(
     )
 
     if existing_email:
+        if not existing_email.email_verified:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": (
+                        "Este e-mail já possui um cadastro pendente. "
+                        "Confirme o código anterior ou solicite outro."
+                    ),
+                    "email_verification_required": True,
+                },
+            )
         raise HTTPException(
             status_code=409,
             detail="Este e-mail já está em uso."
@@ -186,34 +263,154 @@ def register(
         name=data.name,
         username=data.username,
         email=email,
-        password_hash=hash_password(
-            data.password
-        ),
+        password_hash=hash_password(data.password),
+        email_verified=False,
         # Cor própria de avatar e capa, sorteada no cadastro.
         profile_data={"theme_hue": secrets.randbelow(360)}
     )
-
     db.add(novo)
 
     try:
-        db.commit()
-        db.refresh(novo)
-
+        code = _prepare_verification(novo, db)
     except IntegrityError:
         db.rollback()
-
         raise HTTPException(
             status_code=409,
             detail="Este e-mail ou nome de usuário já está em uso."
         )
 
+    try:
+        _deliver_verification(novo, db, code)
+    except EmailDeliveryError:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": (
+                    "Sua conta foi criada, mas não foi possível enviar o código. "
+                    "Configure o serviço de e-mail e use a opção de reenviar."
+                ),
+                "email_verification_required": True,
+            },
+        )
+
     return {
-        "message": "Conta criada com sucesso!",
-        "id": novo.id,
-        "name": novo.name,
+        "message": "Conta criada! Enviamos um código de confirmação para seu e-mail.",
         "email": novo.email,
-        "username": novo.username
+        "verification_required": True,
     }
+
+
+@router.post("/verify-email")
+def verify_email(
+    data: EmailVerificationData,
+    db: Session = Depends(get_db),
+):
+    email = str(data.email).strip().lower()
+    user = db.scalar(
+        select(models.User).where(models.User.email == email)
+    )
+
+    if user is None or user.email_verified or not user.email_verification_code_hash:
+        raise HTTPException(
+            status_code=400,
+            detail="Código inválido ou expirado. Solicite um novo código."
+        )
+
+    if user.email_verification_attempts >= VERIFICATION_MAX_ATTEMPTS:
+        raise HTTPException(
+            status_code=429,
+            detail="Limite de tentativas atingido. Solicite um novo código."
+        )
+
+    expires_at = user.email_verification_expires_at
+    if (
+        expires_at is None
+        or _utc_datetime(expires_at) < datetime.now(timezone.utc)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Código expirado. Solicite um novo código."
+        )
+
+    if not verification_code_matches(
+        email,
+        data.code,
+        user.email_verification_code_hash,
+        SECRET_KEY,
+    ):
+        user.email_verification_attempts += 1
+        db.commit()
+        remaining = max(
+            0,
+            VERIFICATION_MAX_ATTEMPTS - user.email_verification_attempts,
+        )
+        if remaining == 0:
+            raise HTTPException(
+                status_code=429,
+                detail="Limite de tentativas atingido. Solicite um novo código."
+            )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Código incorreto. Você ainda tem {remaining} tentativa(s)."
+        )
+
+    user.email_verified = True
+    user.email_verification_code_hash = None
+    user.email_verification_expires_at = None
+    user.email_verification_sent_at = None
+    user.email_verification_attempts = 0
+    db.commit()
+
+    return {
+        "message": "E-mail confirmado com sucesso! Sua sessão foi iniciada.",
+        "access_token": create_token(user.id),
+        "token_type": "bearer",
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "username": user.username,
+    }
+
+
+@router.post("/resend-verification")
+def resend_verification(
+    data: ResendVerificationData,
+    db: Session = Depends(get_db),
+):
+    """Resend without revealing whether the email belongs to an account."""
+    email = str(data.email).strip().lower()
+    user = db.scalar(
+        select(models.User).where(models.User.email == email)
+    )
+
+    generic_response = {
+        "message": (
+            "Se houver uma conta pendente para este e-mail, "
+            "enviaremos um novo código. Verifique também a caixa de spam."
+        )
+    }
+
+    if user is None or user.email_verified:
+        return generic_response
+
+    now = datetime.now(timezone.utc)
+    sent_at = user.email_verification_sent_at
+    if sent_at is not None:
+        elapsed = (now - _utc_datetime(sent_at)).total_seconds()
+        if elapsed < VERIFICATION_RESEND_COOLDOWN_SECONDS:
+            # Resposta genérica para não permitir enumeração de contas por tempo.
+            return generic_response
+
+    code = _prepare_verification(user, db)
+    try:
+        _deliver_verification(user, db, code)
+    except EmailDeliveryError:
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível enviar o e-mail agora. Tente novamente mais tarde."
+        )
+
+    return generic_response
 
 
 # =========================================
@@ -227,7 +424,7 @@ def login(
 ):
     user = db.scalar(
         select(models.User).where(
-            models.User.email == data.email.lower()
+            models.User.email == str(data.email).strip().lower()
         )
     )
 
@@ -241,6 +438,15 @@ def login(
         raise HTTPException(
             status_code=401,
             detail="E-mail ou senha incorretos"
+        )
+
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Confirme seu e-mail antes de entrar. Você pode solicitar um novo código abaixo.",
+                "email_verification_required": True,
+            },
         )
 
     return {

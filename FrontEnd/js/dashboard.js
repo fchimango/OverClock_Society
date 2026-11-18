@@ -40,6 +40,38 @@
         return node;
     }
 
+    function resolveAvatarUrl(path) {
+        const source = String(path || "").trim();
+        if (!source) return "";
+
+        try {
+            return new URL(source, API_BASE_URL || window.location.origin).toString();
+        } catch {
+            return "";
+        }
+    }
+
+    function createAvatarElement(name, avatarPath, className) {
+        const displayName = String(name || "Jogador").trim();
+        const initial = displayName.charAt(0).toUpperCase() || "?";
+        const avatar = makeElement("span", className, initial);
+        avatar.setAttribute("aria-hidden", "true");
+
+        const imageUrl = resolveAvatarUrl(avatarPath);
+        if (!imageUrl) return avatar;
+
+        const image = document.createElement("img");
+        image.className = "dashboard-avatar-image";
+        image.alt = "";
+        image.loading = "lazy";
+        image.decoding = "async";
+        image.addEventListener("error", () => image.remove(), { once: true });
+        image.src = imageUrl;
+        avatar.appendChild(image);
+
+        return avatar;
+    }
+
     function showMessage(container, message, actionLabel, actionHref) {
         if (!container) return;
         container.replaceChildren();
@@ -105,6 +137,107 @@
         return "Na coleção";
     }
 
+    // Reutiliza o mesmo cache de capas criado pela página Meus Jogos.
+    const RAWG_COVER_CACHE_PREFIX = "overclockSocietyRawgCovers_";
+
+    function normalizeCoverKey(name) {
+        return String(name || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "")
+            .slice(0, 160);
+    }
+
+    function safeRawgImageUrl(value) {
+        try {
+            const url = new URL(String(value || ""));
+            return url.protocol === "https:" ? url.href : "";
+        } catch {
+            return "";
+        }
+    }
+
+    function getCachedGameCover(name) {
+        const key = normalizeCoverKey(name);
+        if (!key) return "";
+
+        try {
+            const userId = localStorage.getItem("userId") || "current";
+            const cache = JSON.parse(localStorage.getItem(`${RAWG_COVER_CACHE_PREFIX}${userId}`) || "{}");
+            return safeRawgImageUrl(cache?.[key]);
+        } catch {
+            return "";
+        }
+    }
+
+    function saveCachedGameCover(name, imageUrl) {
+        const key = normalizeCoverKey(name);
+        const safeUrl = safeRawgImageUrl(imageUrl);
+        if (!key || !safeUrl) return;
+
+        try {
+            const userId = localStorage.getItem("userId") || "current";
+            const storageKey = `${RAWG_COVER_CACHE_PREFIX}${userId}`;
+            const cache = JSON.parse(localStorage.getItem(storageKey) || "{}");
+            cache[key] = safeUrl;
+            const limitedCache = Object.fromEntries(Object.entries(cache).slice(-500));
+            localStorage.setItem(storageKey, JSON.stringify(limitedCache));
+        } catch {
+            // O cache é opcional: a capa continua aparecendo nesta sessão.
+        }
+    }
+
+    function applyGameCover(art, name, imageUrl) {
+        const safeUrl = safeRawgImageUrl(imageUrl);
+        if (!art || !safeUrl || art.querySelector("img.dashboard-game-cover")) return;
+
+        const image = makeElement("img", "dashboard-game-cover");
+        image.alt = `Capa de ${name || "jogo"}`;
+        image.loading = "lazy";
+        image.decoding = "async";
+        image.referrerPolicy = "no-referrer";
+        image.addEventListener("load", () => art.classList.add("has-game-cover"), { once: true });
+        image.addEventListener("error", () => {
+            image.remove();
+            art.classList.remove("has-game-cover");
+        }, { once: true });
+        image.src = safeUrl;
+        art.appendChild(image);
+    }
+
+    async function loadDashboardGameCover(art, game) {
+        const cached = getCachedGameCover(game.name);
+        if (cached) {
+            applyGameCover(art, game.name, cached);
+            return;
+        }
+
+        if (!API_BASE_URL || !game.name) return;
+
+        try {
+            const query = new URLSearchParams({
+                q: String(game.name).slice(0, 80),
+                page: "1",
+                page_size: "10",
+                ordering: "relevance",
+            });
+            const payload = await apiGet(`/catalog/games?${query.toString()}`);
+            const results = Array.isArray(payload.results) ? payload.results : [];
+            const targetName = normalizedName(game.name);
+            const match = results.find((item) => normalizedName(item?.name) === targetName);
+            const imageUrl = safeRawgImageUrl(match?.background_image);
+            if (!imageUrl) return;
+
+            saveCachedGameCover(game.name, imageUrl);
+            applyGameCover(art, game.name, imageUrl);
+        } catch (error) {
+            // Falha no catálogo não deve impedir o Dashboard de carregar.
+            console.debug(`Dashboard: capa indisponível para "${game.name}".`, error);
+        }
+    }
+
     function renderGames(library) {
         const games = collectUniqueGames(library);
         const completed = Array.isArray(library.completed) ? library.completed.length : 0;
@@ -119,14 +252,16 @@
         elements.games.replaceChildren();
         games.slice(0, 4).forEach((game, index) => {
             const card = makeElement("article", `dashboard-game-card dashboard-game-tone-${(index % 4) + 1}`);
-            const art = makeElement("div", "dashboard-game-art", abbreviation(game.name));
+            const art = makeElement("div", "dashboard-game-art");
             art.setAttribute("aria-hidden", "true");
+            art.appendChild(makeElement("span", "dashboard-game-art-fallback", abbreviation(game.name)));
             const details = makeElement("div", "dashboard-game-details");
             details.appendChild(makeElement("span", "dashboard-game-category", gameCategoryLabel(game, library)));
             details.appendChild(makeElement("h3", "", game.name || "Jogo sem nome"));
             details.appendChild(makeElement("p", "", game.genre || "Gênero não informado"));
             card.append(art, details);
             elements.games.appendChild(card);
+            void loadDashboardGameCover(art, game);
         });
     }
 
@@ -145,8 +280,7 @@
         elements.friends.replaceChildren();
         online.forEach((friend) => {
             const row = makeElement("article", "dashboard-online-friend");
-            const avatar = makeElement("span", "dashboard-friend-avatar", String(friend.name || "?").trim().charAt(0).toUpperCase());
-            avatar.setAttribute("aria-hidden", "true");
+            const avatar = createAvatarElement(friend.name, friend.avatar_url, "dashboard-friend-avatar");
             window.OverclockTheme?.applyAvatarHue(avatar, friend.theme_hue);
             const info = makeElement("div", "dashboard-friend-info");
             info.appendChild(makeElement("strong", "", friend.name || "Jogador"));
@@ -167,8 +301,7 @@
         posts.forEach((post) => {
             const card = makeElement("article", "dashboard-feed-item");
             const top = makeElement("div", "dashboard-feed-author-row");
-            const avatar = makeElement("span", "dashboard-feed-avatar", String(post.author || "J").trim().charAt(0).toUpperCase());
-            avatar.setAttribute("aria-hidden", "true");
+            const avatar = createAvatarElement(post.author, post.avatar_url, "dashboard-feed-avatar");
             window.OverclockTheme?.applyAvatarHue(avatar, post.theme_hue);
             const meta = makeElement("div", "dashboard-feed-author");
             meta.appendChild(makeElement("strong", "", post.author || "Jogador"));

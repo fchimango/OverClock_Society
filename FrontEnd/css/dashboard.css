@@ -907,7 +907,10 @@
 .dashboard-collection-panel .dashboard-section-heading { flex-wrap: wrap; gap: 8px 14px; }
 .dashboard-game-card { display: flex; align-items: center; gap: 13px; min-width: 0; padding: 12px; border: 1px solid rgba(255,255,255,.065); border-radius: 13px; background: rgba(4,9,18,.48); transition: border-color .2s ease, transform .2s ease, background .2s ease; }
 .dashboard-game-card:hover { transform: translateY(-2px); border-color: rgba(168,50,59,.38); background: rgba(79,7,4,.12); }
-.dashboard-game-art { display: grid; flex: 0 0 58px; width: 58px; height: 66px; place-items: center; border: 1px solid rgba(240,196,198,.18); border-radius: 10px; background: linear-gradient(145deg, #71151B, #26090D); color: #F6DCDD; font-size: 20px; font-weight: 900; letter-spacing: -.06em; }
+.dashboard-game-art { position: relative; display: grid; flex: 0 0 58px; width: 58px; height: 66px; overflow: hidden; place-items: center; border: 1px solid rgba(240,196,198,.18); border-radius: 10px; background: linear-gradient(145deg, #71151B, #26090D); color: #F6DCDD; font-size: 20px; font-weight: 900; letter-spacing: -.06em; }
+.dashboard-game-art-fallback { position: relative; z-index: 0; }
+.dashboard-game-cover { position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; object-position: center; border-radius: inherit; }
+.dashboard-game-art.has-game-cover .dashboard-game-art-fallback { opacity: 0; }
 .dashboard-game-tone-2 .dashboard-game-art { background: linear-gradient(145deg, #7D3430, #2D1115); }
 .dashboard-game-tone-3 .dashboard-game-art { background: linear-gradient(145deg, #4B252B, #15111D); }
 .dashboard-game-tone-4 .dashboard-game-art { background: linear-gradient(145deg, #8A4A3A, #2B1116); }
@@ -952,6 +955,25 @@
 .dashboard-feed-item { padding: 15px; border: 1px solid rgba(255,255,255,.06); border-radius: 12px; background: rgba(4,9,18,.40); }
 .dashboard-feed-author-row { display: flex; align-items: center; gap: 10px; }
 .dashboard-feed-avatar { flex-basis: 34px; width: 34px; height: 34px; border-radius: 50%; font-size: 12px; }
+
+.dashboard-friend-avatar,
+.dashboard-feed-avatar {
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-avatar-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
+}
 .dashboard-feed-author { display: flex; flex-direction: column; gap: 3px; }
 .dashboard-feed-author strong { color: #E9EDF3; font-size: 11px; }
 .dashboard-feed-author span { color: #7D899C; font-size: 9px; }
