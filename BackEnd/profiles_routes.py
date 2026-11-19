@@ -257,6 +257,19 @@ def list_user_replies(
         .limit(100)
     ).all()
 
+    # Carrega as fotos de todos os autores em lote para evitar uma consulta por resposta.
+    author_ids = {author.id for _, author, _ in rows}
+    media_rows = (
+        db.scalars(
+            select(models.UserProfileMedia).where(
+                models.UserProfileMedia.user_id.in_(author_ids)
+            )
+        ).all()
+        if author_ids
+        else []
+    )
+    media_by_user = {media.user_id: media for media in media_rows}
+
     replies: list[dict[str, Any]] = []
     for comment, author, post in rows:
         username = author.username or feed_routes.fallback_username(author.name)
@@ -268,6 +281,7 @@ def list_user_replies(
                 "author": author.name,
                 "username": f"@{username}",
                 "avatar": feed_routes.get_avatar(author.name),
+                "avatar_url": feed_routes.build_avatar_url(author.id, media_by_user),
                 "theme_hue": feed_routes.get_theme_hue(author),
                 "text": comment.content,
                 "createdAt": feed_routes.format_relative_time(comment.created_at),
