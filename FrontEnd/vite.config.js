@@ -30,7 +30,8 @@ function copyLegacyFrontend() {
                                 && !normalized.endsWith("/index-components.js")
                                 && !normalized.endsWith("/amigos.js")
                                 && !normalized.endsWith("/meus-jogos.js")
-                                && !normalized.endsWith("/feed.js");
+                                && !normalized.endsWith("/feed.js")
+                                && !normalized.endsWith("/perfil.js");
                         }
                     });
                 }
@@ -45,7 +46,8 @@ function copyLegacyFrontend() {
                         return resolved !== resolve(htmlSource, "index.html")
                             && resolved !== resolve(htmlSource, "amigos.html")
                             && resolved !== resolve(htmlSource, "meus-jogos.html")
-                            && resolved !== resolve(htmlSource, "feed.html");
+                            && resolved !== resolve(htmlSource, "feed.html")
+                            && resolved !== resolve(htmlSource, "perfil.html");
                     }
                 });
             }
@@ -85,7 +87,8 @@ export default defineConfig({
                 home: resolve(frontendRoot, "html/index.html"),
                 friends: resolve(frontendRoot, "html/amigos.html"),
                 games: resolve(frontendRoot, "html/meus-jogos.html"),
-                feed: resolve(frontendRoot, "html/feed.html")
+                feed: resolve(frontendRoot, "html/feed.html"),
+                profile: resolve(frontendRoot, "html/perfil.html")
             }
         }
     }
