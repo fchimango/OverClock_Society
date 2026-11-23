@@ -1640,6 +1640,3 @@ if (
 
 updateCharacterCounter();
 
-console.log(
-    "📰 Feed preparado; aguardando a validação da sessão."
-);

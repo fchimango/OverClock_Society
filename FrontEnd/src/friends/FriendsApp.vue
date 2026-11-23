@@ -323,7 +323,6 @@ onMounted(async () => {
             block: "start"
         });
     }
-    console.log("👥 Página Amigos conectada à API via Vue.");
 });
 
 onBeforeUnmount(() => {

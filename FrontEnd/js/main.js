@@ -227,6 +227,3 @@ if (!window.__OCS_VUE_MODAL_ACTIVE__) {
    LOG
 ========================================= */
 
-console.log(
-    "🎮 Overclock Society iniciado com sucesso!"
-);

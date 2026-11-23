@@ -584,7 +584,6 @@ async function loadProfileFromApi() {
         const profile = await response.json();
         applyProfileData(profile);
 
-        console.log("Perfil carregado da API.");
     } catch (error) {
         console.error("Erro ao carregar o Perfil:", error);
 
@@ -725,7 +724,6 @@ if (profileForm) {
             );
 
             alert("Perfil salvo com sucesso!");
-            console.log("Perfil atualizado na API.");
         } catch (error) {
             console.error("Erro ao salvar o Perfil:", error);
             alert("Não foi possível salvar o Perfil: " + error.message);
@@ -1381,7 +1379,6 @@ function renderProfilePosts() {
 window.addEventListener("overclock:session-ready", async () => {
     await loadProfileFromApi();
     await loadProfileActivity(true);
-    console.log("👤 Perfil sincronizado com a sessão.");
 });
 
 window.addEventListener("overclock:profile-updated", () => {
@@ -1408,4 +1405,3 @@ if (localStorage.getItem("token")) {
     void loadProfileFromApi().then(() => loadProfileActivity(true));
 }
 
-console.log("👤 Perfil carregado com sucesso.");

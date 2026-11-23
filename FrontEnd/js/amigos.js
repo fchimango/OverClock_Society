@@ -898,7 +898,6 @@ async function initializeFriendsPage() {
         });
     }
 
-    console.log("👥 Página Amigos conectada à API.");
 }
 
 initializeFriendsPage();

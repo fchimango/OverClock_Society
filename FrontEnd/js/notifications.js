@@ -1874,9 +1874,6 @@
         });
 
 
-        console.log(
-            "🔔 Central de notificações carregada."
-        );
     }
 
 

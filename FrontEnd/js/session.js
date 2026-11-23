@@ -395,10 +395,6 @@ window.dispatchEvent(
     )
 );
 
-        console.log(
-            "✅ Sessão válida:",
-            user.name
-        );
 
     } catch (error) {
         console.error(

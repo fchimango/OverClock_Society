@@ -3482,7 +3482,6 @@ async function initializeGamesPage() {
 
     await hydrateGameCovers();
     openCatalogGameFromQuery();
-    console.log("🎮 Meus Jogos carregado com sucesso.");
 }
 
 initializeGamesPage();
