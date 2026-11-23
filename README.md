@@ -2,31 +2,54 @@
 
 > **Comunidade gamer e hub de networking para estudantes de Engenharia de Software.**
 
+- **Site:** https://overclock-society.netlify.app
+- **API:** https://overclock-api.onrender.com (`/health` verifica se está no ar)
+
 ## Sobre o projeto
 
-A **OverClock Society** aproxima estudantes por meio de jogos digitais, perfis gamers, coleções pessoais, amizades e publicações da comunidade.
+A **OverClock Society** aproxima estudantes por meio de jogos digitais, perfis gamers, coleções pessoais, amizades e publicações da comunidade. O objetivo é facilitar a descoberta de parceiros para jogar: cada pessoa monta sua coleção, publica no feed, adiciona amigos e encontra a próxima party.
 
-## Funcionalidades implementadas
+## Integrantes
 
-- **Catálogo global de jogos via RAWG API:** pesquisa por nome, filtros por gênero e plataforma, ordenação, capas, data de lançamento, avaliação RAWG, Metacritic e detalhes do jogo.
-- **Coleção pessoal:** jogos favoritos (pódio de até três), jogos que a pessoa gosta e jogos zerados, persistidos no PostgreSQL.
-- **Perfis públicos:** exibição da coleção e das publicações de outros membros.
-- **Feed social:** publicações, comentários, curtidas, repostagens e notificações persistidas.
-- **Amizades e presença:** pesquisa de jogadores, solicitações de amizade e status de presença.
-- **Busca global:** jogadores, jogos que aparecem nas coleções da comunidade e publicações, com acesso ao catálogo RAWG.
+- Felipe Yuki
+- Ricardo de Paula
+- João Lucas Barbosa
+- Felipy Chimango
 
-Matchmaking de squads, integração com Steam/Discord e salas temáticas/conquistas permanecem como possíveis extensões futuras; não são prometidas como integrações ativas neste README.
+## Funcionalidades
+
+- **Cadastro com confirmação de e-mail:** a conta só é ativada depois de informar o código enviado por e-mail. Nome e nome de usuário (nick) não podem repetir entre contas.
+- **Perfis personalizados:** cada conta recebe cores próprias de avatar e capa, com editor de recorte para foto e banner. Perfis públicos exibem a coleção e as publicações.
+- **Dashboard:** resumo da conta, conversas recentes da comunidade, amigos online e atalhos para a coleção.
+- **Catálogo global de jogos via RAWG API:** pesquisa por nome, filtros por gênero e plataforma, ordenação, capas, data de lançamento, avaliação e detalhes do jogo.
+- **Coleção pessoal:** jogos favoritos (pódio de até três), jogos de que a pessoa gosta e jogos zerados, salvos no PostgreSQL. Toda conta nova começa com a coleção vazia.
+- **Feed social:** publicações, comentários, curtidas, repostagens e notificações. Hashtags em qualquer parte do texto entram nos "Jogos em destaque".
+- **Amizades e presença:** pesquisa de jogadores, solicitações de amizade e status online.
+- **Busca global:** jogadores, jogos que aparecem nas coleções da comunidade e publicações.
+- **Configurações:** alteração de senha da conta.
+- **Acessibilidade:** botão de **modo daltônico** que troca a paleta de cores do sistema inteiro por uma versão segura para daltonismo (a escolha fica salva no navegador).
+
+Matchmaking de squads, integração com Steam/Discord e salas temáticas/conquistas são possíveis extensões futuras e não fazem parte desta versão.
 
 ## Tecnologias
 
-- Frontend: HTML, CSS e JavaScript.
-- Backend: Python e FastAPI.
-- Banco de dados: PostgreSQL / SQLAlchemy.
-- Catálogo de jogos: [RAWG Video Games Database API](https://rawg.io/apidocs).
+- **Frontend:** Vue 3 e Vite, com páginas em HTML, CSS e JavaScript.
+- **Backend:** Python, FastAPI e SQLAlchemy.
+- **Banco de dados:** PostgreSQL (Neon).
+- **Catálogo de jogos:** [RAWG Video Games Database API](https://rawg.io/apidocs).
+- **Hospedagem:** Netlify (frontend), Render (API) e Neon (banco).
+- **Versionamento:** Git e GitHub.
 
 ## Executar localmente
 
-### 1. Configurar o backend
+### Pré-requisitos
+
+- Node.js 22.12 ou superior
+- Python 3
+- Um banco PostgreSQL (pode ser um projeto gratuito no [Neon](https://neon.tech))
+- Uma chave da RAWG API, gratuita em [rawg.io/apidocs](https://rawg.io/apidocs)
+
+### 1. Backend
 
 No diretório `BackEnd`, crie um ambiente virtual e instale as dependências:
 
@@ -37,65 +60,80 @@ py -m venv .venv
 pip install -r requirements.txt
 ```
 
-Copie `BackEnd/.env.example` para `BackEnd/.env` e preencha `DATABASE_URL`, `SECRET_KEY`, `RAWG_API_KEY` e `CORS_ORIGINS`. É necessário um PostgreSQL compatível com o projeto. A chave RAWG fica somente no backend e não deve ser incluída no JavaScript do frontend.
+Copie `BackEnd/.env.example` para `BackEnd/.env` e preencha as variáveis:
 
-Inicie o FastAPI, a partir da pasta `BackEnd`:
+| Variável | Para que serve |
+| --- | --- |
+| `DATABASE_URL` | Conexão com o PostgreSQL |
+| `SECRET_KEY` | Segredo aleatório usado nos tokens de login |
+| `RAWG_API_KEY` | Chave da RAWG (fica só no backend, nunca no navegador) |
+| `CORS_ORIGINS` | Origens do frontend autorizadas, separadas por vírgula (ex.: `http://127.0.0.1:5500`) |
+| `SMTP_*` | Servidor de e-mail que envia o código de confirmação do cadastro |
+
+As tabelas são criadas automaticamente na primeira execução. Inicie a API a partir da pasta `BackEnd`:
 
 ```powershell
 python -m uvicorn main:app --reload
 ```
 
-A API local ficará disponível em `http://127.0.0.1:8000`. O endpoint `/health` serve para verificar se o processo está ativo.
+A API fica em `http://127.0.0.1:8000`. Abra `http://127.0.0.1:8000/health` para conferir.
 
-### 2. Executar o frontend
+### 2. Frontend
 
-Em outro terminal, na pasta `FrontEnd`, execute:
+Em outro terminal, na pasta `FrontEnd`:
 
 ```powershell
-py -m http.server 5500
+cd FrontEnd
+npm install
+npm run dev
 ```
 
-Abra `http://127.0.0.1:5500/html/index.html`. O catálogo público fica em `http://127.0.0.1:5500/html/catalogo-jogos.html`. Evite abrir os HTMLs diretamente por `file://`.
+Abra `http://127.0.0.1:5500/html/index.html`. Em `localhost` ou `127.0.0.1` o frontend usa automaticamente a API local (`http://127.0.0.1:8000`); em qualquer outro endereço usa a API publicada. Evite abrir os HTMLs diretamente por `file://`.
 
-### 3. Endpoints do catálogo
+Para gerar o build de produção:
 
-- `GET /catalog/games?q=elden&page=1&page_size=24`
-- `GET /catalog/genres`
-- `GET /catalog/platforms`
-- `GET /catalog/games/{id}`
-- `GET /feed/posts?page=1&page_size=20` (Feed paginado, com opção de carregar mais)
+```powershell
+npm run build
+```
 
-O catálogo é público. Os endpoints encaminham as consultas ao RAWG pelo backend; a chave não é enviada ao navegador. Respostas são mantidas em cache em memória por cinco minutos.
+O resultado fica em `FrontEnd/dist`.
 
-### 4. RAWG API e atribuição
+## Publicação
 
-Obtenha sua chave em [rawg.io/apidocs](https://rawg.io/apidocs) e configure-a em `RAWG_API_KEY`. A página do catálogo e o modal de adição de jogos mantêm atribuição com link para a RAWG, conforme os requisitos apresentados pela API. Respeite a quota e os termos do plano escolhido.
+- **Frontend (Netlify):** o arquivo `netlify.toml` já define a pasta base (`FrontEnd`), o comando (`npm run build`) e a pasta publicada (`dist`).
+- **Backend (Render):** serviço web Python com raiz em `BackEnd/`, build `pip install -r requirements.txt` e início `uvicorn main:app --host 0.0.0.0 --port $PORT`. Configure no painel as mesmas variáveis do `.env`, com `CORS_ORIGINS` apontando para o endereço do site no Netlify.
+- Cada commit na `main` publica automaticamente os dois serviços.
 
-## Configuração de frontend e CORS para hospedagem
+`FrontEnd/js/api-config.js` concentra a URL da API usada pelo frontend. Nunca coloque credenciais reais no README, nos arquivos JavaScript ou no Git.
 
-`FrontEnd/js/api-config.js` concentra a URL usada pelos arquivos JavaScript. Como o backend da OverClock Society ainda não foi configurado no Render, `PRODUCTION_API_BASE_URL` está vazio intencionalmente. Depois de criar o serviço **deste projeto**, preencha essa constante com a URL real do backend. Não reutilize a URL de outro projeto.
+## Principais endpoints
 
-No backend hospedado, configure as variáveis de ambiente no painel do serviço:
+- `POST /auth/register`, `POST /auth/verify-email`, `POST /auth/login`, `GET /auth/me`
+- `PUT /auth/profile`, `PUT /auth/password`
+- `GET /catalog/games?q=elden&page=1&page_size=24`, `GET /catalog/genres`, `GET /catalog/platforms`, `GET /catalog/games/{id}`
+- `GET /feed/posts?page=1&page_size=20`
+- `GET /health`
 
-- `DATABASE_URL`: URL do PostgreSQL da OverClock Society.
-- `SECRET_KEY`: segredo aleatório e exclusivo.
-- `RAWG_API_KEY`: chave RAWG.
-- `CORS_ORIGINS`: origens exatas do frontend, separadas por vírgula, por exemplo `https://SEU-FRONTEND.onrender.com` (inclua também localhost apenas quando necessário).
+A documentação interativa completa fica em `/docs` na própria API. As consultas ao catálogo passam pelo backend, que as mantém em cache em memória por cinco minutos.
 
-O frontend precisa ser publicado em uma origem que corresponda a `CORS_ORIGINS`. Não inclua credenciais reais no README, nos exemplos, nos arquivos JavaScript ou no Git.
+## RAWG API e atribuição
+
+A página do catálogo e o modal de adição de jogos mantêm atribuição com link para a RAWG, conforme os requisitos da API. Respeite a quota e os termos do plano escolhido.
 
 ## Testes manuais sugeridos
 
-1. Abrir o catálogo, pesquisar pelo nome de um jogo e aplicar filtros por gênero/plataforma.
-2. Abrir os detalhes e conferir capa, lançamento, gêneros, plataformas e Metacritic quando disponível.
-3. Fazer login, adicionar um jogo à coleção e confirmar a persistência após atualizar `meus-jogos.html`.
-4. Curtir, comentar e repostar uma publicação com duas contas para conferir as notificações.
-5. Testar a busca global do cabeçalho e os campos locais de filtro de amigos/coleções separadamente.
-
+1. Criar uma conta, confirmar o e-mail com o código recebido e entrar.
+2. Tentar criar outra conta com o mesmo nome ou nome de usuário e conferir a mensagem de recusa.
+3. Abrir o catálogo, pesquisar um jogo, aplicar filtros e abrir os detalhes.
+4. Adicionar um jogo à coleção e confirmar que ele continua lá depois de atualizar a página.
+5. Publicar no feed com uma hashtag no meio do texto e conferir os "Jogos em destaque".
+6. Curtir, comentar e repostar com duas contas para conferir as notificações.
+7. Em Configurações, alterar a senha e entrar novamente com a nova.
+8. Ativar o modo daltônico na página inicial e navegar pelo sistema.
 
 ## Testes automatizados
 
-Para executar os testes unitários do catálogo sem usar sua chave RAWG nem fazer chamadas externas:
+Os testes do backend não usam a chave RAWG nem fazem chamadas externas:
 
 ```powershell
 cd BackEnd
