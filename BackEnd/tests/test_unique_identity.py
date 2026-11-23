@@ -21,6 +21,12 @@ def _jsonb_as_json(_type, _compiler, **_kwargs):
     return "JSON"
 
 
+@pytest.fixture(autouse=True)
+def _no_email(monkeypatch):
+    # O cadastro envia um código por e-mail; nos testes isso não deve sair.
+    monkeypatch.setattr(auth, "_deliver_verification", lambda *a, **k: None)
+
+
 @pytest.fixture()
 def db():
     engine = create_engine(
@@ -74,7 +80,8 @@ def test_register_accepts_different_name_and_username(db):
     _register(db, "Maria Souza", "maria.s", "maria@exemplo.com")
     created = _register(db, "Maria Souza Lima", "maria.l", "lima@exemplo.com")
 
-    assert created["name"] == "Maria Souza Lima"
+    assert created["email"] == "lima@exemplo.com"
+    assert _user(db, "lima@exemplo.com").name == "Maria Souza Lima"
 
 
 def _profile(name, username):
