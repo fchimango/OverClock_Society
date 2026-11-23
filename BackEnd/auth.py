@@ -51,6 +51,53 @@ bearer = HTTPBearer()
 
 
 # =========================================
+# UNICIDADE DE NOME E NOME DE USUÁRIO
+# =========================================
+
+def clean_display_name(name: str) -> str:
+    """Tira espaços nas pontas e junta espaços repetidos."""
+    return " ".join(name.split())
+
+
+def display_name_taken(
+    db: Session,
+    name: str,
+    exclude_id: int | None = None
+) -> bool:
+    """Vale como igual se mudar só maiúsculas/minúsculas ou espaços."""
+    stmt = select(models.User.id).where(
+        func.lower(func.trim(models.User.name))
+        == clean_display_name(name).lower()
+    )
+
+    if exclude_id is not None:
+        stmt = stmt.where(models.User.id != exclude_id)
+
+    return db.scalar(stmt.limit(1)) is not None
+
+
+def username_taken(
+    db: Session,
+    username: str,
+    exclude_id: int | None = None
+) -> bool:
+    stmt = select(models.User.id).where(
+        func.lower(models.User.username) == username.lower()
+    )
+
+    if exclude_id is not None:
+        stmt = stmt.where(models.User.id != exclude_id)
+
+    return db.scalar(stmt.limit(1)) is not None
+
+
+NAME_TAKEN_MESSAGE = (
+    "Já existe uma conta com esse nome. "
+    "Use outro nome ou acrescente um sobrenome."
+)
+
+
+# =========================================
 # MODELOS DE ENTRADA
 # =========================================
 
@@ -80,7 +127,7 @@ class RegisterData(BaseModel):
                 "Informe um nome válido."
             )
 
-        name = value.strip()
+        name = clean_display_name(value)
 
         if len(name) < 2:
             raise ValueError(
@@ -247,16 +294,16 @@ def register(
             detail="Este e-mail já está em uso."
         )
 
-    existing_username = db.scalar(
-        select(models.User).where(
-            models.User.username == data.username
-        )
-    )
-
-    if existing_username:
+    if username_taken(db, data.username):
         raise HTTPException(
             status_code=409,
             detail="Este nome de usuário já está em uso."
+        )
+
+    if display_name_taken(db, data.name):
+        raise HTTPException(
+            status_code=409,
+            detail=NAME_TAKEN_MESSAGE
         )
 
     novo = models.User(
@@ -561,7 +608,7 @@ class ProfileUpdateData(BaseModel):
                 "Informe um nome válido."
             )
 
-        value = value.strip()
+        value = clean_display_name(value)
 
         if len(value) < 2:
             raise ValueError(
@@ -770,17 +817,23 @@ def update_profile(
     ),
     db: Session = Depends(get_db)
 ):
-    existing_username = db.scalar(
-        select(models.User.id).where(
-            models.User.username == data.username,
-            models.User.id != user.id
-        )
-    )
-
-    if existing_username is not None:
+    if username_taken(db, data.username, exclude_id=user.id):
         raise HTTPException(
             status_code=409,
             detail="Este nome de usuário já está em uso."
+        )
+
+    # Só confere o nome quando ele muda, para não travar quem já tem um
+    # nome igual ao de outra conta criada antes desta regra.
+    current_name = clean_display_name(user.name or "").lower()
+
+    if (
+        data.name.lower() != current_name
+        and display_name_taken(db, data.name, exclude_id=user.id)
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail=NAME_TAKEN_MESSAGE
         )
 
     user.name = data.name
