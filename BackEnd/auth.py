@@ -170,6 +170,18 @@ class LoginData(BaseModel):
     )
 
 
+class PasswordChangeData(BaseModel):
+    current_password: str = Field(
+        min_length=1,
+        max_length=50
+    )
+
+    new_password: str = Field(
+        min_length=8,
+        max_length=50
+    )
+
+
 class EmailVerificationData(BaseModel):
     email: EmailStr
     code: str = Field(pattern=r"^\d{6}$")
@@ -803,6 +815,38 @@ def update_profile_media(
             if media.cover_data else None
         ),
     }
+
+
+# =========================================
+# ALTERAR SENHA
+# =========================================
+
+@router.put("/password")
+def change_password(
+    data: PasswordChangeData,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if not verify_password(
+        data.current_password,
+        user.password_hash
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="A senha atual está incorreta."
+        )
+
+    if data.current_password == data.new_password:
+        raise HTTPException(
+            status_code=400,
+            detail="A nova senha deve ser diferente da senha atual."
+        )
+
+    user.password_hash = hash_password(data.new_password)
+    db.add(user)
+    db.commit()
+
+    return {"message": "Senha atualizada com sucesso."}
 
 
 # =========================================
