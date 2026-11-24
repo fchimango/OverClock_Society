@@ -59,6 +59,24 @@ function navigateTo(page) {
             >
                 {{ item.label }}
             </a>
+
+            <!-- Só aparecem no celular, onde .nav-buttons fica escondido. -->
+            <div class="nav-menu-actions">
+                <button
+                    class="btn btn-login"
+                    type="button"
+                    @click="navigateTo('login.html')"
+                >
+                    Entrar
+                </button>
+                <button
+                    class="btn btn-register"
+                    type="button"
+                    @click="navigateTo('cadastro.html')"
+                >
+                    Criar conta
+                </button>
+            </div>
         </nav>
 
         <div class="nav-right">
@@ -77,6 +95,14 @@ function navigateTo(page) {
                 <span class="a11y-toggle-icon" aria-hidden="true">👁️</span>
                 <span class="a11y-toggle-label">Modo daltônico</span>
                 <span class="a11y-toggle-state" aria-hidden="true">{{ colorblind ? "✓ Ativo" : "Off" }}</span>
+            </button>
+
+            <button
+                class="btn btn-login nav-quick-login"
+                type="button"
+                @click="navigateTo('login.html')"
+            >
+                Entrar
             </button>
 
             <div class="nav-buttons">

@@ -193,3 +193,56 @@
         justify-self: end;
     }
 }
+
+
+/* Entrar e Criar conta no celular: o .nav-buttons some abaixo de 700px,
+   então os botões ficam no menu e um "Entrar" fica visível no topo. */
+.nav-menu-actions,
+.nav-quick-login {
+    display: none;
+}
+
+@media (max-width: 700px) {
+    .nav-menu-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        padding: 12px 0 4px;
+    }
+
+    .nav-menu-actions .btn {
+        width: 100%;
+    }
+
+    /* "Entrar" com contorno, para parecer botão e não texto solto. */
+    .nav-menu-actions .btn-login,
+    .nav-quick-login {
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 10px;
+    }
+
+    .nav-quick-login {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+    }
+
+    /* Cabe tudo na largura do celular: o botão daltônico fica só com o ícone
+       (o estado ativo continua marcado pela borda e por aria-pressed). */
+    #navbarApp .nav-right {
+        gap: 8px;
+    }
+
+    .a11y-toggle-state {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    #navbarApp .logo {
+        font-size: 17px;
+    }
+}
