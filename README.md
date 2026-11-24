@@ -18,7 +18,7 @@ A **OverClock Society** aproxima estudantes por meio de jogos digitais, perfis g
 
 ## Funcionalidades
 
-- **Cadastro com confirmação de e-mail:** a conta só é ativada depois de informar o código enviado por e-mail. Nome e nome de usuário (nick) não podem repetir entre contas.
+- **Cadastro direto:** a pessoa cria a conta e já entra no sistema. Nome e nome de usuário (nick) não podem repetir entre contas. A confirmação de e-mail por código também está implementada, mas fica desligada por padrão (veja `EMAIL_VERIFICATION_REQUIRED` abaixo).
 - **Perfis personalizados:** cada conta recebe cores próprias de avatar e capa, com editor de recorte para foto e banner. Perfis públicos exibem a coleção e as publicações.
 - **Dashboard:** resumo da conta, conversas recentes da comunidade, amigos online e atalhos para a coleção.
 - **Catálogo global de jogos via RAWG API:** pesquisa por nome, filtros por gênero e plataforma, ordenação, capas, data de lançamento, avaliação e detalhes do jogo.
@@ -68,7 +68,8 @@ Copie `BackEnd/.env.example` para `BackEnd/.env` e preencha as variáveis:
 | `SECRET_KEY` | Segredo aleatório usado nos tokens de login |
 | `RAWG_API_KEY` | Chave da RAWG (fica só no backend, nunca no navegador) |
 | `CORS_ORIGINS` | Origens do frontend autorizadas, separadas por vírgula (ex.: `http://127.0.0.1:5500`) |
-| `SMTP_*` | Servidor de e-mail que envia o código de confirmação do cadastro |
+| `EMAIL_VERIFICATION_REQUIRED` | Opcional. `true` liga a confirmação de e-mail por código no cadastro. Padrão: `false` |
+| `SMTP_*` | Servidor de e-mail do código de confirmação. Só é usado se `EMAIL_VERIFICATION_REQUIRED=true` |
 
 As tabelas são criadas automaticamente na primeira execução. Inicie a API a partir da pasta `BackEnd`:
 
@@ -103,6 +104,7 @@ O resultado fica em `FrontEnd/dist`.
 - **Frontend (Netlify):** o arquivo `netlify.toml` já define a pasta base (`FrontEnd`), o comando (`npm run build`) e a pasta publicada (`dist`).
 - **Backend (Render):** serviço web Python com raiz em `BackEnd/`, build `pip install -r requirements.txt` e início `uvicorn main:app --host 0.0.0.0 --port $PORT`. Configure no painel as mesmas variáveis do `.env`, com `CORS_ORIGINS` apontando para o endereço do site no Netlify.
 - Cada commit na `main` publica automaticamente os dois serviços.
+- A confirmação de e-mail fica desligada em produção: os serviços gratuitos do Render bloqueiam as portas de SMTP. Para ligá-la, use um plano pago ou um provedor de e-mail com SMTP em porta liberada (como a 2525) e defina `EMAIL_VERIFICATION_REQUIRED=true`.
 
 `FrontEnd/js/api-config.js` concentra a URL da API usada pelo frontend. Nunca coloque credenciais reais no README, nos arquivos JavaScript ou no Git.
 
@@ -122,7 +124,7 @@ A página do catálogo e o modal de adição de jogos mantêm atribuição com l
 
 ## Testes manuais sugeridos
 
-1. Criar uma conta, confirmar o e-mail com o código recebido e entrar.
+1. Criar uma conta e conferir que o sistema já abre o dashboard logado.
 2. Tentar criar outra conta com o mesmo nome ou nome de usuário e conferir a mensagem de recusa.
 3. Abrir o catálogo, pesquisar um jogo, aplicar filtros e abrir os detalhes.
 4. Adicionar um jogo à coleção e confirmar que ele continua lá depois de atualizar a página.

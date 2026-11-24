@@ -1,3 +1,4 @@
+import os
 import re
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -89,6 +90,18 @@ def username_taken(
         stmt = stmt.where(models.User.id != exclude_id)
 
     return db.scalar(stmt.limit(1)) is not None
+
+
+def email_verification_required() -> bool:
+    """Confirmação de e-mail por código. Desligada por padrão.
+
+    Para ligar, defina EMAIL_VERIFICATION_REQUIRED=true e configure o SMTP.
+    Os serviços gratuitos do Render bloqueiam as portas de SMTP, então
+    em produção o cadastro funciona sem esse passo.
+    """
+    return os.getenv(
+        "EMAIL_VERIFICATION_REQUIRED", "false"
+    ).strip().lower() in {"1", "true", "yes", "on"}
 
 
 NAME_TAKEN_MESSAGE = (
@@ -218,7 +231,7 @@ def get_current_user(
             detail="Sessão inválida. Faça login novamente."
         )
 
-    if not user.email_verified:
+    if email_verification_required() and not user.email_verified:
         raise HTTPException(
             status_code=403,
             detail="Confirme seu e-mail antes de utilizar sua conta."
@@ -323,11 +336,33 @@ def register(
         username=data.username,
         email=email,
         password_hash=hash_password(data.password),
-        email_verified=False,
+        email_verified=not email_verification_required(),
         # Cor própria de avatar e capa, sorteada no cadastro.
         profile_data={"theme_hue": secrets.randbelow(360)}
     )
     db.add(novo)
+
+    if not email_verification_required():
+        try:
+            db.commit()
+            db.refresh(novo)
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail="Este e-mail ou nome de usuário já está em uso."
+            )
+
+        return {
+            "message": "Conta criada com sucesso!",
+            "verification_required": False,
+            "access_token": create_token(novo.id),
+            "token_type": "bearer",
+            "id": novo.id,
+            "name": novo.name,
+            "email": novo.email,
+            "username": novo.username,
+        }
 
     try:
         code = _prepare_verification(novo, db)
@@ -499,7 +534,7 @@ def login(
             detail="E-mail ou senha incorretos"
         )
 
-    if not user.email_verified:
+    if email_verification_required() and not user.email_verified:
         raise HTTPException(
             status_code=403,
             detail={

@@ -292,7 +292,7 @@ if (registerForm) {
         }
 
         if (submit) submit.disabled = true;
-        showFeedback(feedback, "Criando conta e enviando código de confirmação...", "info");
+        showFeedback(feedback, "Criando sua conta...", "info");
 
         try {
             const response = await fetch(`${API_URL}/auth/register`, {
@@ -308,6 +308,15 @@ if (registerForm) {
                     body.message || "Conta criada. Informe o código enviado ao seu e-mail.",
                     "success"
                 );
+                return;
+            }
+
+            if (response.ok && body.access_token && body.id) {
+                saveLoginSession(body);
+                showFeedback(feedback, "Conta criada! Estamos entrando...", "success");
+                window.setTimeout(() => {
+                    window.location.href = authNextPage || "dashboard.html";
+                }, 700);
                 return;
             }
 
@@ -333,7 +342,7 @@ if (registerForm) {
                 return;
             }
 
-            showFeedback(feedback, "Cadastro concluído. Confira seu e-mail para confirmar a conta.", "success");
+            showFeedback(feedback, "Cadastro concluído. Agora é só entrar na sua conta.", "success");
         } catch (error) {
             console.error("Erro no cadastro:", error);
             showFeedback(feedback, "Não foi possível conectar ao servidor.", "error");

@@ -1,5 +1,7 @@
 # Confirmação de e-mail — Overclock Society
 
+> **Opcional e desligada por padrão.** O cadastro cria a conta já confirmada e inicia a sessão. Para ligar este fluxo, defina `EMAIL_VERIFICATION_REQUIRED=true` e configure o SMTP. Os serviços gratuitos do Render bloqueiam as portas de SMTP (25, 465 e 587), então em produção gratuita deixe desligada.
+
 ## Como funciona
 
 1. O cadastro cria a conta com `email_verified = false`.
